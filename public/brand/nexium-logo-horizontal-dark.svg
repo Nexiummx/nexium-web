@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Capa_1" data-name="Capa 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2700 1000">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke: #8a9bb0;
+        stroke-linejoin: round;
+      }
+
+      .cls-1, .cls-2 {
+        fill: none;
+        stroke-width: 40px;
+      }
+
+      .cls-3, .cls-4 {
+        fill: #fff;
+      }
+
+      .cls-5 {
+        fill: #8a9bb0;
+      }
+
+      .cls-4 {
+        font-family: SegoeUIVariable-BoldSmall, 'Segoe UI Variable';
+        font-size: 400px;
+        font-variation-settings: 'wght' 700, 'opsz' 8;
+        font-weight: 700;
+      }
+
+      .cls-2 {
+        stroke: #fff;
+        stroke-miterlimit: 10;
+      }
+    </style>
+  </defs>
+  <g>
+    <line class="cls-2" x1="341.97" y1="665.2" x2="416.56" y2="491.42"/>
+    <line class="cls-2" x1="569.84" y1="540.11" x2="635.42" y2="357.33"/>
+    <circle class="cls-5" cx="213.29" cy="700.85" r="45"/>
+    <circle class="cls-5" cx="416.56" cy="491.42" r="45"/>
+    <circle class="cls-5" cx="569.84" cy="540.11" r="45"/>
+    <circle class="cls-5" cx="778.04" cy="309.46" r="45"/>
+    <circle class="cls-3" cx="341.97" cy="665.2" r="45"/>
+    <circle class="cls-3" cx="635.42" cy="357.33" r="45"/>
+    <polyline class="cls-1" points="569.84 540.11 416.56 271.34 213.29 700.85"/>
+    <polyline class="cls-1" points="775.58 309.46 567.38 745.85 414.11 491.42"/>
+    <g>
+      <path class="cls-5" d="M710.37,291.53c4.91-18.57,17.26-34.12,33.67-43.26l-232.83-123.78c-7.93-4.21-17.42-4.21-25.35,0l-330.74,175.84c-8.82,4.69-14.33,13.86-14.33,23.84v351.67c0,4.73,1.25,9.28,3.49,13.26,4.56-26.95,24.51-48.65,50.51-55.75v-292.95l303.74-161.48,211.84,112.62Z"/>
+      <path class="cls-5" d="M847.85,304.58c.11,1.61.19,3.24.19,4.88,0,30.14-19.05,55.83-45.77,65.69v284.46l-303.74,161.48-215.49-114.57c-1.54,19.23-10.85,36.27-24.8,47.97l227.62,121.01c3.96,2.11,8.32,3.16,12.67,3.16s8.71-1.05,12.67-3.16l330.74-175.84c8.82-4.69,14.33-13.86,14.33-23.84v-351.67c0-7.51-3.12-14.56-8.42-19.59Z"/>
+    </g>
+  </g>
+  <text class="cls-4" transform="translate(958.81 628.83)"><tspan x="0" y="0">NEXIUM</tspan></text>
+</svg>
