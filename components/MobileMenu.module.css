@@ -1,0 +1,25 @@
+.draw {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+  background: #0d0d0d;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 44px;
+}
+.draw.open {
+  display: flex;
+}
+.draw a {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  font-size: 40px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  transition: color 0.2s;
+}
+.draw a:hover {
+  color: #fff;
+}
