@@ -14,7 +14,7 @@ export const WA_LINKS = {
   contact: wa("Hola Nexium, quiero hablar de mi proyecto"),
 } as const;
 
-export const EMAIL = "hola@nexiummx.com";
+export const EMAIL = "info@nexiummx.com";
 export const SITE_URL = "https://www.nexiummx.com";
-export const IG_URL = "https://www.instagram.com/nexiummx"; // actualizar con handle real
-export const FB_URL = "https://www.facebook.com/nexiummx"; // actualizar con handle real
+export const IG_URL = "https://www.instagram.com/nexiummx?igsh=MThwMGFnbnNzOGtpZw=="; // actualizar con handle real
+export const FB_URL = "https://www.facebook.com/share/18ckS66URV/"; // actualizar con handle real
