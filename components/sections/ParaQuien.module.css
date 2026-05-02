@@ -6,7 +6,7 @@
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 2fr 2fr 1fr;
   gap: 24px;
 }
 .card {
@@ -28,6 +28,7 @@
 }
 .no {
   border-color: rgba(138, 155, 176, 0.15);
+  padding: 36px 22px;
 }
 .tag {
   display: inline-block;

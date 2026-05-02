@@ -11,10 +11,12 @@
   transition: background 0.35s, backdrop-filter 0.35s, padding 0.3s;
 }
 .hdr.sc {
-  background: rgba(13, 13, 13, 0.88);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  padding: 14px 52px;
+  background: rgba(13, 13, 13, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  padding: 12px 52px;
+  border-bottom: 1px solid rgba(27, 47, 110, 0.18);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 .logoA {
   display: flex;
