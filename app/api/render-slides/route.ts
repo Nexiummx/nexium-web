@@ -38,11 +38,17 @@ async function getBrowser() {
   });
 }
 
+// Token hardcodeado — no depende de variables de entorno para evitar
+// problemas de sincronización entre .env.local y Vercel dashboard.
+// Para cambiarlo: actualizar este valor Y el TOOL_TOKEN en page.tsx.
+const TOOL_TOKEN = "nexium-slides-2026";
+
 export async function POST(req: NextRequest) {
   // Verificar token de acceso
   const authHeader = req.headers.get("x-nexium-token");
-  const expectedToken = process.env.NEXIUM_TOOL_TOKEN ?? "nexium-slides-2026";
-  if (authHeader !== expectedToken) {
+  // Aceptar el token del env (si está configurado en Vercel) o el hardcodeado
+  const expectedToken = process.env.NEXIUM_TOOL_TOKEN || TOOL_TOKEN;
+  if (!authHeader || authHeader !== expectedToken) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 

@@ -4,7 +4,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import styles from "./slides.module.css";
 
 /* ── Constantes ─────────────────────────────────────────────────────────── */
-const ACCESS_TOKEN = process.env.NEXT_PUBLIC_NEXIUM_TOOL_TOKEN ?? "nexium-slides-2026";
+// Mismo valor que TOOL_TOKEN en app/api/render-slides/route.ts
+const ACCESS_TOKEN = "nexium-slides-2026";
 const SLIDE_W = 1080;
 const SLIDE_H = 1350;
 const PREVIEW_SCALE = 0.38;
@@ -16,7 +17,10 @@ interface SlideData {
 }
 
 /* ── Llamada a la API de render ─────────────────────────────────────────── */
-async function renderViaApi(html: string): Promise<SlideData[]> {
+async function renderViaApi(
+  html: string,
+  onUnauthorized: () => void
+): Promise<SlideData[]> {
   const res = await fetch("/api/render-slides", {
     method: "POST",
     headers: {
@@ -26,9 +30,16 @@ async function renderViaApi(html: string): Promise<SlideData[]> {
     body: JSON.stringify({ html, format: "png" }),
   });
 
+  if (res.status === 401) {
+    // Token inválido — cerrar sesión y volver al gate
+    sessionStorage.removeItem("nxt_tool_unlocked");
+    onUnauthorized();
+    throw new Error("Sesión expirada. Ingresa el token nuevamente.");
+  }
+
   if (!res.ok) {
-    const { error } = await res.json();
-    throw new Error(error ?? `Error ${res.status}`);
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { error?: string }).error ?? `Error ${res.status}`);
   }
 
   const { slides } = await res.json();
@@ -167,7 +178,6 @@ export default function SlidesToolPage() {
     setSlides([]);
     setRenderMsg("Iniciando Chromium…");
 
-    // Actualizar mensaje mientras trabaja
     const msgs = [
       "Cargando fuentes y CSS…",
       "Renderizando slides…",
@@ -180,7 +190,7 @@ export default function SlidesToolPage() {
     }, 2500);
 
     try {
-      const result = await renderViaApi(html);
+      const result = await renderViaApi(html, () => setUnlocked(false));
       setSlides(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al renderizar.");
