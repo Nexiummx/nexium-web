@@ -1,3 +1,5 @@
+"use client";
+import { useTilt } from "@/components/lib/useTilt";
 import styles from "./PorQueNexium.module.css";
 
 const HEX = "24,2 44,13 44,35 24,46 4,35 4,13";
@@ -46,9 +48,47 @@ const REASONS = [
   },
 ];
 
+interface ReasonCardProps {
+  title: string;
+  desc: string;
+  icon: React.ReactNode;
+  index: number;
+}
+
+function ReasonCard({ title, desc, icon, index }: ReasonCardProps) {
+  const tiltRef = useTilt();
+  return (
+    <div ref={tiltRef} className={`${styles.item} rv d${index + 1}`}>
+      <div className={styles.ico}>{icon}</div>
+      <h3>{title}</h3>
+      <p>{desc}</p>
+    </div>
+  );
+}
+
 export function PorQueNexium() {
   return (
     <section id="por-que" className={styles.section} data-st>
+      <svg
+        className="hexBorder"
+        style={{ top: 40, right: 40, width: 180 }}
+        viewBox="0 0 180 180"
+        aria-hidden="true"
+      >
+        <polygon
+          points="90,10 165,52 165,128 90,170 15,128 15,52"
+          fill="none"
+          stroke="#1B2F6E"
+          strokeWidth="1"
+        />
+        <polygon
+          points="90,30 145,62 145,118 90,150 35,118 35,62"
+          fill="none"
+          stroke="#1B2F6E"
+          strokeWidth="0.8"
+          opacity="0.6"
+        />
+      </svg>
       <div className={`si ${styles.inner}`}>
         <div className="shdr-l rv">
           <span className="slabel">Por qué nosotros</span>
@@ -57,12 +97,8 @@ export function PorQueNexium() {
           <p>Hay cientos de agencias. Estas son las razones concretas por las que algunos nos eligen.</p>
         </div>
         <div className={styles.grid}>
-          {REASONS.map(({ title, desc, icon }, i) => (
-            <div key={title} className={`${styles.item} rv d${i + 1}`}>
-              <div className={styles.ico}>{icon}</div>
-              <h3>{title}</h3>
-              <p>{desc}</p>
-            </div>
+          {REASONS.map((r, i) => (
+            <ReasonCard key={r.title} {...r} index={i} />
           ))}
         </div>
       </div>

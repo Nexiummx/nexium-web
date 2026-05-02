@@ -71,15 +71,23 @@ a {
   color: var(--blue);
   margin-bottom: 16px;
 }
+/* srule: arranca en width 0, se dibuja al entrar al viewport */
 .srule {
   display: block;
-  width: 40px;
+  width: 0;
   height: 2px;
   background: var(--blue);
   margin: 20px 0;
+  transition: width 0.7s 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.rv.vis .srule {
+  width: 40px;
 }
 .srule-c {
   margin: 20px auto;
+}
+.rv.vis .srule-c {
+  width: 40px;
 }
 .shdr {
   text-align: center;
@@ -125,27 +133,39 @@ a {
   color: var(--blue);
 }
 
-/* Reveal on scroll */
+/* Reveal on scroll — duración aumentada, easing dramático */
 .rv {
   opacity: 0;
   transform: translateY(30px);
-  transition: opacity 0.55s ease-out, transform 0.55s ease-out;
+  transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .rv.vis {
   opacity: 1;
   transform: none;
 }
+
+/* Scroll-driven scale en H2 */
+.rv h2 {
+  transform: scale(1.05);
+  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.rv.vis h2 {
+  transform: scale(1);
+}
+
+/* Stagger delays aumentados para cascada visible */
 .d1 {
-  transition-delay: 0.08s;
+  transition-delay: 0.12s;
 }
 .d2 {
-  transition-delay: 0.17s;
+  transition-delay: 0.24s;
 }
 .d3 {
-  transition-delay: 0.26s;
+  transition-delay: 0.36s;
 }
 .d4 {
-  transition-delay: 0.35s;
+  transition-delay: 0.48s;
 }
 
 /* Botones */
@@ -162,7 +182,8 @@ a {
   border: none;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.2s, box-shadow 0.25s, transform 0.15s;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s,
+    box-shadow 0.25s;
   text-decoration: none;
 }
 .btn-p:hover {
@@ -211,7 +232,7 @@ a {
   transform: scale(1.02);
 }
 
-/* Animated background */
+/* Animated background — doble mesh gradient */
 @property --rx {
   syntax: "<percentage>";
   inherits: false;
@@ -222,17 +243,32 @@ a {
   inherits: false;
   initial-value: 50%;
 }
+@property --rx2 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 80%;
+}
+@property --ry2 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 20%;
+}
 .bgr {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
   background: radial-gradient(
-    ellipse 55% 55% at var(--rx, 50%) var(--ry, 50%),
-    rgba(27, 47, 110, 0.32) 0%,
-    transparent 70%
-  );
-  animation: bgD 28s ease-in-out infinite;
+      ellipse 55% 55% at var(--rx, 50%) var(--ry, 50%),
+      rgba(27, 47, 110, 0.32) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 40% 40% at var(--rx2, 80%) var(--ry2, 20%),
+      rgba(27, 47, 110, 0.22) 0%,
+      transparent 65%
+    );
+  animation: bgD 28s ease-in-out infinite, bgD2 38s ease-in-out infinite reverse;
 }
 @keyframes bgD {
   0% {
@@ -256,6 +292,24 @@ a {
     --ry: 40%;
   }
 }
+@keyframes bgD2 {
+  0% {
+    --rx2: 80%;
+    --ry2: 20%;
+  }
+  33% {
+    --rx2: 20%;
+    --ry2: 80%;
+  }
+  66% {
+    --rx2: 60%;
+    --ry2: 50%;
+  }
+  100% {
+    --rx2: 80%;
+    --ry2: 20%;
+  }
+}
 .hpulse {
   animation: hpulse var(--dur, 4s) ease-in-out infinite;
 }
@@ -267,6 +321,17 @@ a {
   50% {
     opacity: 0.38;
   }
+}
+
+/* Decoraciones hexagonales por sección */
+.hexBorder {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s ease-out;
+}
+.rv.vis .hexBorder {
+  opacity: 0.08;
 }
 
 @media (max-width: 767px) {

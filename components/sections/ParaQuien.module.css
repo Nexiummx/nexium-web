@@ -1,5 +1,6 @@
 .section {
   background: var(--bg-alt);
+  position: relative;
 }
 .inner {
   padding: 128px 0;

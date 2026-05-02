@@ -5,6 +5,26 @@ const HEX_SMALL = "24,3 42,13 42,35 24,45 6,35 6,13";
 export function ParaQuien() {
   return (
     <section id="para-quien" className={styles.section} data-st>
+      <svg
+        className="hexBorder"
+        style={{ top: 40, left: 40, width: 180, transform: "rotate(30deg)" }}
+        viewBox="0 0 180 180"
+        aria-hidden="true"
+      >
+        <polygon
+          points="90,10 165,52 165,128 90,170 15,128 15,52"
+          fill="none"
+          stroke="#1B2F6E"
+          strokeWidth="1"
+        />
+        <polygon
+          points="90,30 145,62 145,118 90,150 35,118 35,62"
+          fill="none"
+          stroke="#1B2F6E"
+          strokeWidth="0.8"
+          opacity="0.6"
+        />
+      </svg>
       <div className={`si ${styles.inner}`}>
         <div className="shdr rv">
           <span className="slabel">Para quién</span>
