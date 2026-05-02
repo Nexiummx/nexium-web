@@ -25,7 +25,7 @@ export function SiteSchema() {
     serviceType: [
       "Desarrollo web",
       "Consultoría de digitalización",
-      "Software SaaS",
+      "Integraciones con IA",
     ],
     priceRange: "$$",
   };
