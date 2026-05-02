@@ -7,30 +7,29 @@ const CHROMIUM_PACK_URL =
 const SLIDE_W = 1080;
 const SLIDE_H = 1350;
 
-// Timeout de la función serverless en Vercel (Pro: 300s, Free: 60s)
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
+// Token de acceso — mismo valor que ACCESS_TOKEN en page.tsx
+const TOOL_TOKEN = "nexium-slides-2026";
+
 async function getBrowser() {
-  // En Vercel (producción y preview): usar chromium-min ligero
   if (process.env.VERCEL) {
     const chromium = (await import("@sparticuz/chromium-min")).default;
     const puppeteerCore = (await import("puppeteer-core")).default;
-
     const executablePath = await chromium.executablePath(CHROMIUM_PACK_URL);
-
     return puppeteerCore.launch({
       args: [
         ...chromium.args,
         "--font-render-hinting=none",
         "--disable-web-security",
+        "--disable-features=IsolateOrigins",
+        "--disable-site-isolation-trials",
       ],
       executablePath,
       headless: true,
     });
   }
-
-  // Localmente: usar puppeteer con Chromium bundled
   const puppeteer = (await import("puppeteer")).default;
   return puppeteer.launch({
     headless: true,
@@ -38,15 +37,8 @@ async function getBrowser() {
   });
 }
 
-// Token hardcodeado — no depende de variables de entorno para evitar
-// problemas de sincronización entre .env.local y Vercel dashboard.
-// Para cambiarlo: actualizar este valor Y el TOOL_TOKEN en page.tsx.
-const TOOL_TOKEN = "nexium-slides-2026";
-
 export async function POST(req: NextRequest) {
-  // Verificar token de acceso
   const authHeader = req.headers.get("x-nexium-token");
-  // Aceptar el token del env (si está configurado en Vercel) o el hardcodeado
   const expectedToken = process.env.NEXIUM_TOOL_TOKEN || TOOL_TOKEN;
   if (!authHeader || authHeader !== expectedToken) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
@@ -69,24 +61,30 @@ export async function POST(req: NextRequest) {
     browser = await getBrowser();
     const page = await browser.newPage();
 
-    // Viewport amplio para contener todos los slides
     await page.setViewport({
       width: SLIDE_W,
       height: SLIDE_H * 20,
       deviceScaleFactor: 1,
     });
 
-    await page.setContent(html, {
+    // Usar data URL para evitar problemas de networking en Vercel serverless.
+    // encodeURIComponent preserva todo el HTML incluyendo fuentes externas (Google Fonts).
+    const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
+
+    await page.goto(dataUrl, {
       waitUntil: "networkidle0",
-      timeout: 30000,
+      timeout: 45000,
     });
 
-    // Esperar fuentes
-    await page.evaluateHandle("document.fonts.ready");
-    // Buffer extra para Google Fonts
-    await new Promise((r) => setTimeout(r, 1500));
+    // Esperar fuentes de forma segura
+    try {
+      await page.evaluateHandle("document.fonts.ready");
+    } catch {
+      // silenciar si no está disponible
+    }
+    // Buffer extra para que Google Fonts y CSS terminen de aplicarse
+    await new Promise((r) => setTimeout(r, 2000));
 
-    // Detectar slides
     const postCount = await page.evaluate(() => {
       return document.querySelectorAll(".post").length;
     });
@@ -99,7 +97,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Capturar cada slide
     const slides: { index: number; dataUrl: string }[] = [];
 
     for (let i = 0; i < postCount; i++) {
@@ -122,11 +119,14 @@ export async function POST(req: NextRequest) {
     }
 
     await browser.close();
-
     return NextResponse.json({ slides, count: postCount });
   } catch (err) {
     if (browser) {
-      try { await browser.close(); } catch { /* ignore */ }
+      try {
+        await browser.close();
+      } catch {
+        /* ignore */
+      }
     }
     const message = err instanceof Error ? err.message : "Error interno.";
     return NextResponse.json({ error: message }, { status: 500 });
