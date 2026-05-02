@@ -43,7 +43,7 @@ export function IcoCons({ className }: { className?: string }) {
   );
 }
 
-export function IcoSaas({ className }: { className?: string }) {
+export function IcoIa({ className }: { className?: string }) {
   return (
     <svg
       className={className}

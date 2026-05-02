@@ -1,4 +1,4 @@
-import { IcoWeb, IcoCons, IcoSaas } from "@/components/icons/ServiceIcons";
+import { IcoWeb, IcoCons, IcoIa } from "@/components/icons/ServiceIcons";
 import { WA_LINKS } from "@/lib/constants";
 import styles from "./Servicios.module.css";
 
@@ -16,9 +16,9 @@ const SERVICES = [
     href: WA_LINKS.cons,
   },
   {
-    Icon: IcoSaas,
-    title: "SaaS para agencias automotrices",
-    desc: "Herramienta para gestionar inventario, seguimiento de clientes y reportes. Construida para el sector.",
+    Icon: IcoIa,
+    title: "Integraciones con IA",
+    desc: "Integramos IA en tu negocio para automatizar tareas y mejorar la eficiencia. Desde procesos de ventas hasta reportes de inventario.",
     href: WA_LINKS.saas,
   },
 ];

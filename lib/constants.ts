@@ -10,7 +10,7 @@ export const WA_LINKS = {
   hero: wa("Hola Nexium, vi su sitio y quiero saber cómo digitalizar mi negocio"),
   dev: wa("Hola Nexium, me interesa su servicio de desarrollo web"),
   cons: wa("Hola Nexium, quiero agendar una consultoría de digitalización"),
-  saas: wa("Hola Nexium, quiero saber más del SaaS para agencias automotrices"),
+  saas: wa("Hola Nexium, quiero saber más sobre las integraciones con IA que realizan"),
   contact: wa("Hola Nexium, quiero hablar de mi proyecto"),
 } as const;
 
