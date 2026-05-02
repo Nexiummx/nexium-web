@@ -37,7 +37,12 @@ function HexNet() {
   ];
 
   return (
-    <svg viewBox="0 0 440 440" fill="none" aria-hidden="true">
+    <svg
+      viewBox="0 0 440 440"
+      fill="none"
+      aria-hidden="true"
+      style={{ animation: "hpulse 6s ease-in-out infinite" }}
+    >
       <polygon
         points="220,20 380,110 380,330 220,420 60,330 60,110"
         fill="none"

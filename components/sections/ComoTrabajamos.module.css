@@ -7,14 +7,14 @@
 .row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0;
+  gap: 32px;
   position: relative;
 }
 .line {
   position: absolute;
-  top: 31px;
-  left: calc(12.5% + 8px);
-  right: calc(12.5% + 8px);
+  top: 64px;
+  left: calc(12.5% + 16px);
+  right: calc(12.5% + 16px);
   height: 1px;
   background: rgba(27, 47, 110, 0.3);
   overflow: hidden;
@@ -32,15 +32,15 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 0 16px;
+  padding: 24px 16px;
   position: relative;
   z-index: 1;
 }
 .hex {
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   position: relative;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
   flex-shrink: 0;
 }
 .hexBg {
@@ -55,20 +55,21 @@
   justify-content: center;
   font-family: var(--font-barlow-condensed), sans-serif;
   font-weight: 700;
-  font-size: 22px;
+  font-size: 28px;
   color: #fff;
+  letter-spacing: -0.02em;
 }
 .step:hover .hexBg {
   filter: drop-shadow(0 0 14px rgba(27, 47, 110, 0.85));
 }
 .step h3 {
-  font-size: 16px;
-  margin-bottom: 10px;
+  font-size: 18px;
+  margin-bottom: 14px;
 }
 .step p {
   color: rgba(255, 255, 255, 0.52);
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 @media (max-width: 767px) {

@@ -27,10 +27,10 @@ export function Servicios() {
   return (
     <section id="servicios" className={styles.section} data-st>
       <div className={`si ${styles.inner}`}>
-        <div className="shdr rv">
+        <div className="shdr-l rv">
           <span className="slabel">Servicios</span>
           <h2>Qué hacemos</h2>
-          <span className="srule srule-c" />
+          <span className="srule" />
           <p>Tres áreas donde somos buenos de verdad. Si tu necesidad cae fuera, te lo decimos antes de cotizar.</p>
         </div>
         <div className={styles.grid}>

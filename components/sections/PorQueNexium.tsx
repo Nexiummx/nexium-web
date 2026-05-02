@@ -50,10 +50,10 @@ export function PorQueNexium() {
   return (
     <section id="por-que" className={styles.section} data-st>
       <div className={`si ${styles.inner}`}>
-        <div className="shdr rv">
+        <div className="shdr-l rv">
           <span className="slabel">Por qué nosotros</span>
           <h2>Por qué Nexium</h2>
-          <span className="srule srule-c" />
+          <span className="srule" />
           <p>Hay cientos de agencias. Estas son las razones concretas por las que algunos nos eligen.</p>
         </div>
         <div className={styles.grid}>
