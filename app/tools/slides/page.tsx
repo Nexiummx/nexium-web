@@ -7,13 +7,32 @@ import styles from "./slides.module.css";
 const ACCESS_TOKEN = process.env.NEXT_PUBLIC_NEXIUM_TOOL_TOKEN ?? "nexium-slides-2026";
 const SLIDE_W = 1080;
 const SLIDE_H = 1350;
-// Scale factor para preview en pantalla
 const PREVIEW_SCALE = 0.38;
 
 /* ── Tipos ───────────────────────────────────────────────────────────────── */
 interface SlideData {
   index: number;
-  dataUrl: string; // PNG base64
+  dataUrl: string; // PNG o JPG base64 data URL
+}
+
+/* ── Llamada a la API de render ─────────────────────────────────────────── */
+async function renderViaApi(html: string): Promise<SlideData[]> {
+  const res = await fetch("/api/render-slides", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-nexium-token": ACCESS_TOKEN,
+    },
+    body: JSON.stringify({ html, format: "png" }),
+  });
+
+  if (!res.ok) {
+    const { error } = await res.json();
+    throw new Error(error ?? `Error ${res.status}`);
+  }
+
+  const { slides } = await res.json();
+  return slides as SlideData[];
 }
 
 /* ── Componente SlideCard ────────────────────────────────────────────────── */
@@ -85,92 +104,6 @@ function SlideCard({ slide }: { slide: SlideData }) {
   );
 }
 
-/* ── Render engine ────────────────────────────────────────────────────────
-   Usa un <iframe> oculto para inyectar el HTML completo (con fuentes y CSS),
-   luego html2canvas captura cada .post como un canvas de 1080×1350.
-─────────────────────────────────────────────────────────────────────────── */
-async function renderSlidesToDataUrls(html: string): Promise<SlideData[]> {
-  const { default: html2canvas } = await import("html2canvas");
-
-  // Crear iframe oculto
-  const iframe = document.createElement("iframe");
-  iframe.style.cssText = `
-    position: fixed;
-    left: -9999px;
-    top: 0;
-    width: ${SLIDE_W}px;
-    height: ${SLIDE_H * 20}px;
-    border: none;
-    visibility: hidden;
-    pointer-events: none;
-  `;
-  document.body.appendChild(iframe);
-
-  const iDoc = iframe.contentDocument!;
-  iDoc.open();
-  iDoc.write(html);
-  iDoc.close();
-
-  // Esperar a que el DOM esté listo + fuentes carguen
-  await new Promise<void>((resolve) => {
-    const check = () => {
-      if (iDoc.readyState === "complete") {
-        // Extra wait para Google Fonts
-        setTimeout(resolve, 1200);
-      } else {
-        setTimeout(check, 100);
-      }
-    };
-    check();
-  });
-
-  const iWin = iframe.contentWindow!;
-
-  // Esperar document.fonts si disponible
-  if ((iDoc as Document & { fonts?: FontFaceSet }).fonts) {
-    try {
-      await (iDoc as Document & { fonts: FontFaceSet }).fonts.ready;
-      await new Promise((r) => setTimeout(r, 600));
-    } catch {
-      // silenciar
-    }
-  }
-
-  const posts = Array.from(iDoc.querySelectorAll<HTMLElement>(".post"));
-
-  if (posts.length === 0) {
-    document.body.removeChild(iframe);
-    throw new Error('No se encontraron elementos con clase ".post" en el HTML.');
-  }
-
-  const results: SlideData[] = [];
-
-  for (let i = 0; i < posts.length; i++) {
-    const el = posts[i];
-    const canvas = await html2canvas(el, {
-      useCORS: true,
-      allowTaint: true,
-      x: 0,
-      y: 0,
-      width: SLIDE_W,
-      height: SLIDE_H,
-      windowWidth: SLIDE_W,
-      windowHeight: SLIDE_H,
-      backgroundColor: "#0D0D0D",
-      logging: false,
-      foreignObjectRendering: false,
-      imageTimeout: 15000,
-    });
-    results.push({
-      index: i,
-      dataUrl: canvas.toDataURL("image/png"),
-    });
-  }
-
-  document.body.removeChild(iframe);
-  return results;
-}
-
 /* ── Gate de acceso ─────────────────────────────────────────────────────── */
 function TokenGate({ onUnlock }: { onUnlock: () => void }) {
   const [input, setInput] = useState("");
@@ -217,10 +150,10 @@ export default function SlidesToolPage() {
   const [html, setHtml] = useState("");
   const [slides, setSlides] = useState<SlideData[]>([]);
   const [rendering, setRendering] = useState(false);
+  const [renderMsg, setRenderMsg] = useState("");
   const [error, setError] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Verificar sesión previa
   useEffect(() => {
     if (sessionStorage.getItem("nxt_tool_unlocked") === "1") {
       setUnlocked(true);
@@ -232,13 +165,29 @@ export default function SlidesToolPage() {
     setRendering(true);
     setError("");
     setSlides([]);
+    setRenderMsg("Iniciando Chromium…");
+
+    // Actualizar mensaje mientras trabaja
+    const msgs = [
+      "Cargando fuentes y CSS…",
+      "Renderizando slides…",
+      "Capturando imágenes…",
+    ];
+    let msgIdx = 0;
+    const msgInterval = setInterval(() => {
+      msgIdx = (msgIdx + 1) % msgs.length;
+      setRenderMsg(msgs[msgIdx]);
+    }, 2500);
+
     try {
-      const result = await renderSlidesToDataUrls(html);
+      const result = await renderViaApi(html);
       setSlides(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al renderizar.");
     } finally {
+      clearInterval(msgInterval);
       setRendering(false);
+      setRenderMsg("");
     }
   }, [html]);
 
@@ -349,7 +298,7 @@ export default function SlidesToolPage() {
             className={styles.textarea}
             value={html}
             onChange={(e) => setHtml(e.target.value)}
-            placeholder={`Pega aquí tu HTML completo.\n\nEl script detecta todos los elementos con clase ".post" y los convierte en imágenes individuales.\n\nEjemplo:\n<div class="post s4">...</div>\n<div class="post s4">...</div>`}
+            placeholder={`Pega aquí tu HTML completo.\n\nEl motor detecta todos los elementos con clase ".post" y los convierte en imágenes pixel-perfect (Chromium headless).\n\nEjemplo:\n<div class="post s4">...</div>\n<div class="post s4">...</div>`}
             spellCheck={false}
             autoCorrect="off"
             autoCapitalize="off"
@@ -384,9 +333,9 @@ export default function SlidesToolPage() {
             {rendering && (
               <div className={styles.loading}>
                 <div className={styles.spinner} />
-                <span>Renderizando slides…</span>
-                <span style={{ fontSize: 12, opacity: 0.6 }}>
-                  Cargando fuentes y CSS, puede tardar ~10s
+                <span>{renderMsg || "Renderizando…"}</span>
+                <span style={{ fontSize: 12, opacity: 0.5 }}>
+                  Chromium headless · pixel-perfect · ~10–20s
                 </span>
               </div>
             )}
@@ -403,7 +352,7 @@ export default function SlidesToolPage() {
                 <span className={styles.emptyIcon}>⬚</span>
                 <span>Pega tu HTML y presiona Renderizar</span>
                 <span style={{ fontSize: 12 }}>
-                  Cada .post se convierte en una imagen 1080×1350
+                  Cada .post → imagen 1080×1350 pixel-perfect
                 </span>
               </div>
             )}
@@ -420,10 +369,10 @@ export default function SlidesToolPage() {
                 {slides.length} slides listos
               </span>
               <button className={styles.btnSecondary} onClick={downloadAllPng}>
-                ↓ ZIP PNG
+                ↓ Todos PNG
               </button>
               <button className={styles.btnSecondary} onClick={downloadAllJpg}>
-                ↓ ZIP JPG
+                ↓ Todos JPG
               </button>
               <button className={styles.btnPrimary} onClick={downloadAllPdf}>
                 ↓ PDF completo
