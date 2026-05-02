@@ -5,6 +5,7 @@ import { ParaQuien } from "@/components/sections/ParaQuien";
 import { Servicios } from "@/components/sections/Servicios";
 import { ComoTrabajamos } from "@/components/sections/ComoTrabajamos";
 import { PorQueNexium } from "@/components/sections/PorQueNexium";
+import { Metricas } from "@/components/sections/Metricas";
 import { FAQ } from "@/components/sections/FAQ";
 import { Contacto } from "@/components/sections/Contacto";
 import { Footer } from "@/components/Footer";
@@ -22,6 +23,7 @@ export default function Home() {
         <Servicios />
         <ComoTrabajamos />
         <PorQueNexium />
+        <Metricas />
         <FAQ />
         <Contacto />
       </main>

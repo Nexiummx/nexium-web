@@ -1,5 +1,6 @@
 .section {
   background: var(--bg);
+  position: relative;
 }
 .inner {
   padding: 128px 0;
@@ -15,7 +16,8 @@
 .item {
   background: var(--bg);
   padding: 52px 36px;
-  transition: background 0.3s;
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s;
 }
 .item:hover {
   background: #131313;

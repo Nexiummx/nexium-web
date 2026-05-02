@@ -58,13 +58,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 0 60px rgba(27, 47, 110, 0.35));
-  animation: hpulse 5s ease-in-out infinite;
-}
-.hexVis svg {
   width: 100%;
-  max-width: 440px;
-  height: auto;
 }
 .deco {
   position: absolute;
@@ -80,6 +74,7 @@
     grid-template-columns: 1fr;
   }
   .hexVis {
-    display: none;
+    margin-top: 32px;
+    justify-content: center;
   }
 }
