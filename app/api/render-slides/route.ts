@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// URL del pack de Chromium para Vercel (Sparticuz v147 compatible con puppeteer-core 24.x)
+// URL del pack de Chromium para Vercel — Sparticuz v147.0.2, arquitectura x64
+// El archivo DEBE incluir la arquitectura (.x64.tar), de lo contrario da 404 en GitHub Releases
 const CHROMIUM_PACK_URL =
-  "https://github.com/Sparticuz/chromium/releases/download/v147.0.0/chromium-v147.0.0-pack.tar";
+  "https://github.com/Sparticuz/chromium/releases/download/v147.0.2/chromium-v147.0.2-pack.x64.tar";
 
 const SLIDE_W = 1080;
 const SLIDE_H = 1350;
