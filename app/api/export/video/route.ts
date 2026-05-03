@@ -1,0 +1,124 @@
+import { NextRequest, NextResponse } from "next/server";
+import { put } from "@vercel/blob";
+import fs from "fs/promises";
+import path from "path";
+import os from "os";
+import { captureFrames } from "@/lib/video/captureFrames";
+import { encodeVideo } from "@/lib/video/encodeVideo";
+import {
+  extractRawMetadata,
+  resolveVideoConfig,
+} from "@/lib/video/extractMetadata";
+import { validateConfig } from "@/lib/video/presets";
+import type {
+  VideoExportRequest,
+  VideoExportResponse,
+} from "@/lib/video/types";
+
+export const runtime = "nodejs";
+export const maxDuration = 300;
+export const dynamic = "force-dynamic";
+
+export async function POST(
+  request: NextRequest
+): Promise<NextResponse<VideoExportResponse>> {
+  const startTime = Date.now();
+  let workDir: string | null = null;
+
+  try {
+    const body = (await request.json()) as VideoExportRequest;
+
+    if (!body.html || typeof body.html !== "string") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "html field is required and must be a string",
+        },
+        { status: 400 }
+      );
+    }
+
+    // 1. Extraer metadata del HTML (regex, sin abrir browser)
+    const rawMetadata = extractRawMetadata(body.html);
+
+    // 2. Resolver config final: body > html metadata > preset > hard default
+    const config = resolveVideoConfig(body, rawMetadata);
+
+    // 3. Validar
+    const validation = validateConfig(config);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { success: false, error: validation.error, config },
+        { status: 400 }
+      );
+    }
+
+    console.log("[video-export] Config resuelta:", config);
+
+    // 4. Workspace temporal en /tmp (único writable en Vercel)
+    workDir = await fs.mkdtemp(path.join(os.tmpdir(), "nexium-video-"));
+    const framesDir = path.join(workDir, "frames");
+    const outputPath = path.join(workDir, `${config.filename}.mp4`);
+
+    // 5. Capturar frames con Puppeteer
+    console.log(
+      `[video-export] Capturing: ${config.durationSeconds}s @ ${config.fps}fps (${config.width}×${config.height})`
+    );
+    const frames = await captureFrames({
+      html: body.html,
+      durationSeconds: config.durationSeconds,
+      fps: config.fps,
+      width: config.width,
+      height: config.height,
+      outputDir: framesDir,
+    });
+
+    // 6. Encodear MP4 con ffmpeg
+    console.log(`[video-export] Encoding ${frames.length} frames to MP4`);
+    await encodeVideo({
+      framesDir,
+      outputPath,
+      fps: config.fps,
+      width: config.width,
+      height: config.height,
+    });
+
+    // 7. Subir a Vercel Blob
+    console.log("[video-export] Uploading to Vercel Blob");
+    const videoBuffer = await fs.readFile(outputPath);
+    const blob = await put(`videos/${config.filename}.mp4`, videoBuffer, {
+      access: "public",
+      contentType: "video/mp4",
+    });
+
+    const durationMs = Date.now() - startTime;
+    console.log(`[video-export] Done in ${(durationMs / 1000).toFixed(1)}s`);
+
+    return NextResponse.json({
+      success: true,
+      videoUrl: blob.url,
+      filename: `${config.filename}.mp4`,
+      durationMs,
+      framesCaptured: frames.length,
+      config,
+    });
+  } catch (error) {
+    console.error("[video-export] Error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  } finally {
+    // Limpiar archivos temporales
+    if (workDir) {
+      try {
+        await fs.rm(workDir, { recursive: true, force: true });
+      } catch (cleanupError) {
+        console.warn("[video-export] Cleanup failed:", cleanupError);
+      }
+    }
+  }
+}
