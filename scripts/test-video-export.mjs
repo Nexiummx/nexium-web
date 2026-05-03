@@ -90,28 +90,50 @@ async function main() {
     process.exit(1);
   }
 
-  const result = await response.json();
   const totalMs = Date.now() - startTime;
+  const contentType = response.headers.get("content-type") ?? "";
 
-  if (!result.success) {
-    console.error("❌ Error del endpoint:", result.error);
+  if (!response.ok) {
+    const result = await response.json().catch(() => ({}));
+    console.error("❌ Error del endpoint:", result.error ?? response.statusText);
     console.error("   Status HTTP:", response.status);
     process.exit(1);
   }
 
-  console.log("✅ Video generado exitosamente");
   console.log(`⏱  Tiempo total: ${(totalMs / 1000).toFixed(1)}s`);
-  console.log(`🎞  Frames capturados: ${result.framesCaptured}`);
-  console.log(`📦 Filename: ${result.filename}`);
-  console.log(`🔗 URL: ${result.videoUrl}`);
-  console.log();
-  console.log("⚙️  Config resuelta:");
-  console.log(`   type:     ${result.config.type}`);
-  console.log(`   size:     ${result.config.width}×${result.config.height}`);
-  console.log(`   duration: ${result.config.durationSeconds}s`);
-  console.log(`   fps:      ${result.config.fps}`);
-  console.log();
-  console.log("💡 Abre la URL en browser para verificar el video.");
+
+  if (contentType.includes("video/mp4")) {
+    // Modo local: guardar el binario a disco
+    const filename = response.headers.get("x-nexium-filename") ?? `video-${Date.now()}.mp4`;
+    const frames = response.headers.get("x-nexium-frames") ?? "?";
+    const buf = Buffer.from(await response.arrayBuffer());
+    await fs.writeFile(filename, buf);
+
+    console.log("✅ Video generado exitosamente (modo local — descarga directa)");
+    console.log(`🎞  Frames capturados: ${frames}`);
+    console.log(`📦 Guardado como: ${filename} (${(buf.byteLength / 1024).toFixed(0)} KB)`);
+    console.log();
+    console.log("💡 Abre el archivo con QuickTime o VLC para verificar.");
+  } else {
+    // Modo Vercel: URL de Blob en JSON
+    const result = await response.json();
+    if (!result.success) {
+      console.error("❌ Error:", result.error);
+      process.exit(1);
+    }
+    console.log("✅ Video generado exitosamente");
+    console.log(`🎞  Frames capturados: ${result.framesCaptured}`);
+    console.log(`📦 Filename: ${result.filename}`);
+    console.log(`🔗 URL: ${result.videoUrl}`);
+    console.log();
+    console.log("⚙️  Config resuelta:");
+    console.log(`   type:     ${result.config.type}`);
+    console.log(`   size:     ${result.config.width}×${result.config.height}`);
+    console.log(`   duration: ${result.config.durationSeconds}s`);
+    console.log(`   fps:      ${result.config.fps}`);
+    console.log();
+    console.log("💡 Abre la URL en browser para verificar el video.");
+  }
 }
 
 main().catch((err) => {

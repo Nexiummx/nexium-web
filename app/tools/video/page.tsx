@@ -230,20 +230,42 @@ export default function VideoToolPage() {
         body: JSON.stringify({ html }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
+      if (!res.ok) {
+        // Intentar leer el error como JSON
+        const data = await res.json().catch(() => ({})) as { error?: string };
         throw new Error(data.error ?? `Error ${res.status}`);
       }
 
-      // Descargar el MP4 directamente
-      const a = document.createElement("a");
-      a.href = data.videoUrl;
-      a.download = data.filename ?? "video.mp4";
-      a.target = "_blank";
-      a.click();
+      const contentType = res.headers.get("Content-Type") ?? "";
 
-      showSuccess(data.videoUrl);
+      if (contentType.includes("video/mp4")) {
+        // Modo local: respuesta binaria directa → crear object URL y descargar
+        const filename =
+          res.headers.get("X-Nexium-Filename") ?? "video.mp4";
+        const blob = await res.blob();
+        const objectUrl = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = filename;
+        a.click();
+
+        // Revocar después de un momento
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
+        showSuccess(objectUrl);
+      } else {
+        // Modo Vercel: respuesta JSON con URL de Blob
+        const data = await res.json() as { success: boolean; videoUrl?: string; filename?: string; error?: string };
+        if (!data.success) throw new Error(data.error ?? "Error desconocido");
+
+        const a = document.createElement("a");
+        a.href = data.videoUrl!;
+        a.download = data.filename ?? "video.mp4";
+        a.target = "_blank";
+        a.click();
+
+        showSuccess(data.videoUrl!);
+      }
     } catch (e) {
       showError(e instanceof Error ? e.message : "Error al exportar el video.");
     } finally {
