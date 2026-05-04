@@ -8,24 +8,36 @@
     "build": "next build",
     "start": "next start",
     "generate:og": "node scripts/generate-og.cjs",
-    "html-to-png": "node scripts/html-to-png.cjs"
+    "html-to-png": "node scripts/html-to-png.cjs",
+    "render-video": "node scripts/render-gsap-video.mjs",
+    "test": "jest"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@sparticuz/chromium": "^148.0.0",
     "@sparticuz/chromium-min": "^147.0.2",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/blob": "^2.3.3",
+    "fluent-ffmpeg": "^2.1.3",
     "next": "14.2.35",
     "puppeteer-core": "^24.42.0",
     "react": "^18",
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@types/fluent-ffmpeg": "^2.1.28",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "canvas": "^3.2.3",
     "html2canvas": "^1.4.1",
+    "jest": "^30.3.0",
+    "jest-environment-node": "^30.3.0",
     "jspdf": "^4.2.1",
     "puppeteer": "^24.42.0",
     "sharp": "^0.33.5",
+    "ts-jest": "^29.4.9",
     "typescript": "^5"
   }
 }

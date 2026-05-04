@@ -4,7 +4,14 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   experimental: {
-    serverComponentsExternalPackages: ["puppeteer-core", "@sparticuz/chromium-min", "puppeteer"],
+    serverComponentsExternalPackages: [
+      "puppeteer-core",
+      "@sparticuz/chromium-min",
+      "@sparticuz/chromium",
+      "puppeteer",
+      "@ffmpeg-installer/ffmpeg",
+      "fluent-ffmpeg",
+    ],
   },
 };
 
