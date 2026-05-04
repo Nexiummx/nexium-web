@@ -9,6 +9,7 @@
     "start": "next start",
     "generate:og": "node scripts/generate-og.cjs",
     "html-to-png": "node scripts/html-to-png.cjs",
+    "render-video": "node scripts/render-gsap-video.mjs",
     "test": "jest"
   },
   "dependencies": {
