@@ -1,8 +1,10 @@
-import { SITE_URL, EMAIL, WA_NUMBER } from "@/lib/constants";
+import { SITE_URL, EMAIL } from "@/lib/constants";
+import { getWaNumberFromEnv } from "@/lib/wa-server";
 
 // Schema.org LocalBusiness para Nexium.
 // Esto ayuda a Google a entender qué es el negocio, dónde está y cómo contactarlo.
 export function SiteSchema() {
+  const waNumber = getWaNumberFromEnv();
   const schema = {
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
@@ -10,7 +12,7 @@ export function SiteSchema() {
     description:
       "Agencia tech que ayuda a emprendedores y startups mexicanos a digitalizar y escalar su negocio.",
     url: SITE_URL,
-    telephone: `+${WA_NUMBER}`,
+    telephone: `+${waNumber}`,
     email: EMAIL,
     address: {
       "@type": "PostalAddress",

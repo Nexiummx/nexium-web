@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { WA_LINKS } from "@/lib/constants";
+import { useSiteWa } from "@/components/SiteConfigProvider";
 import styles from "./MobileMenu.module.css";
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
 }
 
 export function MobileMenu({ open, onClose }: Props) {
+  const { waLinks } = useSiteWa();
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
@@ -33,7 +34,7 @@ export function MobileMenu({ open, onClose }: Props) {
         FAQ
       </a>
       <a
-        href={WA_LINKS.hero}
+        href={waLinks.hero}
         className="btn-n"
         style={{ fontSize: 22, padding: "18px 48px" }}
         target="_blank"

@@ -1,20 +1,6 @@
-// Single source of truth para todos los links y datos de contacto.
-// El número se lee de NEXT_PUBLIC_WA_NUMBER (env var) con fallback al valor
-// hardcodeado — así funciona en local sin .env y en Vercel con la variable configurada.
-
-export const WA_NUMBER =
-  process.env.NEXT_PUBLIC_WA_NUMBER ?? "MX_WA_REDACTED"; // formato: 52 + lada + número, sin +
-
-const wa = (msg: string) =>
-  `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
-
-export const WA_LINKS = {
-  hero: wa("Hola Nexium, vi su sitio y quiero saber cómo digitalizar mi negocio"),
-  dev: wa("Hola Nexium, me interesa su servicio de desarrollo web"),
-  cons: wa("Hola Nexium, quiero agendar una consultoría de digitalización"),
-  saas: wa("Hola Nexium, quiero saber más sobre las integraciones con IA que realizan"),
-  contact: wa("Hola Nexium, quiero hablar de mi proyecto"),
-} as const;
+// Single source of truth para links y datos de contacto (excepto WhatsApp).
+// El número de WhatsApp se configura con WA_NUMBER o NEXT_PUBLIC_WA_NUMBER en Vercel
+// y se expone a la app vía SiteConfigProvider (ver app/layout.tsx y useSiteWa()).
 
 export const EMAIL = "info@nexiummx.com";
 export const SITE_URL = "https://www.nexiummx.com";

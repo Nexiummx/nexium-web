@@ -1,29 +1,33 @@
 "use client";
+import { useMemo } from "react";
 import { IcoWeb, IcoCons, IcoIa } from "@/components/icons/ServiceIcons";
-import { WA_LINKS } from "@/lib/constants";
+import { useSiteWa } from "@/components/SiteConfigProvider";
 import { useTilt } from "@/components/lib/useTilt";
+import type { WaLinks } from "@/lib/wa-links";
 import styles from "./Servicios.module.css";
 
-const SERVICES = [
-  {
-    Icon: IcoWeb,
-    title: "Desarrollo web",
-    desc: "Landing pages, sitios corporativos y aplicaciones web a medida. Código limpio, carga rápida y diseño que convierte.",
-    href: WA_LINKS.dev,
-  },
-  {
-    Icon: IcoCons,
-    title: "Consultoría de digitalización",
-    desc: "Analizamos tus procesos e identificamos qué automatizar primero. Un plan concreto, no un reporte de 80 páginas.",
-    href: WA_LINKS.cons,
-  },
-  {
-    Icon: IcoIa,
-    title: "Integraciones con IA",
-    desc: "Integramos IA en tu negocio para automatizar tareas y mejorar la eficiencia. Desde procesos de ventas hasta reportes de inventario.",
-    href: WA_LINKS.saas,
-  },
-];
+function buildServices(waLinks: WaLinks) {
+  return [
+    {
+      Icon: IcoWeb,
+      title: "Desarrollo web",
+      desc: "Landing pages, sitios corporativos y aplicaciones web a medida. Código limpio, carga rápida y diseño que convierte.",
+      href: waLinks.dev,
+    },
+    {
+      Icon: IcoCons,
+      title: "Consultoría de digitalización",
+      desc: "Analizamos tus procesos e identificamos qué automatizar primero. Un plan concreto, no un reporte de 80 páginas.",
+      href: waLinks.cons,
+    },
+    {
+      Icon: IcoIa,
+      title: "Integraciones con IA",
+      desc: "Integramos IA en tu negocio para automatizar tareas y mejorar la eficiencia. Desde procesos de ventas hasta reportes de inventario.",
+      href: waLinks.saas,
+    },
+  ];
+}
 
 interface ServiceCardProps {
   Icon: React.ComponentType;
@@ -48,6 +52,9 @@ function ServiceCard({ Icon, title, desc, href, index }: ServiceCardProps) {
 }
 
 export function Servicios() {
+  const { waLinks } = useSiteWa();
+  const services = useMemo(() => buildServices(waLinks), [waLinks]);
+
   return (
     <section id="servicios" className={styles.section} data-st>
       <svg
@@ -78,7 +85,7 @@ export function Servicios() {
           <p>Tres áreas donde somos buenos de verdad. Si tu necesidad cae fuera, te lo decimos antes de cotizar.</p>
         </div>
         <div className={styles.grid}>
-          {SERVICES.map((s, i) => (
+          {services.map((s, i) => (
             <ServiceCard key={s.title} {...s} index={i} />
           ))}
         </div>

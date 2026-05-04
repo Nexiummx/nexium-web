@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Barlow, Barlow_Condensed } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import Script from "next/script";
+import { SiteConfigProvider } from "@/components/SiteConfigProvider";
+import { getSiteWaConfig } from "@/lib/wa-server";
 import { SiteSchema } from "./schema";
 import "./globals.css";
 
@@ -88,6 +90,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const waConfig = getSiteWaConfig();
+
   return (
     <html
       lang="es"
@@ -97,13 +101,15 @@ export default function RootLayout({
         <SiteSchema />
       </head>
       <body>
-        <a href="#main" className="skip">
-          Saltar al contenido
-        </a>
+        <SiteConfigProvider value={waConfig}>
+          <a href="#main" className="skip">
+            Saltar al contenido
+          </a>
 
-        {children}
+          {children}
 
-        <Analytics />
+          <Analytics />
+        </SiteConfigProvider>
 
         {GA_ID && (
           <>

@@ -1,10 +1,11 @@
 "use client";
-import { WA_LINKS } from "@/lib/constants";
+import { useSiteWa } from "@/components/SiteConfigProvider";
 import { WaIcon } from "@/components/icons/WaIcon";
 import { ParticleField } from "./ParticleField";
 import styles from "./Hero.module.css";
 
 export function Hero() {
+  const { waLinks } = useSiteWa();
   return (
     <section id="hero" className={styles.section} data-st>
       <div className="bgr" aria-hidden="true" />
@@ -33,7 +34,7 @@ export function Hero() {
               técnicos.
             </p>
             <div className={styles.ctas}>
-              <a href={WA_LINKS.hero} className="btn-p" target="_blank" rel="noopener noreferrer">
+              <a href={waLinks.hero} className="btn-p" target="_blank" rel="noopener noreferrer">
                 <WaIcon /> Hablemos de tu negocio
               </a>
               <a href="#servicios" className="btn-s">

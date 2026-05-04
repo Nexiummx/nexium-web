@@ -1,10 +1,14 @@
+"use client";
+
 import { LogoIcon } from "./icons/LogoIcon";
 import { IgIcon, FbIcon, EmailIcon } from "./icons/SocialIcons";
 import { WaIcon } from "./icons/WaIcon";
-import { EMAIL, IG_URL, FB_URL, WA_LINKS, WA_NUMBER } from "@/lib/constants";
+import { useSiteWa } from "@/components/SiteConfigProvider";
+import { EMAIL, IG_URL, FB_URL } from "@/lib/constants";
 import styles from "./Footer.module.css";
 
 export function Footer() {
+  const { waNumber, waLinks } = useSiteWa();
   return (
     <footer className={styles.footer}>
       <div className={styles.inner}>
@@ -29,7 +33,7 @@ export function Footer() {
             <a href="#servicios">Servicios</a>
             <a href="#como-trabajamos">Cómo trabajamos</a>
             <a href="#faq">FAQ</a>
-            <a href={WA_LINKS.contact} target="_blank" rel="noopener noreferrer">
+            <a href={waLinks.contact} target="_blank" rel="noopener noreferrer">
               Hablemos
             </a>
           </nav>
@@ -41,7 +45,7 @@ export function Footer() {
               <EmailIcon />
               {EMAIL}
             </a>
-            <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer">
+            <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer">
               <WaIcon size={14} />
               WhatsApp
             </a>

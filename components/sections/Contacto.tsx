@@ -1,8 +1,12 @@
-import { WA_LINKS, EMAIL } from "@/lib/constants";
+"use client";
+
+import { useSiteWa } from "@/components/SiteConfigProvider";
+import { EMAIL } from "@/lib/constants";
 import { WaIcon } from "@/components/icons/WaIcon";
 import styles from "./Contacto.module.css";
 
 export function Contacto() {
+  const { waLinks } = useSiteWa();
   return (
     <section id="contacto" className={styles.section} data-st>
       <div className="bgr" aria-hidden="true" />
@@ -18,7 +22,7 @@ export function Contacto() {
         </p>
         <div className={styles.ctas}>
           <a
-            href={WA_LINKS.contact}
+            href={waLinks.contact}
             className="btn-p"
             target="_blank"
             rel="noopener noreferrer"

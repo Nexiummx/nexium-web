@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LogoHorizontal } from "./icons/LogoHorizontal";
 import { MobileMenu } from "./MobileMenu";
-import { WA_LINKS } from "@/lib/constants";
+import { useSiteWa } from "@/components/SiteConfigProvider";
 import styles from "./Header.module.css";
 
 export function Header() {
+  const { waLinks } = useSiteWa();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -32,7 +33,7 @@ export function Header() {
           <a href="#como-trabajamos">Cómo trabajamos</a>
           <a href="#faq">FAQ</a>
           <a
-            href={WA_LINKS.hero}
+            href={waLinks.hero}
             className="btn-n"
             target="_blank"
             rel="noopener noreferrer"
