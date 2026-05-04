@@ -5,14 +5,14 @@ import { getWaNumberFromEnv } from "@/lib/wa-server";
 // Esto ayuda a Google a entender qué es el negocio, dónde está y cómo contactarlo.
 export function SiteSchema() {
   const waNumber = getWaNumberFromEnv();
-  const schema = {
+  const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
     name: "Nexium",
     description:
       "Agencia tech que ayuda a emprendedores y startups mexicanos a digitalizar y escalar su negocio.",
     url: SITE_URL,
-    telephone: `+${waNumber}`,
+    ...(waNumber ? { telephone: `+${waNumber}` } : {}),
     email: EMAIL,
     address: {
       "@type": "PostalAddress",

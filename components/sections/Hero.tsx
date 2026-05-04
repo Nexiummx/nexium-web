@@ -34,9 +34,11 @@ export function Hero() {
               técnicos.
             </p>
             <div className={styles.ctas}>
-              <a href={waLinks.hero} className="btn-p" target="_blank" rel="noopener noreferrer">
-                <WaIcon /> Hablemos de tu negocio
-              </a>
+              {waLinks && (
+                <a href={waLinks.hero} className="btn-p" target="_blank" rel="noopener noreferrer">
+                  <WaIcon /> Hablemos de tu negocio
+                </a>
+              )}
               <a href="#servicios" className="btn-s">
                 Ver servicios ↓
               </a>

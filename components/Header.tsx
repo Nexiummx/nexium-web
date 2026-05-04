@@ -32,15 +32,17 @@ export function Header() {
           <a href="#servicios">Servicios</a>
           <a href="#como-trabajamos">Cómo trabajamos</a>
           <a href="#faq">FAQ</a>
-          <a
-            href={waLinks.hero}
-            className="btn-n"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Hablemos por WhatsApp"
-          >
-            Hablemos →
-          </a>
+          {waLinks && (
+            <a
+              href={waLinks.hero}
+              className="btn-n"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Hablemos por WhatsApp"
+            >
+              Hablemos →
+            </a>
+          )}
         </nav>
 
         <button

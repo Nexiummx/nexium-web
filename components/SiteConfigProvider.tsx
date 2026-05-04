@@ -9,7 +9,7 @@ import type { WaLinks } from "@/lib/wa-links";
 
 export type SiteWaConfig = {
   waNumber: string;
-  waLinks: WaLinks;
+  waLinks: WaLinks | null;
 };
 
 const SiteConfigContext = createContext<SiteWaConfig | null>(null);
@@ -30,8 +30,6 @@ export function SiteConfigProvider({
 
 export function useSiteWa(): SiteWaConfig {
   const ctx = useContext(SiteConfigContext);
-  if (!ctx) {
-    throw new Error("useSiteWa debe usarse dentro de SiteConfigProvider");
-  }
-  return ctx;
+  // Si no hay provider (no debería ocurrir), devuelve config vacía en lugar de romper.
+  return ctx ?? { waNumber: "", waLinks: null };
 }

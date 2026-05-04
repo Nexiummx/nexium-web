@@ -14,6 +14,7 @@ export function normalizeWaDigits(input: string): string {
 /**
  * Número solo desde variables de entorno (nunca hardcodeado en el repo).
  * En local: copia `.env.example` → `.env.local` y define `WA_NUMBER`.
+ * Devuelve string vacío si la variable no está configurada (la app no se rompe).
  */
 export function getWaNumberFromEnv(): string {
   const raw =
@@ -22,14 +23,12 @@ export function getWaNumberFromEnv(): string {
     "";
   const digits = normalizeWaDigits(raw);
   if (digits.length >= 10) return digits;
-
-  throw new Error(
-    "Falta WA_NUMBER o NEXT_PUBLIC_WA_NUMBER (mínimo 10 dígitos, solo números). " +
-      "Copia .env.example a .env.local y rellena WA_NUMBER, o configura la variable en Vercel."
-  );
+  // Variable no configurada: devuelve vacío y los componentes ocultarán el botón de WA.
+  return "";
 }
 
-export function getSiteWaConfig(): { waNumber: string; waLinks: WaLinks } {
+export function getSiteWaConfig(): { waNumber: string; waLinks: WaLinks | null } {
   const waNumber = getWaNumberFromEnv();
+  if (!waNumber) return { waNumber: "", waLinks: null };
   return { waNumber, waLinks: buildWaLinks(waNumber) };
 }

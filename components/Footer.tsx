@@ -33,9 +33,11 @@ export function Footer() {
             <a href="#servicios">Servicios</a>
             <a href="#como-trabajamos">Cómo trabajamos</a>
             <a href="#faq">FAQ</a>
-            <a href={waLinks.contact} target="_blank" rel="noopener noreferrer">
-              Hablemos
-            </a>
+            {waLinks && (
+              <a href={waLinks.contact} target="_blank" rel="noopener noreferrer">
+                Hablemos
+              </a>
+            )}
           </nav>
         </div>
         <div>
@@ -45,10 +47,12 @@ export function Footer() {
               <EmailIcon />
               {EMAIL}
             </a>
-            <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer">
-              <WaIcon size={14} />
-              WhatsApp
-            </a>
+            {waNumber && (
+              <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer">
+                <WaIcon size={14} />
+                WhatsApp
+              </a>
+            )}
           </div>
           <p className={styles.loc}>Durango, México</p>
         </div>

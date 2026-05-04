@@ -33,16 +33,18 @@ export function MobileMenu({ open, onClose }: Props) {
       <a href="#faq" onClick={onClose}>
         FAQ
       </a>
-      <a
-        href={waLinks.hero}
-        className="btn-n"
-        style={{ fontSize: 22, padding: "18px 48px" }}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={onClose}
-      >
-        Hablemos →
-      </a>
+      {waLinks && (
+        <a
+          href={waLinks.hero}
+          className="btn-n"
+          style={{ fontSize: 22, padding: "18px 48px" }}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onClose}
+        >
+          Hablemos →
+        </a>
+      )}
     </nav>
   );
 }

@@ -6,25 +6,25 @@ import { useTilt } from "@/components/lib/useTilt";
 import type { WaLinks } from "@/lib/wa-links";
 import styles from "./Servicios.module.css";
 
-function buildServices(waLinks: WaLinks) {
+function buildServices(waLinks: WaLinks | null) {
   return [
     {
       Icon: IcoWeb,
       title: "Desarrollo web",
       desc: "Landing pages, sitios corporativos y aplicaciones web a medida. Código limpio, carga rápida y diseño que convierte.",
-      href: waLinks.dev,
+      href: waLinks?.dev ?? "#contacto",
     },
     {
       Icon: IcoCons,
       title: "Consultoría de digitalización",
       desc: "Analizamos tus procesos e identificamos qué automatizar primero. Un plan concreto, no un reporte de 80 páginas.",
-      href: waLinks.cons,
+      href: waLinks?.cons ?? "#contacto",
     },
     {
       Icon: IcoIa,
       title: "Integraciones con IA",
       desc: "Integramos IA en tu negocio para automatizar tareas y mejorar la eficiencia. Desde procesos de ventas hasta reportes de inventario.",
-      href: waLinks.saas,
+      href: waLinks?.saas ?? "#contacto",
     },
   ];
 }

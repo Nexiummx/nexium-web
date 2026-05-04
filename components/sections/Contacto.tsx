@@ -20,17 +20,19 @@ export function Contacto() {
         <p className={styles.sub}>
           Una llamada de 30 minutos es suficiente para saber si podemos ayudarte — y si no, te decimos a quién acudir.
         </p>
-        <div className={styles.ctas}>
-          <a
-            href={waLinks.contact}
-            className="btn-p"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Escríbenos por WhatsApp"
-          >
-            <WaIcon size={20} /> Escríbenos por WhatsApp
-          </a>
-        </div>
+        {waLinks && (
+          <div className={styles.ctas}>
+            <a
+              href={waLinks.contact}
+              className="btn-p"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Escríbenos por WhatsApp"
+            >
+              <WaIcon size={20} /> Escríbenos por WhatsApp
+            </a>
+          </div>
+        )}
         <p className={styles.em}>
           o escríbenos a <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
         </p>
