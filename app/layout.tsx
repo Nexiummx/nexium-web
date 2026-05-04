@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Barlow, Barlow_Condensed } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import Script from "next/script";
@@ -90,6 +91,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Obliga a render dinámico: así WA_NUMBER / NEXT_PUBLIC_WA_NUMBER se leen
+  // en cada request en Vercel, no solo en el build (evita quedar pegado al número antiguo).
+  void headers();
+
   const waConfig = getSiteWaConfig();
 
   return (
