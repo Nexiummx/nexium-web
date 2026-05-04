@@ -9,7 +9,6 @@ import {
   resolveVideoConfig,
 } from "@/lib/video/extractMetadata";
 import { validateConfig } from "@/lib/video/presets";
-import { CAPTURE_FPS, SERVERLESS_SCALE } from "@/lib/video/config";
 import type { VideoExportRequest, VideoExportResponse } from "@/lib/video/types";
 
 export const runtime = "nodejs";
@@ -49,16 +48,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const framesDir = path.join(workDir, "frames");
     const outputPath = path.join(workDir, `${config.filename}.mp4`);
 
-    const isVercel = Boolean(process.env.VERCEL);
-    const captureFps = Math.min(CAPTURE_FPS, config.fps);
-    const captureW = Math.round(config.width * (isVercel ? SERVERLESS_SCALE : 1));
-    const captureH = Math.round(config.height * (isVercel ? SERVERLESS_SCALE : 1));
-    const totalFrames = Math.round(config.durationSeconds * captureFps);
-
     console.log(
-      `[video-export] Capturing: ${config.durationSeconds}s @ ${captureFps}fps ` +
-      `(${captureW}×${captureH}) → encode a ${config.fps}fps (${config.width}×${config.height}) · ` +
-      `totalFrames=${totalFrames} isVercel=${isVercel}`
+      `[video-export] Capturing: ${config.durationSeconds}s @ ${config.fps}fps (${config.width}×${config.height})`
     );
 
     const frames = await captureFrames({
@@ -75,7 +66,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       framesDir,
       outputPath,
       fps: config.fps,
-      captureFps,
       width: config.width,
       height: config.height,
     });

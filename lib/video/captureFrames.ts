@@ -1,42 +1,28 @@
 import path from "path";
 import fs from "fs/promises";
 import type { CaptureFramesOptions } from "./types";
-import { CAPTURE_FPS, SERVERLESS_SCALE } from "./config";
 
 /**
- * Lanza Puppeteer en modo serverless-compatible y captura N frames
- * de una página HTML animada.
+ * Lanza Puppeteer localmente y captura frames PNG frame a frame.
+ * Diseñado para correr en local con el script render-gsap-video.mjs.
+ * No está pensado para Vercel serverless (60s es insuficiente para videos de calidad).
  *
- * Optimizaciones para Vercel Hobby (60s timeout):
- * - Captura a CAPTURE_FPS (ej. 10fps) en vez del FPS final del video.
- *   FFmpeg interpola al FPS objetivo al encodear → 3x menos screenshots.
- * - En Vercel: viewport a 50% de la resolución final → 4x menos píxeles.
- *   FFmpeg reescala al tamaño correcto al encodear.
- * - Screenshots en JPEG en vez de PNG → escritura a disco 2-3x más rápida.
+ * Estrategia:
+ * 1. Carga el HTML vía data URL
+ * 2. Espera fonts y paint inicial
+ * 3. Detecta motor de animación (GSAP o Web Animations API)
+ * 4. Para cada frame: avanza el tiempo, fuerza paint, screenshot PNG
  */
 export async function captureFrames(
   options: CaptureFramesOptions
 ): Promise<string[]> {
   const { html, durationSeconds, fps, width, height, outputDir } = options;
-
-  const isVercel = Boolean(process.env.VERCEL);
-
-  // En Vercel capturamos a menos FPS y FFmpeg interpola al final
-  const captureFps = Math.min(CAPTURE_FPS, fps);
-  const totalFrames = Math.round(durationSeconds * captureFps);
-  const frameDurationMs = 1000 / captureFps;
-
-  // En Vercel usamos resolución reducida; FFmpeg reescala al encodear
-  const scale = isVercel ? SERVERLESS_SCALE : 1;
-  const captureWidth = Math.round(width * scale);
-  const captureHeight = Math.round(height * scale);
-
-  console.log(
-    `[captureFrames] captureFps=${captureFps} totalFrames=${totalFrames} ` +
-    `viewport=${captureWidth}×${captureHeight} (escala=${scale}) isVercel=${isVercel}`
-  );
+  const totalFrames = Math.round(durationSeconds * fps);
+  const frameDurationMs = 1000 / fps;
 
   await fs.mkdir(outputDir, { recursive: true });
+
+  const isVercel = Boolean(process.env.VERCEL);
 
   let browser;
 
@@ -45,7 +31,7 @@ export async function captureFrames(
     const puppeteerCore = (await import("puppeteer-core")).default;
     browser = await puppeteerCore.launch({
       args: chromium.args,
-      defaultViewport: { width: captureWidth, height: captureHeight, deviceScaleFactor: 1 },
+      defaultViewport: { width, height, deviceScaleFactor: 1 },
       executablePath: await chromium.executablePath(),
       headless: true,
     });
@@ -53,8 +39,14 @@ export async function captureFrames(
     const puppeteer = (await import("puppeteer")).default;
     browser = await puppeteer.launch({
       headless: true,
-      defaultViewport: { width: captureWidth, height: captureHeight, deviceScaleFactor: 1 },
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      defaultViewport: { width, height, deviceScaleFactor: 1 },
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-web-security",
+        "--font-render-hinting=none",
+      ],
     });
   }
 
@@ -68,8 +60,8 @@ export async function captureFrames(
 
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
 
-    // Buffer para que GSAP y CSS estén pintados antes de detectar el motor
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Buffer para que GSAP y CSS terminen de inicializar
+    await new Promise((resolve) => setTimeout(resolve, 600));
 
     const engineInfo = await page.evaluate(() => {
       const GSAP_NAMES = ["tl", "videoTimeline", "timeline", "masterTl", "mainTl", "tl1", "gsapTl", "anim"];
@@ -107,12 +99,13 @@ export async function captureFrames(
     });
 
     console.log(
-      `[captureFrames] Motor: ${engineInfo.engine.toUpperCase()} · duración detectada: ${engineInfo.duration.toFixed(2)}s`
+      `[captureFrames] Motor: ${engineInfo.engine.toUpperCase()} · duración: ${engineInfo.duration.toFixed(2)}s · ` +
+      `${totalFrames} frames @ ${fps}fps · ${width}×${height}`
     );
 
     for (let i = 0; i < totalFrames; i++) {
       const currentTimeMs = i * frameDurationMs;
-      const currentTimeSec = i / captureFps;
+      const currentTimeSec = i / fps;
 
       if (engineInfo.engine === "gsap") {
         await page.evaluate(
@@ -139,23 +132,21 @@ export async function captureFrames(
         })
       );
 
-      // JPEG es 2-3x más rápido de escribir que PNG; suficiente para social media
       const framePath = path.join(
         outputDir,
-        `frame-${String(i).padStart(5, "0")}.jpg`
+        `frame-${String(i).padStart(5, "0")}.png`
       );
 
       await page.screenshot({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         path: framePath as any,
-        type: "jpeg",
-        quality: 90,
+        type: "png",
         omitBackground: false,
       });
 
       framePaths.push(framePath);
 
-      if (i % 10 === 0) {
+      if (i % 30 === 0) {
         console.log(`[captureFrames] Frame ${i + 1}/${totalFrames}`);
       }
     }

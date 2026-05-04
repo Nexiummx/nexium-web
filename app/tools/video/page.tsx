@@ -12,15 +12,6 @@ import styles from "./video.module.css";
 /* ── Constantes ─────────────────────────────────────────────────────────── */
 const ACCESS_TOKEN = "nexium-slides-2026";
 
-const EXPORT_MSGS = [
-  "Iniciando Chromium…",
-  "Cargando fuentes y CSS…",
-  "Capturando frames…",
-  "Capturando frames…",
-  "Codificando MP4 con ffmpeg…",
-  "Subiendo a Blob storage…",
-];
-
 /* ── Utilidades ─────────────────────────────────────────────────────────── */
 function formatTime(s: number): string {
   const m = Math.floor(s / 60);
@@ -203,14 +194,11 @@ export default function VideoToolPage() {
   const [previewHtml, setPreviewHtml] = useState(""); // lo que está en el iframe
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState({ cur: 0, dur: 0 });
-  const [exporting, setExporting] = useState(false);
-  const [exportMsgIdx, setExportMsgIdx] = useState(0);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [error, setError] = useState("");
-  const [successUrl, setSuccessUrl] = useState("");
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (sessionStorage.getItem("nxt_tool_unlocked") === "1") setUnlocked(true);
@@ -231,7 +219,6 @@ export default function VideoToolPage() {
   useEffect(() => {
     return () => {
       if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
-      if (successTimerRef.current) clearTimeout(successTimerRef.current);
     };
   }, []);
 
@@ -282,74 +269,7 @@ export default function VideoToolPage() {
     errorTimerRef.current = setTimeout(() => setError(""), 6000);
   };
 
-  const showSuccess = (url: string) => {
-    setSuccessUrl(url);
-    if (successTimerRef.current) clearTimeout(successTimerRef.current);
-    successTimerRef.current = setTimeout(() => setSuccessUrl(""), 12000);
-  };
-
-  const handleExport = useCallback(async () => {
-    if (!html.trim() || exporting) return;
-    setExporting(true);
-    setExportMsgIdx(0);
-    setError("");
-    setSuccessUrl("");
-
-    const msgInterval = setInterval(() => {
-      setExportMsgIdx((i) => Math.min(i + 1, EXPORT_MSGS.length - 1));
-    }, 6000);
-
-    try {
-      const res = await fetch("/api/export/video", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html }),
-      });
-
-      if (!res.ok) {
-        // Intentar leer el error como JSON
-        const data = await res.json().catch(() => ({})) as { error?: string };
-        throw new Error(data.error ?? `Error ${res.status}`);
-      }
-
-      const contentType = res.headers.get("Content-Type") ?? "";
-
-      if (contentType.includes("video/mp4")) {
-        // Modo local: respuesta binaria directa → crear object URL y descargar
-        const filename =
-          res.headers.get("X-Nexium-Filename") ?? "video.mp4";
-        const blob = await res.blob();
-        const objectUrl = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = objectUrl;
-        a.download = filename;
-        a.click();
-
-        // Revocar después de un momento
-        setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
-        showSuccess(objectUrl);
-      } else {
-        // Modo Vercel: respuesta JSON con URL de Blob
-        const data = await res.json() as { success: boolean; videoUrl?: string; filename?: string; error?: string };
-        if (!data.success) throw new Error(data.error ?? "Error desconocido");
-
-        const a = document.createElement("a");
-        a.href = data.videoUrl!;
-        a.download = data.filename ?? "video.mp4";
-        a.target = "_blank";
-        a.click();
-
-        showSuccess(data.videoUrl!);
-      }
-    } catch (e) {
-      showError(e instanceof Error ? e.message : "Error al exportar el video.");
-    } finally {
-      clearInterval(msgInterval);
-      setExporting(false);
-      setExportMsgIdx(0);
-    }
-  }, [html, exporting]);
+  void showError; // usado por futuros errores de preview
 
   // Dimensiones para el iframe con aspect ratio del preset detectado por meta tag
   const iframeSize = useMemo(() => {
@@ -405,17 +325,10 @@ export default function VideoToolPage() {
           </button>
           <button
             className={styles.btnPrimary}
-            onClick={handleExport}
-            disabled={!html.trim() || exporting}
+            onClick={() => setShowExportModal(true)}
+            disabled={!html.trim()}
           >
-            {exporting ? (
-              <>
-                <span className={styles.spinner} />
-                {EXPORT_MSGS[exportMsgIdx]}
-              </>
-            ) : (
-              "↓ Exportar MP4"
-            )}
+            ↓ Exportar MP4
           </button>
         </div>
       </header>
@@ -556,50 +469,77 @@ export default function VideoToolPage() {
 
           {/* Barra de exportación */}
           <div className={styles.exportBar}>
-            {exporting ? (
-              <span className={styles.exportProgress}>
-                <span className={styles.spinner} />
-                {EXPORT_MSGS[exportMsgIdx]}
-              </span>
-            ) : (
-              <span className={styles.exportInfo}>
-                <span className={styles.exportInfoStrong}>Exportar MP4 </span>
-                — captura frames con Chromium headless + ffmpeg H.264.{" "}
-                El HTML se auto-configura con meta tags{" "}
-                <code style={{ fontSize: 11, opacity: 0.7 }}>nexium:type</code>,{" "}
-                <code style={{ fontSize: 11, opacity: 0.7 }}>nexium:duration</code>,{" "}
-                <code style={{ fontSize: 11, opacity: 0.7 }}>nexium:fps</code>.
-              </span>
-            )}
+            <span className={styles.exportInfo}>
+              <span className={styles.exportInfoStrong}>Calidad máxima · local</span>
+              {" — "}guarda el HTML y corre el script desde terminal.{" "}
+              <code style={{ fontSize: 11, opacity: 0.7 }}>60fps · 1080px · CRF 18</code>
+            </span>
             <button
               className={styles.btnPrimary}
-              onClick={handleExport}
-              disabled={!html.trim() || exporting}
+              onClick={() => setShowExportModal(true)}
+              disabled={!html.trim()}
               style={{ flexShrink: 0 }}
             >
-              {exporting ? "Exportando…" : "↓ Exportar MP4"}
+              ↓ Exportar MP4
             </button>
           </div>
         </div>
       </div>
 
-      {/* ── Toasts ── */}
+      {/* ── Toast de error ── */}
       {error && (
         <div className={styles.errorToast}>
           ⚠ {error}
         </div>
       )}
-      {successUrl && (
-        <div className={styles.successToast}>
-          ✓ Video generado.{" "}
-          <a
-            href={successUrl}
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "inherit", textDecoration: "underline" }}
-          >
-            Abrir en browser
-          </a>
+
+      {/* ── Modal: instrucciones de exportación local ── */}
+      {showExportModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowExportModal(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <span>Exportar MP4 · Calidad máxima</span>
+              <button className={styles.modalClose} onClick={() => setShowExportModal(false)}>✕</button>
+            </div>
+            <div className={styles.modalBody}>
+              <p className={styles.modalText}>
+                La exportación corre <strong>en tu máquina</strong> para garantizar calidad completa:{" "}
+                <strong>60fps · 1080×1920 · CRF 18</strong> sin límites de tiempo.
+              </p>
+              <ol className={styles.modalSteps}>
+                <li>
+                  Guarda tu HTML en un archivo, por ejemplo:{" "}
+                  <code className={styles.inlineCode}>flyer.html</code>
+                </li>
+                <li>
+                  Abre una terminal en la raíz del proyecto{" "}
+                  <code className={styles.inlineCode}>nexium-web/</code>
+                </li>
+                <li>Ejecuta el script:</li>
+              </ol>
+              <pre className={styles.codeBlock}>{`node scripts/render-gsap-video.mjs flyer.html \\
+  --fps 60 \\
+  --duration 12 \\
+  --width 1080 --height 1920 \\
+  --output mi-video`}</pre>
+              <p className={styles.modalNote}>
+                El script detecta automáticamente GSAP (<code className={styles.inlineCode}>window.tl</code>,{" "}
+                <code className={styles.inlineCode}>window.videoTimeline</code>, etc.) o CSS animations puras.
+                El MP4 se guarda en la carpeta del proyecto.
+              </p>
+              <details className={styles.modalDetails}>
+                <summary>Ver todas las opciones del script</summary>
+                <pre className={styles.codeBlock}>{`--fps <n>          FPS del video (default: 30)
+--duration <n>     Duración en segundos
+--width <n>        Ancho del viewport (default: 1080)
+--height <n>       Alto del viewport (default: 1920)
+--output <nombre>  Nombre del archivo de salida
+--crf <n>          Calidad H.264 (default: 18 — lossless)
+--preset <s>       Velocidad ffmpeg: ultrafast..veryslow
+--keep-frames      No borrar los PNG temporales`}</pre>
+              </details>
+            </div>
+          </div>
         </div>
       )}
     </div>

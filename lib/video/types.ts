@@ -44,11 +44,7 @@ export interface CaptureFramesOptions {
 export interface EncodeVideoOptions {
   framesDir: string;
   outputPath: string;
-  /** FPS final del video de salida */
   fps: number;
-  /** FPS al que se capturaron los frames (puede ser menor que fps) */
-  captureFps?: number;
-  /** Dimensiones finales del video de salida */
   width: number;
   height: number;
 }

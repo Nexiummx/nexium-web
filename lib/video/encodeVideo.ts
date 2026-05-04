@@ -7,40 +7,29 @@ import { VIDEO_QUALITY } from "./config";
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 /**
- * Ensambla frames JPEG/PNG numerados en un MP4 H.264.
+ * Ensambla frames PNG numerados (frame-00000.png, frame-00001.png…)
+ * en un MP4 H.264 de calidad máxima.
  *
- * Soporta captura a menor FPS que el video final (captureFps < fps):
- * FFmpeg duplica frames para alcanzar el FPS de salida, sin necesidad
- * de capturas extra en Puppeteer.
- *
- * También reescala al tamaño final correcto, ya que la captura puede
- * haberse hecho a resolución reducida para ahorrar tiempo en serverless.
+ * Nota: los dos filtros de video (scale + pad) se combinan en una sola
+ * instrucción -vf para evitar que ffmpeg rechace opciones duplicadas.
  */
 export async function encodeVideo(options: EncodeVideoOptions): Promise<void> {
-  const { framesDir, outputPath, fps, captureFps, width, height } = options;
+  const { framesDir, outputPath, fps, width, height } = options;
 
-  // Detecta si los frames son JPEG o PNG según lo que haya en disco
-  // Por convención: siempre usamos .jpg desde captureFrames optimizado
-  const inputPattern = path.join(framesDir, "frame-%05d.jpg");
-
-  // FPS de entrada = FPS al que se capturaron los frames
-  const inputFps = captureFps ?? fps;
+  const inputPattern = path.join(framesDir, "frame-%05d.png");
 
   // Asegurar dimensiones pares (requerido por H.264 yuv420p)
   const safeW = width % 2 === 0 ? width : width + 1;
   const safeH = height % 2 === 0 ? height : height + 1;
 
-  // scale reescala al tamaño final, pad asegura dimensiones pares
   const vf = `scale=${safeW}:${safeH}:flags=lanczos,pad=ceil(iw/2)*2:ceil(ih/2)*2`;
 
-  console.log(
-    `[encodeVideo] inputFps=${inputFps} outputFps=${fps} tamaño=${safeW}×${safeH} preset=${VIDEO_QUALITY.PRESET}`
-  );
+  console.log(`[encodeVideo] ${fps}fps · ${safeW}×${safeH} · CRF ${VIDEO_QUALITY.CRF} · preset ${VIDEO_QUALITY.PRESET}`);
 
   return new Promise((resolve, reject) => {
     ffmpeg()
       .input(inputPattern)
-      .inputFPS(inputFps)
+      .inputFPS(fps)
       .videoCodec("libx264")
       .outputOptions([
         `-pix_fmt ${VIDEO_QUALITY.PIX_FMT}`,
