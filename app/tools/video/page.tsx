@@ -12,13 +12,14 @@ import styles from "./video.module.css";
 /* ── Constantes ─────────────────────────────────────────────────────────── */
 const ACCESS_TOKEN = "nexium-slides-2026";
 
-const EXPORT_MSGS = [
-  "Iniciando Chromium…",
-  "Cargando fuentes y CSS…",
-  "Capturando frames…",
-  "Capturando frames…",
-  "Codificando MP4 con ffmpeg…",
-  "Finalizando…",
+/** Fases de exportación: [mensaje, % al llegar a esta fase] */
+const EXPORT_PHASES: [string, number][] = [
+  ["Iniciando Chromium…",      8],
+  ["Cargando fuentes y CSS…", 18],
+  ["Capturando frames…",      30],
+  ["Capturando frames…",      62],
+  ["Codificando con ffmpeg…", 88],
+  ["Finalizando…",            96],
 ];
 
 /** En Vercel el hostname termina en vercel.app o es el dominio de producción */
@@ -212,7 +213,8 @@ export default function VideoToolPage() {
   const [progress, setProgress] = useState({ cur: 0, dur: 0 });
   const [showExportModal, setShowExportModal] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [exportMsgIdx, setExportMsgIdx] = useState(0);
+  const [exportPhase, setExportPhase] = useState(0);   // índice en EXPORT_PHASES
+  const [exportPct, setExportPct] = useState(0);        // 0-100
   const [successMsg, setSuccessMsg] = useState("");
   const [error, setError] = useState("");
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -311,12 +313,17 @@ export default function VideoToolPage() {
 
     // En local: exportar directo via API
     setExporting(true);
-    setExportMsgIdx(0);
+    setExportPhase(0);
+    setExportPct(EXPORT_PHASES[0][1]);
     setError("");
     setSuccessMsg("");
 
-    const msgInterval = setInterval(() => {
-      setExportMsgIdx((i) => Math.min(i + 1, EXPORT_MSGS.length - 1));
+    // Avanza automáticamente fase a fase cada ~8s mientras el fetch corre
+    let phaseIdx = 0;
+    const phaseTimer = setInterval(() => {
+      phaseIdx = Math.min(phaseIdx + 1, EXPORT_PHASES.length - 1);
+      setExportPhase(phaseIdx);
+      setExportPct(EXPORT_PHASES[phaseIdx][1]);
     }, 8000);
 
     try {
@@ -332,6 +339,9 @@ export default function VideoToolPage() {
       }
 
       const contentType = res.headers.get("Content-Type") ?? "";
+
+      // Llegar a 100% justo antes de la descarga
+      setExportPct(100);
 
       if (contentType.includes("video/mp4")) {
         const filename = res.headers.get("X-Nexium-Filename") ?? "video.mp4";
@@ -356,9 +366,10 @@ export default function VideoToolPage() {
     } catch (e) {
       showError(e instanceof Error ? e.message : "Error al exportar el video.");
     } finally {
-      clearInterval(msgInterval);
+      clearInterval(phaseTimer);
       setExporting(false);
-      setExportMsgIdx(0);
+      setExportPhase(0);
+      setExportPct(0);
     }
   }, [html, exporting]);
 
@@ -420,7 +431,7 @@ export default function VideoToolPage() {
             disabled={!html.trim() || exporting}
           >
             {exporting ? (
-              <><span className={styles.spinner} />{EXPORT_MSGS[exportMsgIdx]}</>
+              <><span className={styles.spinner} />{EXPORT_PHASES[exportPhase][0]}</>
             ) : "↓ Exportar MP4"}
           </button>
         </div>
@@ -563,10 +574,20 @@ export default function VideoToolPage() {
           {/* Barra de exportación */}
           <div className={styles.exportBar}>
             {exporting ? (
-              <span className={styles.exportProgress}>
-                <span className={styles.spinner} />
-                {EXPORT_MSGS[exportMsgIdx]}
-              </span>
+              <div className={styles.exportProgressWrap}>
+                <div className={styles.exportProgressRow}>
+                  <span className={styles.exportProgressLabel}>
+                    {EXPORT_PHASES[exportPhase][0]}
+                  </span>
+                  <span className={styles.exportProgressPct}>{exportPct}%</span>
+                </div>
+                <div className={styles.exportProgressTrack}>
+                  <div
+                    className={styles.exportProgressFill}
+                    style={{ width: `${exportPct}%` }}
+                  />
+                </div>
+              </div>
             ) : (
               <span className={styles.exportInfo}>
                 <span className={styles.exportInfoStrong}>Exportar MP4 </span>
