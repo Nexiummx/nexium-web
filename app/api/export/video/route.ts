@@ -12,7 +12,7 @@ import { validateConfig } from "@/lib/video/presets";
 import type { VideoExportRequest, VideoExportResponse } from "@/lib/video/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 300;
+export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 const USE_BLOB = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
