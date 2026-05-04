@@ -8,31 +8,31 @@ export const PRESETS: Record<PresetType, PresetConfig> = {
     width: 1080,
     height: 1920,
     durationSeconds: 12,
-    fps: 30,
+    fps: 60,
   },
   reel: {
     width: 1080,
     height: 1920,
     durationSeconds: 15,
-    fps: 30,
+    fps: 60,
   },
   square: {
     width: 1080,
     height: 1080,
     durationSeconds: 6,
-    fps: 30,
+    fps: 60,
   },
   landscape: {
     width: 1920,
     height: 1080,
     durationSeconds: 10,
-    fps: 30,
+    fps: 60,
   },
   tiktok: {
     width: 1080,
     height: 1920,
     durationSeconds: 15,
-    fps: 30,
+    fps: 60,
   },
 };
 

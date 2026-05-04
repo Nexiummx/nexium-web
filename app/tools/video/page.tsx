@@ -454,7 +454,7 @@ export default function VideoToolPage() {
             className={styles.textarea}
             value={html}
             onChange={(e) => setHtml(e.target.value)}
-            placeholder={`Pega aquí tu HTML animado.\n\nEl video se auto-configura con meta tags:\n\n<meta name="nexium:type" content="story">\n<meta name="nexium:duration" content="12">\n<meta name="nexium:fps" content="30">\n\nPresets: story · reel · square · landscape · tiktok`}
+            placeholder={`Pega aquí tu HTML animado.\n\nEl video se auto-configura con meta tags:\n\n<meta name="nexium:type" content="story">\n<meta name="nexium:duration" content="12">\n<meta name="nexium:fps" content="60">\n\nPresets: story · reel · square · landscape · tiktok`}
             spellCheck={false}
             autoCorrect="off"
             autoCapitalize="off"
