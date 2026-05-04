@@ -1,7 +1,9 @@
 // Single source of truth para todos los links y datos de contacto.
-// Cambiar el número de WhatsApp aquí lo actualiza en todo el sitio.
+// El número se lee de NEXT_PUBLIC_WA_NUMBER (env var) con fallback al valor
+// hardcodeado — así funciona en local sin .env y en Vercel con la variable configurada.
 
-export const WA_NUMBER = "MX_WA_REDACTED"; // formato: 52 + lada + número, sin +
+export const WA_NUMBER =
+  process.env.NEXT_PUBLIC_WA_NUMBER ?? "MX_WA_REDACTED"; // formato: 52 + lada + número, sin +
 
 const wa = (msg: string) =>
   `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
