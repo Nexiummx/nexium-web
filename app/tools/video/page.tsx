@@ -12,6 +12,22 @@ import styles from "./video.module.css";
 /* ── Constantes ─────────────────────────────────────────────────────────── */
 const ACCESS_TOKEN = "nexium-slides-2026";
 
+const EXPORT_MSGS = [
+  "Iniciando Chromium…",
+  "Cargando fuentes y CSS…",
+  "Capturando frames…",
+  "Capturando frames…",
+  "Codificando MP4 con ffmpeg…",
+  "Finalizando…",
+];
+
+/** En Vercel el hostname termina en vercel.app o es el dominio de producción */
+const isVercelEnv = () =>
+  typeof window !== "undefined" &&
+  (window.location.hostname.endsWith(".vercel.app") ||
+    window.location.hostname === "nexiummx.com" ||
+    window.location.hostname === "www.nexiummx.com");
+
 /* ── Utilidades ─────────────────────────────────────────────────────────── */
 function formatTime(s: number): string {
   const m = Math.floor(s / 60);
@@ -195,10 +211,14 @@ export default function VideoToolPage() {
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState({ cur: 0, dur: 0 });
   const [showExportModal, setShowExportModal] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportMsgIdx, setExportMsgIdx] = useState(0);
+  const [successMsg, setSuccessMsg] = useState("");
   const [error, setError] = useState("");
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (sessionStorage.getItem("nxt_tool_unlocked") === "1") setUnlocked(true);
@@ -219,6 +239,7 @@ export default function VideoToolPage() {
   useEffect(() => {
     return () => {
       if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
     };
   }, []);
 
@@ -266,10 +287,80 @@ export default function VideoToolPage() {
   const showError = (msg: string) => {
     setError(msg);
     if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
-    errorTimerRef.current = setTimeout(() => setError(""), 6000);
+    errorTimerRef.current = setTimeout(() => setError(""), 7000);
   };
 
-  void showError; // usado por futuros errores de preview
+  const showSuccess = (msg: string) => {
+    setSuccessMsg(msg);
+    if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    successTimerRef.current = setTimeout(() => setSuccessMsg(""), 10000);
+  };
+
+  /**
+   * En local: llama a /api/export/video y descarga el MP4 directamente.
+   * En Vercel: abre el modal con las instrucciones del script local.
+   */
+  const handleExport = useCallback(async () => {
+    if (!html.trim() || exporting) return;
+
+    // En Vercel: mostrar modal con instrucciones
+    if (isVercelEnv()) {
+      setShowExportModal(true);
+      return;
+    }
+
+    // En local: exportar directo via API
+    setExporting(true);
+    setExportMsgIdx(0);
+    setError("");
+    setSuccessMsg("");
+
+    const msgInterval = setInterval(() => {
+      setExportMsgIdx((i) => Math.min(i + 1, EXPORT_MSGS.length - 1));
+    }, 8000);
+
+    try {
+      const res = await fetch("/api/export/video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(data.error ?? `Error ${res.status}`);
+      }
+
+      const contentType = res.headers.get("Content-Type") ?? "";
+
+      if (contentType.includes("video/mp4")) {
+        const filename = res.headers.get("X-Nexium-Filename") ?? "video.mp4";
+        const blob = await res.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = filename;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
+        showSuccess(`✓ Descargado: ${filename}`);
+      } else {
+        const data = await res.json() as { success: boolean; videoUrl?: string; filename?: string; error?: string };
+        if (!data.success) throw new Error(data.error ?? "Error desconocido");
+        const a = document.createElement("a");
+        a.href = data.videoUrl!;
+        a.download = data.filename ?? "video.mp4";
+        a.target = "_blank";
+        a.click();
+        showSuccess(`✓ Video listo: ${data.filename}`);
+      }
+    } catch (e) {
+      showError(e instanceof Error ? e.message : "Error al exportar el video.");
+    } finally {
+      clearInterval(msgInterval);
+      setExporting(false);
+      setExportMsgIdx(0);
+    }
+  }, [html, exporting]);
 
   // Dimensiones para el iframe con aspect ratio del preset detectado por meta tag
   const iframeSize = useMemo(() => {
@@ -325,10 +416,12 @@ export default function VideoToolPage() {
           </button>
           <button
             className={styles.btnPrimary}
-            onClick={() => setShowExportModal(true)}
-            disabled={!html.trim()}
+            onClick={handleExport}
+            disabled={!html.trim() || exporting}
           >
-            ↓ Exportar MP4
+            {exporting ? (
+              <><span className={styles.spinner} />{EXPORT_MSGS[exportMsgIdx]}</>
+            ) : "↓ Exportar MP4"}
           </button>
         </div>
       </header>
@@ -469,28 +562,35 @@ export default function VideoToolPage() {
 
           {/* Barra de exportación */}
           <div className={styles.exportBar}>
-            <span className={styles.exportInfo}>
-              <span className={styles.exportInfoStrong}>Calidad máxima · local</span>
-              {" — "}guarda el HTML y corre el script desde terminal.{" "}
-              <code style={{ fontSize: 11, opacity: 0.7 }}>60fps · 1080px · CRF 18</code>
-            </span>
+            {exporting ? (
+              <span className={styles.exportProgress}>
+                <span className={styles.spinner} />
+                {EXPORT_MSGS[exportMsgIdx]}
+              </span>
+            ) : (
+              <span className={styles.exportInfo}>
+                <span className={styles.exportInfoStrong}>Exportar MP4 </span>
+                — Chromium headless + ffmpeg H.264 · CRF 18 · resolución completa
+              </span>
+            )}
             <button
               className={styles.btnPrimary}
-              onClick={() => setShowExportModal(true)}
-              disabled={!html.trim()}
+              onClick={handleExport}
+              disabled={!html.trim() || exporting}
               style={{ flexShrink: 0 }}
             >
-              ↓ Exportar MP4
+              {exporting ? "Exportando…" : "↓ Exportar MP4"}
             </button>
           </div>
         </div>
       </div>
 
-      {/* ── Toast de error ── */}
+      {/* ── Toasts ── */}
       {error && (
-        <div className={styles.errorToast}>
-          ⚠ {error}
-        </div>
+        <div className={styles.errorToast}>⚠ {error}</div>
+      )}
+      {successMsg && (
+        <div className={styles.successToast}>{successMsg}</div>
       )}
 
       {/* ── Modal: instrucciones de exportación local ── */}
