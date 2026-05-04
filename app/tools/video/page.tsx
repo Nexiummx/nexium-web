@@ -43,7 +43,7 @@ function injectControlScript(html: string): string {
 <script>
 (function() {
   /* ── Detectar motor de animación ── */
-  var GSAP_NAMES = ['tl', 'timeline', 'masterTl', 'mainTl', 'tl1'];
+  var GSAP_NAMES = ['tl', 'videoTimeline', 'timeline', 'masterTl', 'mainTl', 'tl1', 'gsapTl', 'anim'];
   var gsapTl = null;
 
   function findGsapTl() {
@@ -121,22 +121,30 @@ function injectControlScript(html: string): string {
   /* ── Inicializar cuando el DOM esté listo ── */
   function init() {
     gsapTl = findGsapTl();
+    if (gsapTl) {
+      // Si la timeline fue creada con paused:true, arrancarla automáticamente
+      if (gsapTl.paused && gsapTl.paused()) gsapTl.play();
+    }
     startTick();
-    // Re-intentar detectar GSAP si se cargó de forma asíncrona
+    // Re-intentar detectar GSAP si el script se ejecutó después del DOMContentLoaded
     if (!gsapTl) {
-      setTimeout(function() {
-        gsapTl = findGsapTl();
-      }, 500);
-      setTimeout(function() {
-        gsapTl = findGsapTl();
-      }, 1500);
+      var attempts = [200, 500, 1000, 2000];
+      attempts.forEach(function(delay) {
+        setTimeout(function() {
+          if (!gsapTl) {
+            gsapTl = findGsapTl();
+            if (gsapTl && gsapTl.paused && gsapTl.paused()) gsapTl.play();
+          }
+        }, delay);
+      });
     }
   }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
-    init();
+    // DOM ya listo pero GSAP puede no haber ejecutado su script aún
+    setTimeout(init, 0);
   }
 })();
 </script>`;

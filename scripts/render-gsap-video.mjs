@@ -179,7 +179,7 @@ async function main() {
   const gsapInfo = await page.evaluate(() => {
     // Buscar la timeline en window.tl (convención estándar)
     // También intentar window.timeline, window.masterTl como fallbacks
-    const candidates = ["tl", "timeline", "masterTl", "mainTl", "tl1"];
+    const candidates = ["tl", "videoTimeline", "timeline", "masterTl", "mainTl", "tl1", "gsapTl", "anim"];
     let found = null;
 
     for (const name of candidates) {

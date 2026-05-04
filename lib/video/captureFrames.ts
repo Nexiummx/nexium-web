@@ -59,7 +59,7 @@ export async function captureFrames(
 
     // Detectar motor de animación y pausar al frame 0
     const engineInfo = await page.evaluate(() => {
-      const GSAP_NAMES = ["tl", "timeline", "masterTl", "mainTl", "tl1"];
+      const GSAP_NAMES = ["tl", "videoTimeline", "timeline", "masterTl", "mainTl", "tl1", "gsapTl", "anim"];
       let gsapName: string | null = null;
 
       for (const name of GSAP_NAMES) {
