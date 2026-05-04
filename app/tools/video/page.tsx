@@ -29,47 +29,115 @@ function formatTime(s: number): string {
 }
 
 /**
- * Inyecta en el HTML un script que escucha mensajes del padre (play/pause/restart)
- * y los aplica sobre las animaciones CSS de la página via Web Animations API.
+ * Inyecta en el HTML un script de control universal.
+ * Detecta automáticamente si el HTML usa GSAP o CSS animations puras:
+ *
+ * - GSAP (window.tl / window.timeline / etc.) → tl.pause() / tl.seek() / tl.play()
+ * - CSS puro → Web Animations API (getAnimations())
+ *
+ * Ambos modos son completamente transparentes: los botones del panel
+ * funcionan igual sin importar qué stack de animación use el HTML.
  */
 function injectControlScript(html: string): string {
   const script = `
 <script>
 (function() {
-  function applyToAnims(fn) {
-    document.getAnimations().forEach(fn);
+  /* ── Detectar motor de animación ── */
+  var GSAP_NAMES = ['tl', 'timeline', 'masterTl', 'mainTl', 'tl1'];
+  var gsapTl = null;
+
+  function findGsapTl() {
+    for (var i = 0; i < GSAP_NAMES.length; i++) {
+      var candidate = window[GSAP_NAMES[i]];
+      if (candidate && typeof candidate.pause === 'function' && typeof candidate.seek === 'function') {
+        return candidate;
+      }
+    }
+    // Fallback: globalTimeline de GSAP
+    if (window.gsap && window.gsap.globalTimeline) return window.gsap.globalTimeline;
+    return null;
   }
+
+  /* ── Operaciones GSAP ── */
+  function gsapPause()   { gsapTl.pause(); }
+  function gsapPlay()    { gsapTl.play(); }
+  function gsapRestart() { gsapTl.seek(0, false); gsapTl.play(); }
+  function gsapSeek(sec) { gsapTl.seek(sec, false); }
+
+  /* ── Operaciones Web Animations API ── */
+  function cssAnims() { return document.getAnimations(); }
+  function cssPause()   { cssAnims().forEach(function(a){ a.pause(); }); }
+  function cssPlay()    { cssAnims().forEach(function(a){ a.play(); }); }
+  function cssRestart() { cssAnims().forEach(function(a){ a.cancel(); a.play(); }); }
+  function cssSeek(ms)  { cssAnims().forEach(function(a){ a.currentTime = ms; }); }
+
+  /* ── Dispatcher según motor ── */
+  function dispatch(cmd, data) {
+    if (gsapTl) {
+      if (cmd === 'pause')   gsapPause();
+      if (cmd === 'play')    gsapPlay();
+      if (cmd === 'restart') gsapRestart();
+      if (cmd === 'seek')    gsapSeek(data.sec);
+    } else {
+      if (cmd === 'pause')   cssPause();
+      if (cmd === 'play')    cssPlay();
+      if (cmd === 'restart') cssRestart();
+      if (cmd === 'seek')    cssSeek(data.ms);
+    }
+  }
+
+  /* ── Escuchar comandos del panel ── */
   window.addEventListener('message', function(e) {
     var cmd = e.data && e.data.nexiumCmd;
     if (!cmd) return;
-    if (cmd === 'pause')   applyToAnims(function(a){ a.pause(); });
-    if (cmd === 'play')    applyToAnims(function(a){ a.play(); });
-    if (cmd === 'restart') applyToAnims(function(a){ a.cancel(); a.play(); });
-    if (cmd === 'seek')    applyToAnims(function(a){ a.currentTime = e.data.ms; });
+    dispatch(cmd, e.data);
   });
-  // Reportar progreso de la animación más larga al padre
-  var maxDur = 0;
+
+  /* ── Reportar progreso al panel cada 100ms ── */
   var ticker;
   function startTick() {
     clearInterval(ticker);
     ticker = setInterval(function() {
-      var anims = document.getAnimations();
-      if (!anims.length) return;
-      var dur = 0;
-      var cur = 0;
-      anims.forEach(function(a) {
-        var d = a.effect ? a.effect.getTiming().duration : 0;
-        if (typeof d === 'number' && d > dur) {
-          dur = d;
-          cur = typeof a.currentTime === 'number' ? a.currentTime : 0;
-        }
-      });
-      if (dur > maxDur) maxDur = dur;
-      window.parent.postMessage({ nexiumProgress: { cur: cur, dur: maxDur } }, '*');
+      var cur = 0, dur = 0;
+
+      if (gsapTl) {
+        dur = (gsapTl.duration() || 0) * 1000;
+        cur = (gsapTl.time ? gsapTl.time() : 0) * 1000;
+      } else {
+        var anims = cssAnims();
+        anims.forEach(function(a) {
+          var d = a.effect ? a.effect.getTiming().duration : 0;
+          if (typeof d === 'number' && d > dur) {
+            dur = d;
+            cur = typeof a.currentTime === 'number' ? a.currentTime : 0;
+          }
+        });
+      }
+
+      window.parent.postMessage({ nexiumProgress: { cur: cur, dur: dur } }, '*');
     }, 100);
   }
-  document.addEventListener('DOMContentLoaded', startTick);
-  if (document.readyState !== 'loading') startTick();
+
+  /* ── Inicializar cuando el DOM esté listo ── */
+  function init() {
+    gsapTl = findGsapTl();
+    startTick();
+    // Re-intentar detectar GSAP si se cargó de forma asíncrona
+    if (!gsapTl) {
+      setTimeout(function() {
+        gsapTl = findGsapTl();
+      }, 500);
+      setTimeout(function() {
+        gsapTl = findGsapTl();
+      }, 1500);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
 </script>`;
 
