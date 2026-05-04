@@ -6,13 +6,15 @@
 
 import { buildWaLinks, type WaLinks } from "./wa-links";
 
-const DEFAULT_WA = "MX_WA_REDACTED";
-
 /** Deja solo dígitos (acepta +52, espacios, guiones). */
 export function normalizeWaDigits(input: string): string {
   return input.replace(/\D/g, "");
 }
 
+/**
+ * Número solo desde variables de entorno (nunca hardcodeado en el repo).
+ * En local: copia `.env.example` → `.env.local` y define `WA_NUMBER`.
+ */
 export function getWaNumberFromEnv(): string {
   const raw =
     process.env.WA_NUMBER?.trim() ||
@@ -20,7 +22,11 @@ export function getWaNumberFromEnv(): string {
     "";
   const digits = normalizeWaDigits(raw);
   if (digits.length >= 10) return digits;
-  return DEFAULT_WA;
+
+  throw new Error(
+    "Falta WA_NUMBER o NEXT_PUBLIC_WA_NUMBER (mínimo 10 dígitos, solo números). " +
+      "Copia .env.example a .env.local y rellena WA_NUMBER, o configura la variable en Vercel."
+  );
 }
 
 export function getSiteWaConfig(): { waNumber: string; waLinks: WaLinks } {

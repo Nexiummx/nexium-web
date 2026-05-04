@@ -1,4 +1,4 @@
-/** Construye los enlaces wa.me a partir del número (solo dígitos, ej. MX_WA_REDACTED). */
+/** Construye los enlaces wa.me a partir del número (solo dígitos, ej. país + lada + número). */
 
 const wa = (number: string, msg: string) =>
   `https://wa.me/${number}?text=${encodeURIComponent(msg)}`;
