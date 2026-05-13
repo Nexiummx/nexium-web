@@ -1,0 +1,62 @@
+[
+  {
+    "id": "web",
+    "nombre": "Desarrollo Web",
+    "descripcion": "Sitios que cargan rápido, se entienden a la primera y convierten: landings, multi-vista y productos digitales a medida.",
+    "incluye": [
+      "Arquitectura de información y wireframes",
+      "Diseño UI acorde a tu marca",
+      "Implementación responsive",
+      "Performance y SEO técnico base",
+      "Deploy y handoff documentado"
+    ],
+    "casosUso": [],
+    "precioPlaceholder": "Desde MXN ___ (definir en llamada)"
+  },
+  {
+    "id": "ecommerce",
+    "nombre": "Ecommerce",
+    "descripcion": "Tiendas en línea con flujo de compra claro: Shopify headless o custom, pagos e inventario cuando aplica.",
+    "incluye": [
+      "Catálogo y fichas de producto",
+      "Checkout y métodos de pago",
+      "Integraciones (envíos, CRM, analytics)",
+      "Panel operable para tu equipo",
+      "Optimización de conversión"
+    ],
+    "casosUso": [],
+    "precioPlaceholder": "Desde MXN ___ (definir en llamada)"
+  },
+  {
+    "id": "auto",
+    "nombre": "Automatizaciones",
+    "descripcion": "Menos tareas repetidas: workflows, integraciones y asistentes con IA donde tiene sentido.",
+    "incluye": [
+      "Mapeo de procesos actuales",
+      "Diseño del flujo automatizado",
+      "Integración con WhatsApp, forms, CRM",
+      "Monitoreo y alertas básicas",
+      "Documentación para tu equipo"
+    ],
+    "casosUso": [
+      "Formulario WhatsApp que filtra leads",
+      "Bot de cotización automático",
+      "Workflow de onboarding de clientes"
+    ],
+    "precioPlaceholder": "Por alcance (cotización)"
+  },
+  {
+    "id": "consultoria",
+    "nombre": "Consultoría digital",
+    "descripcion": "Para equipos que necesitan claridad antes de construir: diagnóstico, prioridades y hoja de ruta.",
+    "incluye": [
+      "Sesiones con stakeholders",
+      "Auditoría de canales y herramientas",
+      "Priorización por impacto/esfuerzo",
+      "Roadmap trimestral",
+      "Recomendaciones de stack y proveedores"
+    ],
+    "casosUso": [],
+    "precioPlaceholder": "Paquete por sprint (definir)"
+  }
+]

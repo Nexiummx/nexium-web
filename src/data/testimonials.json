@@ -1,0 +1,23 @@
+[
+  {
+    "id": "t1",
+    "quote": "Esperaba un sitio web. Recibí una herramienta que me ahorra horas cada semana en seguimiento a clientes.",
+    "nombre": "Saúl R.",
+    "empresa": "Finse Seguros",
+    "imagen": ""
+  },
+  {
+    "id": "t2",
+    "quote": "Lo que más valoro es que hablan claro: alcance, tiempos y qué no incluye. Cero sorpresas en la factura.",
+    "nombre": "Mariana V.",
+    "empresa": "Retail local",
+    "imagen": ""
+  },
+  {
+    "id": "t3",
+    "quote": "Necesitábamos velocidad sin sacrificar diseño. El resultado se siente de agencia grande, con trato directo.",
+    "nombre": "Equipo",
+    "empresa": "Startup en CDMX",
+    "imagen": ""
+  }
+]

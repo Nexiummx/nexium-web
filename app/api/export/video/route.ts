@@ -12,7 +12,7 @@ import { validateConfig } from "@/lib/video/presets";
 import type { VideoExportRequest, VideoExportResponse } from "@/lib/video/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 const USE_BLOB = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       width: config.width,
       height: config.height,
       outputDir: framesDir,
+      motionApply: body.motionApply,
     });
 
     console.log(`[video-export] Encoding ${frames.length} frames to MP4`);

@@ -61,7 +61,7 @@ export function validateConfig(
   ) {
     return {
       valid: false,
-      error: `Duration must be between ${VIDEO_LIMITS.MIN_DURATION_SECONDS} and ${VIDEO_LIMITS.MAX_DURATION_SECONDS} seconds`,
+      error: `La duración debe estar entre ${VIDEO_LIMITS.MIN_DURATION_SECONDS} y ${VIDEO_LIMITS.MAX_DURATION_SECONDS} segundos`,
     };
   }
 

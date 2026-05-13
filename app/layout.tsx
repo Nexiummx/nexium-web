@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { Barlow, Barlow_Condensed } from "next/font/google";
+import {
+  Instrument_Serif,
+  Inter,
+  JetBrains_Mono,
+} from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import Script from "next/script";
 import { SiteConfigProvider } from "@/components/SiteConfigProvider";
@@ -8,17 +12,25 @@ import { getSiteWaConfig } from "@/lib/wa-server";
 import { SiteSchema } from "./schema";
 import "./globals.css";
 
-const barlow = Barlow({
+const instrumentSerif = Instrument_Serif({
+  weight: "400",
+  style: ["normal", "italic"],
   subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-barlow",
+  variable: "--font-instrument",
   display: "swap",
 });
 
-const barlowCondensed = Barlow_Condensed({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["700"],
-  variable: "--font-barlow-condensed",
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-jetbrains",
   display: "swap",
 });
 
@@ -26,20 +38,19 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.nexiummx.com"),
 
   title: {
-    default: "Nexium — Digitaliza y escala tu negocio",
+    default: "Nexium — Agencia tech · Durango, México",
     template: "%s | Nexium",
   },
   description:
-    "Agencia tech en Durango que ayuda a emprendedores y startups mexicanos a digitalizar y escalar su negocio con desarrollo web, consultoría y automatización.",
+    "Estudio tech en Durango: desarrollo web (landing, multi-vista, ecommerce), consultoría de digitalización y automatizaciones con IA. Hecho por ingeniería, con alma editorial.",
 
   keywords: [
-    "agencia digital Durango",
+    "agencia tech Durango",
     "desarrollo web México",
-    "digitalización de negocios",
-    "consultoría tecnológica PYME",
-    "automatización negocios México",
-    "landing page México",
-    "software a medida Durango",
+    "ecommerce Durango",
+    "automatización IA",
+    "consultoría digital",
+    "Nexium",
   ],
 
   openGraph: {
@@ -47,24 +58,24 @@ export const metadata: Metadata = {
     locale: "es_MX",
     url: "https://www.nexiummx.com",
     siteName: "Nexium",
-    title: "Nexium — Digitaliza y escala tu negocio",
+    title: "Nexium — Agencia tech · Durango, México",
     description:
-      "Ayudamos a emprendedores mexicanos a digitalizar su negocio sin complicaciones. Desarrollo web, consultoría y automatización.",
+      "Desarrollo web, digitalización y automatizaciones para emprendedores que valoran su tiempo.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Nexium — logo con wordmark",
+        alt: "Nexium",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Nexium — Digitaliza y escala tu negocio",
+    title: "Nexium — Agencia tech · Durango, México",
     description:
-      "Ayudamos a emprendedores mexicanos a digitalizar su negocio sin complicaciones.",
+      "Desarrollo web, digitalización y automatizaciones para emprendedores que valoran su tiempo.",
     images: ["/og-image.png"],
   },
 
@@ -91,21 +102,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Obliga a render dinámico: así WA_NUMBER / NEXT_PUBLIC_WA_NUMBER se leen
-  // en cada request en Vercel, no solo en el build (evita quedar pegado al número antiguo).
   void headers();
-
   const waConfig = getSiteWaConfig();
 
   return (
     <html
       lang="es"
-      className={`${barlow.variable} ${barlowCondensed.variable}`}
+      className={`${instrumentSerif.variable} ${inter.variable} ${jetbrains.variable}`}
     >
       <head>
         <SiteSchema />
       </head>
-      <body>
+      <body className="min-h-screen font-sans text-base font-normal leading-relaxed text-nex-text antialiased">
         <SiteConfigProvider value={waConfig}>
           <a href="#main" className="skip">
             Saltar al contenido

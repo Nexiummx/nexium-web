@@ -1,13 +1,14 @@
-import { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/constants";
+import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    {
-      url: SITE_URL,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 1,
-    },
-  ];
+  const base = SITE_URL.replace(/\/$/, "");
+  const now = new Date();
+  const pages = ["", "/proyectos", "/servicios", "/contacto"];
+  return pages.map((path) => ({
+    url: `${base}${path}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: path === "" ? 1 : 0.8,
+  }));
 }

@@ -1,0 +1,27 @@
+[
+  {
+    "id": "1",
+    "pregunta": "¿Cuánto tiempo toma un proyecto?",
+    "respuesta": "Depende del alcance. Una landing enfocada puede ir de 2 a 4 semanas; ecommerce o sistemas con integraciones suelen requerir de 6 a 12 semanas. En la primera llamada te damos un rango realista con hitos."
+  },
+  {
+    "id": "2",
+    "pregunta": "¿Trabajan fuera de Durango?",
+    "respuesta": "Sí. La base operativa es Durango, pero el trabajo es remoto-first: reuniones por videollamada, entregables en la nube y comunicación por los canales que prefieras."
+  },
+  {
+    "id": "3",
+    "pregunta": "¿Qué incluye el soporte post-lanzamiento?",
+    "respuesta": "Incluye periodo de garantía para bugs de implementación y paquetes opcionales de mantenimiento (actualizaciones de dependencias, pequeños ajustes y monitoreo). Lo acordamos por escrito antes del cierre."
+  },
+  {
+    "id": "4",
+    "pregunta": "¿Manejan hosting y dominios?",
+    "respuesta": "Podemos recomendarte proveedores (Vercel, AWS, etc.), dejarte todo en tu cuenta o operarlo por ti con un fee mensual. Los dominios siempre deben quedar a tu nombre."
+  },
+  {
+    "id": "5",
+    "pregunta": "¿Cuál es el proceso de pago?",
+    "respuesta": "Típicamente anticipo al inicio, hito a mitad de construcción y cierre contra entrega. Para proyectos largos se puede fraccionar por fases. Facturación en México con datos fiscales."
+  }
+]

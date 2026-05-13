@@ -1,0 +1,35 @@
+[
+  {
+    "id": "atrio",
+    "slug": "atrio-casa",
+    "nombre": "Atrio Casa",
+    "categoria": "INTERIORISMO • RESIDENCIAL",
+    "descripcion": "Catálogo editorial y cotización para una firma de interiorismo en Durango. Ritmo visual calmado, tipografía protagonista.",
+    "year": "2025",
+    "tech": ["React", "Vite", "Tailwind", "Framer Motion"],
+    "url": "https://atrio.nexiummx.com",
+    "imagen": "/projects/atrio-hero.jpg"
+  },
+  {
+    "id": "vivanta",
+    "slug": "clinica-vivanta",
+    "nombre": "Clínica Vivanta",
+    "categoria": "SALUD • MULTIESPECIALIDAD",
+    "descripcion": "Presencia digital cálida y clínica para multiespecialidad: agenda, servicios y confianza médica sin fricción.",
+    "year": "2025",
+    "tech": ["Next.js", "TypeScript", "Tailwind", "Framer Motion"],
+    "url": "https://vivanta.nexiummx.com",
+    "imagen": "/projects/vivanta-hero.jpg"
+  },
+  {
+    "id": "lina",
+    "slug": "lina-y-roma",
+    "nombre": "Lina & Roma",
+    "categoria": "RETAIL • SLOW FASHION",
+    "descripcion": "Ecommerce narrativo para moda consciente: producto, historia de marca y checkout claro.",
+    "year": "2025",
+    "tech": ["React", "Shopify", "Tailwind", "Motion"],
+    "url": "https://linayroma.nexiummx.com",
+    "imagen": "/projects/lina-hero.jpg"
+  }
+]

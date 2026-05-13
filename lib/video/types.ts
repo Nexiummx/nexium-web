@@ -1,3 +1,5 @@
+import type { MotionApplyPayload } from "@/lib/motion-overrides/types";
+
 export type PresetType = "story" | "reel" | "square" | "landscape" | "tiktok";
 
 /** Configuración resuelta lista para captureFrames + encodeVideo */
@@ -20,6 +22,8 @@ export interface VideoExportRequest {
   width?: number;
   height?: number;
   filename?: string;
+  /** Overrides GSAP/CSS fase 1 (misma carga que en preview). */
+  motionApply?: MotionApplyPayload;
 }
 
 export interface VideoExportResponse {
@@ -39,6 +43,7 @@ export interface CaptureFramesOptions {
   width: number;
   height: number;
   outputDir: string;
+  motionApply?: MotionApplyPayload;
 }
 
 export interface EncodeVideoOptions {

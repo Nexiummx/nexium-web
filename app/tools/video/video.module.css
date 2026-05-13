@@ -164,7 +164,7 @@
 /* ── Cuerpo principal ────────────────────────────────────────────────────── */
 .body {
   display: grid;
-  grid-template-columns: 400px 1fr;
+  grid-template-columns: 400px minmax(0, 1fr) minmax(260px, 360px);
   height: calc(100vh - 53px);
 }
 
@@ -222,13 +222,97 @@
   margin-left: auto;
 }
 
-/* ── Panel derecho (preview) ─────────────────────────────────────────────── */
-.previewPanel {
+/* ── Columna central (preview + export) ───────────────────────────────────── */
+.previewColumn {
   display: flex;
   flex-direction: column;
   background: #080808;
   overflow: hidden;
+  min-width: 0;
 }
+
+/* Panel lateral Motion */
+.motionSidebar {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #1e1e1e;
+  background: #0a0a0a;
+  min-height: 0;
+  overflow: hidden;
+}
+.motionSidebarPlayhead {
+  flex-shrink: 0;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid #1a1a1a;
+  background: linear-gradient(180deg, rgba(74, 123, 217, 0.08), transparent);
+}
+.motionSidebarPlayheadLabel {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 2px;
+}
+.motionSidebarPlayheadValue {
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #7aa3ff;
+  line-height: 1.2;
+}
+.motionSidebarPlayheadHint {
+  display: block;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.28);
+  margin-top: 6px;
+  line-height: 1.35;
+}
+.motionSidebarInner {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 12px 16px;
+}
+.motionSidebar .motionLabelCell {
+  max-width: 72px;
+  font-size: 11px;
+}
+.motionSidebar .motionCellInput {
+  max-width: 72px;
+  min-width: 48px;
+}
+.motionSidebar .motionTable th {
+  font-size: 9px;
+  padding: 5px 4px;
+}
+.motionSidebar .motionTable td {
+  padding: 5px 4px;
+}
+.motionRowActive {
+  background: rgba(74, 123, 217, 0.14) !important;
+  box-shadow: inset 3px 0 0 #4a7bd9;
+}
+.motionRowActive .motionCellInput {
+  border-color: rgba(74, 123, 217, 0.45);
+}
+
+/* Bloque que entra en pantalla completa: cabecera + escenario + controles */
+.previewFsShell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.previewFsShell:fullscreen,
+.previewFsShell:-webkit-full-screen {
+  width: 100%;
+  height: 100%;
+  background: #080808;
+}
+
 .previewHeader {
   padding: 12px 20px 10px;
   font-size: 12px;
@@ -242,12 +326,268 @@
   justify-content: space-between;
   flex-shrink: 0;
 }
+.previewHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-left: auto;
+  min-width: 0;
+}
 .previewMeta {
   font-size: 11px;
   font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
   color: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: min(360px, 42vw);
+}
+
+/* Meta rápido: duración / FPS → nexium:* en el HTML */
+.metaQuickPanel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px 20px;
+  padding: 10px 20px 12px;
+  border-bottom: 1px solid #1a1a1a;
+  background: #0a0a0a;
+  flex-shrink: 0;
+}
+.metaQuickHint {
+  width: 100%;
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.28);
+  margin: 0;
+}
+.metaQuickField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+}
+.metaQuickField input {
+  width: 88px;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  outline: none;
+}
+.metaQuickField input:focus {
+  border-color: rgba(74, 123, 217, 0.55);
+}
+.metaQuickField input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btnFullscreen {
+  background: #1a1a1a;
+  color: rgba(255, 255, 255, 0.75);
+  border: 1px solid #2a2a2a;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.btnFullscreen:hover:not(:disabled) {
+  background: #222;
+  border-color: #3a3a3a;
+  color: #fff;
+}
+.btnFullscreen:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Motion overrides fase 1 (dentro del panel lateral) */
+.motionPhase1Header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.motionPhase1Title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+.motionPhase1Actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.motionPhase1Hint {
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.28);
+  margin: 0 0 8px;
+}
+.motionMismatch {
+  font-size: 12px;
+  color: #e8a035;
+  margin: 0 0 8px;
+}
+.motionLinkBtn {
+  background: none;
+  border: none;
+  color: #7aa3ff;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+}
+.motionLinkBtn:hover {
+  color: #a8c4ff;
+}
+.motionEmpty {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.28);
+  margin: 4px 0 0;
+}
+.motionSubTitle {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.38);
+  margin: 10px 0 6px;
+}
+.motionSceneBlock {
+  margin-bottom: 14px;
+}
+.motionSceneBlock:last-child {
+  margin-bottom: 0;
+}
+.motionSceneHeadingRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 0 0 5px;
+  padding-left: 2px;
+}
+.motionSceneHeading {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+.motionSceneHeadingSuffix {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.3);
+}
+.motionSceneScale {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.motionSceneScaleLabel {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  white-space: nowrap;
+}
+.motionSceneScaleInput {
+  width: 52px;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  outline: none;
+}
+.motionSceneScaleInput:focus {
+  border-color: rgba(74, 123, 217, 0.55);
+}
+.motionHintStrong {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+}
+.motionTableWrap {
+  overflow-x: auto;
+  border-radius: 6px;
+  border: 1px solid #222;
+}
+.motionTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.motionTable th,
+.motionTable td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid #1e1e1e;
+  vertical-align: middle;
+}
+.motionTable th {
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 500;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: #111;
+}
+.motionMono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+}
+.motionLabelCell {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.75);
+}
+.motionCellInput {
+  width: 100%;
+  min-width: 56px;
+  max-width: 100px;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.motionCellInput:focus {
+  border-color: rgba(74, 123, 217, 0.55);
+  outline: none;
 }
 
 /* ── Área central del preview ────────────────────────────────────────────── */
@@ -354,17 +694,25 @@
 }
 .progressBar {
   flex: 1;
-  height: 3px;
+  height: 8px;
   background: #1e1e1e;
-  border-radius: 2px;
+  border-radius: 4px;
   overflow: hidden;
   cursor: pointer;
   position: relative;
+  touch-action: none;
+  user-select: none;
+}
+.progressBarInactive {
+  cursor: default;
+  pointer-events: none;
+  opacity: 0.45;
 }
 .progressFill {
   height: 100%;
   background: linear-gradient(90deg, #1b2f6e, #4a7bd9);
-  border-radius: 2px;
+  border-radius: 4px;
+  pointer-events: none;
   transition: width 0.1s linear;
 }
 .timeDisplay {

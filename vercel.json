@@ -1,7 +1,7 @@
 {
   "functions": {
     "app/api/export/video/route.ts": {
-      "maxDuration": 60,
+      "maxDuration": 300,
       "memory": 2048
     }
   }

@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs/promises";
 import type { CaptureFramesOptions } from "./types";
+import { buildVideoIframeDocument } from "./iframeBridge";
 
 /**
  * Lanza Puppeteer localmente y captura frames PNG frame a frame.
@@ -16,7 +17,8 @@ import type { CaptureFramesOptions } from "./types";
 export async function captureFrames(
   options: CaptureFramesOptions
 ): Promise<string[]> {
-  const { html, durationSeconds, fps, width, height, outputDir } = options;
+  const { html, durationSeconds, fps, width, height, outputDir, motionApply } = options;
+  const bridgedHtml = buildVideoIframeDocument(html, motionApply ?? { gsap: [], css: [] });
   const totalFrames = Math.round(durationSeconds * fps);
   const frameDurationMs = 1000 / fps;
 
@@ -55,7 +57,7 @@ export async function captureFrames(
   try {
     const page = await browser.newPage();
 
-    const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
+    const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(bridgedHtml)}`;
     await page.goto(dataUrl, { waitUntil: "networkidle0", timeout: 30000 });
 
     await page.evaluate(() => document.fonts.ready.then(() => undefined));

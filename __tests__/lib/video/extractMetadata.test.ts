@@ -59,7 +59,7 @@ describe("resolveVideoConfig", () => {
     expect(config.width).toBe(1080);
     expect(config.height).toBe(1920);
     expect(config.durationSeconds).toBe(12);
-    expect(config.fps).toBe(30);
+    expect(config.fps).toBe(60);
   });
 
   it("applies preset from HTML metadata", () => {

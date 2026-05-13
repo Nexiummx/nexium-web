@@ -51,7 +51,7 @@ describe("POST /api/export/video", () => {
 
     expect(res.status).toBe(400);
     expect(json.success).toBe(false);
-    expect(json.error).toContain("Duration must be");
+    expect(json.error).toContain("La duración debe estar");
   });
 
   it("successfully exports video and returns URL", async () => {
