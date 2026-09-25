@@ -10,6 +10,7 @@
     "generate:og": "node scripts/generate-og.cjs",
     "html-to-png": "node scripts/html-to-png.cjs",
     "render-video": "node scripts/render-gsap-video.mjs",
+    "setup:downloader": "node scripts/setup-yt-dlp.mjs",
     "test": "jest"
   },
   "dependencies": {

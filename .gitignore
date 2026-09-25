@@ -37,3 +37,6 @@ next-env.d.ts
 
 # html-to-png tool output
 /output/slides/
+
+# yt-dlp binary (npm run setup:downloader)
+/bin/
