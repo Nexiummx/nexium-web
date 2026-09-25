@@ -10,8 +10,6 @@ import type {
 } from "@/lib/downloader/types";
 
 /* ── Constantes ─────────────────────────────────────────────────────────── */
-const ACCESS_TOKEN = "nexium-slides-2026";
-
 const QUALITY_LABELS: Record<DownloadQuality, string> = {
   best: "Máxima",
   "1080": "1080p",
@@ -38,49 +36,9 @@ function isQualityAvailable(q: DownloadQuality, heights: number[]): boolean {
   return heights[0] >= Number(q);
 }
 
-/* ── Gate de acceso ─────────────────────────────────────────────────────── */
-function TokenGate({ onUnlock }: { onUnlock: () => void }) {
-  const [input, setInput] = useState("");
-  const [error, setError] = useState("");
-
-  const submit = () => {
-    if (input.trim() === ACCESS_TOKEN) {
-      sessionStorage.setItem("nxt_tool_unlocked", "1");
-      onUnlock();
-    } else {
-      setError("Token incorrecto.");
-    }
-  };
-
-  return (
-    <div className={shared.gate}>
-      <div className={shared.gateBox}>
-        <h2>Nexium Tools</h2>
-        <p>Ingresa el token de acceso para continuar.</p>
-        <input
-          className={shared.gateInput}
-          type="password"
-          placeholder="Token de acceso"
-          value={input}
-          onChange={(e) => {
-            setInput(e.target.value);
-            setError("");
-          }}
-          onKeyDown={(e) => e.key === "Enter" && submit()}
-          autoFocus
-        />
-        {error && <span className={shared.gateError}>{error}</span>}
-        <button className={shared.btnPrimary} onClick={submit}>
-          Acceder →
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /* ── Componente principal ────────────────────────────────────────────────── */
+/** Sin token: la página no está enlazada en ningún lado ni se indexa. */
 export default function DownloaderToolPage() {
-  const [unlocked, setUnlocked] = useState(false);
   const [url, setUrl] = useState("");
   const [info, setInfo] = useState<VideoInfo | null>(null);
   const [quality, setQuality] = useState<DownloadQuality>("best");
@@ -91,10 +49,6 @@ export default function DownloaderToolPage() {
   const [error, setError] = useState("");
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (sessionStorage.getItem("nxt_tool_unlocked") === "1") setUnlocked(true);
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -197,14 +151,6 @@ export default function DownloaderToolPage() {
     setInfo(null);
     setError("");
   };
-
-  if (!unlocked) {
-    return (
-      <div className={shared.root}>
-        <TokenGate onUnlock={() => setUnlocked(true)} />
-      </div>
-    );
-  }
 
   return (
     <div className={shared.root}>
