@@ -6,6 +6,7 @@
     "stop": "pkill -f 'next dev'",
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "node scripts/setup-yt-dlp.mjs --optional && next build",
     "start": "next start",
     "generate:og": "node scripts/generate-og.cjs",
     "html-to-png": "node scripts/html-to-png.cjs",

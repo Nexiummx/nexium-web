@@ -2,6 +2,7 @@ import {
   buildFormatArgs,
   cleanYtDlpError,
   parseVideoUrl,
+  resolveYtDlpPath,
   sanitizeFilename,
   summarizeInfo,
 } from "@/lib/downloader/ytdlp";
@@ -112,5 +113,53 @@ describe("cleanYtDlpError", () => {
     const stderr =
       "WARNING: algo\nERROR: [generic] Unsupported URL: https://x.com\n";
     expect(cleanYtDlpError(stderr)).toBe("[generic] Unsupported URL: https://x.com");
+  });
+});
+
+describe("resolveYtDlpPath", () => {
+  const fs = jest.requireActual("fs") as typeof import("fs");
+  const path = jest.requireActual("path") as typeof import("path");
+  const os = jest.requireActual("os") as typeof import("os");
+  let cwd: string;
+  const tmpCopy = path.join(os.tmpdir(), "nexium-yt-dlp");
+  const origCwd = process.cwd;
+
+  beforeEach(() => {
+    delete process.env.YTDLP_PATH;
+    cwd = fs.mkdtempSync(path.join(os.tmpdir(), "nexium-cwd-"));
+    fs.mkdirSync(path.join(cwd, "bin"));
+    process.cwd = () => cwd;
+    fs.rmSync(tmpCopy, { force: true });
+  });
+
+  afterEach(() => {
+    process.cwd = origCwd;
+    fs.rmSync(cwd, { recursive: true, force: true });
+    fs.rmSync(tmpCopy, { force: true });
+  });
+
+  it("prefers YTDLP_PATH", () => {
+    process.env.YTDLP_PATH = "/opt/yt-dlp";
+    expect(resolveYtDlpPath()).toBe("/opt/yt-dlp");
+  });
+
+  it("falls back to yt-dlp on PATH when bin/ is empty", () => {
+    expect(resolveYtDlpPath()).toBe("yt-dlp");
+  });
+
+  it("uses bin/yt-dlp when it is executable", () => {
+    const bin = path.join(cwd, "bin", "yt-dlp");
+    fs.writeFileSync(bin, "#!/bin/sh\n");
+    fs.chmodSync(bin, 0o755);
+    expect(resolveYtDlpPath()).toBe(bin);
+  });
+
+  it("copies bin/yt-dlp to tmp and chmods it when it lost the exec bit", () => {
+    const bin = path.join(cwd, "bin", "yt-dlp");
+    fs.writeFileSync(bin, "#!/bin/sh\n");
+    fs.chmodSync(bin, 0o644);
+    const resolved = resolveYtDlpPath();
+    expect(resolved).toBe(tmpCopy);
+    expect(() => fs.accessSync(resolved, fs.constants.X_OK)).not.toThrow();
   });
 });

@@ -3,6 +3,7 @@ import fs from "fs";
 import fsp from "fs/promises";
 import path from "path";
 import net from "net";
+import os from "os";
 import type { DownloadQuality, VideoInfo } from "./types";
 
 /** Límites para no saturar el servidor ni la función serverless */
@@ -24,15 +25,34 @@ export class YtDlpMissingError extends Error {
 /**
  * Busca el binario de yt-dlp en este orden:
  * 1. YTDLP_PATH (variable de entorno)
- * 2. ./bin/yt-dlp (descargado con `npm run setup:downloader`)
+ * 2. ./bin/yt-dlp (`npm run setup:downloader`; en Vercel se descarga en el build)
  * 3. `yt-dlp` en el PATH del sistema
  */
 export function resolveYtDlpPath(): string {
   if (process.env.YTDLP_PATH) return process.env.YTDLP_PATH;
   const exe = process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp";
   const local = path.join(process.cwd(), "bin", exe);
-  if (fs.existsSync(local)) return local;
+  if (fs.existsSync(local)) return ensureExecutable(local);
   return exe;
+}
+
+/**
+ * En Vercel el bundle es de solo lectura y puede perder el bit de ejecución.
+ * Si el binario no es ejecutable, se copia a /tmp y se le da permiso ahí.
+ */
+function ensureExecutable(file: string): string {
+  if (process.platform === "win32") return file;
+  try {
+    fs.accessSync(file, fs.constants.X_OK);
+    return file;
+  } catch {
+    const copy = path.join(os.tmpdir(), `nexium-${path.basename(file)}`);
+    if (!fs.existsSync(copy)) {
+      fs.copyFileSync(file, copy);
+      fs.chmodSync(copy, 0o755);
+    }
+    return copy;
+  }
 }
 
 /** Hosts que nunca debemos pedirle a yt-dlp que visite (SSRF) */

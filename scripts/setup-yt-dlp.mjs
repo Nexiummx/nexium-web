@@ -4,6 +4,9 @@
  *
  *   npm run setup:downloader
  *
+ * En Vercel corre en cada deploy vía `vercel-build` con --optional:
+ * si la descarga falla, avisa pero no rompe el build.
+ *
  * No requiere Python. Vuelve a ejecutarlo para actualizar yt-dlp
  * (las plataformas cambian seguido y las versiones viejas dejan de funcionar).
  */
@@ -22,11 +25,16 @@ const ASSETS = {
   "win32-arm64": "yt-dlp.exe",
 };
 
+const OPTIONAL = process.argv.includes("--optional");
+const fail = (msg) => {
+  console.error(`${OPTIONAL ? "⚠" : "✗"} ${msg}`);
+  process.exit(OPTIONAL ? 0 : 1);
+};
+
 const key = `${process.platform}-${process.arch}`;
 const asset = ASSETS[key];
 if (!asset) {
-  console.error(`✗ Plataforma no soportada: ${key}. Instala yt-dlp manualmente y define YTDLP_PATH.`);
-  process.exit(1);
+  fail(`Plataforma no soportada: ${key}. Instala yt-dlp manualmente y define YTDLP_PATH.`);
 }
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -34,11 +42,8 @@ const binDir = path.join(root, "bin");
 const target = path.join(binDir, process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
 
 console.log(`↓ Descargando ${asset} …`);
-const res = await fetch(`${BASE}/${asset}`);
-if (!res.ok) {
-  console.error(`✗ Error ${res.status} al descargar ${asset}`);
-  process.exit(1);
-}
+const res = await fetch(`${BASE}/${asset}`).catch((err) => fail(`No se pudo descargar ${asset}: ${err.message}`));
+if (!res.ok) fail(`Error ${res.status} al descargar ${asset}`);
 
 await fs.mkdir(binDir, { recursive: true });
 await fs.writeFile(target, Buffer.from(await res.arrayBuffer()));
