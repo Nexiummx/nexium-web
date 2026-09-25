@@ -3,6 +3,13 @@
     "app/api/export/video/route.ts": {
       "maxDuration": 60,
       "memory": 2048
+    },
+    "app/api/download/info/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/download/video/route.ts": {
+      "maxDuration": 60,
+      "memory": 2048
     }
   }
 }
