@@ -14,11 +14,15 @@ describe("buildPath", () => {
     );
   });
 
+  it("acepta PNG", () => {
+    expect(buildPath("pmabc123", "blusa-1-k3x9.png")).toBe("pmabc123/blusa-1-k3x9.png");
+  });
+
   it.each([
     ["../x", "a.jpg"],
     ["pmabc123", "../a.jpg"],
     ["pmabc123", "a/b.jpg"],
-    ["pmabc123", "a.png"],
+    ["pmabc123", "a.gif"],
     ["pmabc123", "A.jpg"],
     ["pmabc123", 5],
   ])("rechaza %p / %p", (id, name) => {

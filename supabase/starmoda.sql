@@ -117,7 +117,7 @@ grant execute on function public.starmoda_quien(text) to service_role;
 -- el CSV). Sin políticas: con la llave pública nadie puede subir, listar ni
 -- borrar; solo se sube con la URL firmada que da /api/starmoda/upload.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('starmoda-fotos', 'starmoda-fotos', true, 2097152, array['image/jpeg', 'image/webp'])
+values ('starmoda-fotos', 'starmoda-fotos', true, 2097152, array['image/jpeg', 'image/webp', 'image/png'])
 on conflict (id) do update
   set public = excluded.public,
       file_size_limit = excluded.file_size_limit,

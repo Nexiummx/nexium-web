@@ -11,6 +11,7 @@ export const BUCKET = "starmoda-fotos";
 const EXTS: Record<string, string> = {
   jpg: "image/jpeg",
   webp: "image/webp",
+  png: "image/png",
 };
 
 export class StarmodaError extends Error {

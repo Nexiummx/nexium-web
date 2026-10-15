@@ -605,7 +605,7 @@
     var code=getCode();
     if(!code){ upState[f.key]="Falta el código de acceso"; repaint(); codeModal(); return; }
     upState[f.key]="subiendo"; repaint();
-    var name=(f.target||"foto").replace(/\.[a-z]+$/,"")+"-"+f.key+"."+(f.ext==="webp"?"webp":"jpg");
+    var name=(f.target||"foto").replace(/\.[a-z]+$/,"")+"-"+f.key+"."+(f.ext==="webp"||f.ext==="png"?f.ext:"jpg");
     fetch("/api/starmoda/upload",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({code:code,productId:p.id,fileName:name})
     }).then(function(r){
@@ -1194,7 +1194,7 @@
       return new Promise(function(res){
         var issues=[],level="ok";
         var ext=(file.name.split(".").pop()||"").toLowerCase();
-        if(!(ext==="jpg"||ext==="jpeg"||ext==="webp")){ issues.push("Formato "+ext.toUpperCase()+" — se necesita JPG o WEBP"); level="bad"; }
+        if(!(ext==="jpg"||ext==="jpeg"||ext==="webp"||ext==="png")){ issues.push("Formato "+ext.toUpperCase()+" — se necesita JPG, PNG o WEBP"); level="bad"; }
         if(file.size>PHOTO.maxBytes){ issues.push("Pesa más de 2 MB"); level="bad"; }
         else if(file.size>PHOTO.warnBytes&&level!=="bad"){ issues.push("Pesa más de 600 KB, conviene comprimirla"); level="warn"; }
         var url=URL.createObjectURL(file),img=new Image(),key=Math.random().toString(36).slice(2,8);
@@ -1236,7 +1236,7 @@
 
     form.appendChild(h("fieldset",{},[
       h("legend",{},[h("span",{class:"kicker",text:"Cuatro"}),h("div",{class:"secttl",text:"Fotos"})]),
-      h("p",{class:"hint",text:"Vertical 3:4, mínimo 1200×1600 px, JPG o WEBP. La app revisa cada foto y te dice con qué nombre guardarla."}),
+      h("p",{class:"hint",text:"Vertical 3:4, mínimo 1200×1600 px, JPG, PNG o WEBP. La app revisa cada foto y te dice con qué nombre guardarla."}),
       drop,shots
     ]));
 
