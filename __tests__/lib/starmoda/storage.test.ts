@@ -1,4 +1,4 @@
-import { buildPath, createUploadTicket, getConfig, StarmodaError } from "@/lib/starmoda/storage";
+import { buildPath, checkSetup, createUploadTicket, getConfig, StarmodaError } from "@/lib/starmoda/storage";
 
 const cfg = { url: "https://abc.supabase.co", key: "sb_secret_x" };
 
@@ -77,5 +77,39 @@ describe("createUploadTicket", () => {
       createUploadTicket({ code: "", productId: "p1234", fileName: "a.jpg" }, cfg)
     ).rejects.toMatchObject({ status: 403 });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("checkSetup", () => {
+  const env = { SUPABASE_URL: "https://abc.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "sb_secret_x" } as unknown as NodeJS.ProcessEnv;
+  const fetchMock = jest.fn();
+  beforeEach(() => {
+    fetchMock.mockReset();
+    global.fetch = fetchMock as unknown as typeof fetch;
+  });
+
+  it("reporta falta de configuración sin llamar a Supabase", async () => {
+    expect(await checkSetup("sm-1", {} as unknown as NodeJS.ProcessEnv)).toEqual({
+      config: false, code: null, bucket: null, error: "storage_no_configurado",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("todo bien", async () => {
+    fetchMock.mockResolvedValueOnce(res(200, '"Nexium"')).mockResolvedValueOnce(res(200, { id: "starmoda-fotos", public: true }));
+    expect(await checkSetup("sm-1", env)).toEqual({ config: true, code: true, bucket: true });
+    expect(fetchMock.mock.calls[1][0]).toBe("https://abc.supabase.co/storage/v1/bucket/starmoda-fotos");
+  });
+
+  it("código malo y bucket inexistente", async () => {
+    fetchMock
+      .mockResolvedValueOnce(res(403, { message: "codigo_invalido" }))
+      .mockResolvedValueOnce(res(400, { statusCode: "404", error: "Bucket not found" }));
+    expect(await checkSetup("malo", env)).toEqual({ config: true, code: false, bucket: false });
+  });
+
+  it("llave secreta incorrecta", async () => {
+    fetchMock.mockResolvedValueOnce(res(401, { message: "Invalid API key" })).mockResolvedValueOnce(res(401, {}));
+    expect(await checkSetup("sm-1", env)).toMatchObject({ config: true, code: null, bucket: null, error: "supabase_401" });
   });
 });

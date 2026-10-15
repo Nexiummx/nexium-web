@@ -80,6 +80,51 @@ async function checkCode(cfg: Config, code: unknown): Promise<void> {
   throw new StarmodaError(`supabase_${r.status}`, 502);
 }
 
+export interface SetupStatus {
+  /** El servidor tiene SUPABASE_URL y la llave secreta */
+  config: boolean;
+  /** El código existe y está activo (null: no se pudo revisar) */
+  code: boolean | null;
+  /** El bucket de fotos existe y es público (null: no se pudo revisar) */
+  bucket: boolean | null;
+  error?: string;
+}
+
+/** Diagnóstico para la pantalla de conexión de la app: nunca lanza. */
+export async function checkSetup(
+  code: unknown,
+  env: NodeJS.ProcessEnv = process.env
+): Promise<SetupStatus> {
+  let cfg: Config;
+  try {
+    cfg = getConfig(env);
+  } catch {
+    return { config: false, code: null, bucket: null, error: "storage_no_configurado" };
+  }
+  const out: SetupStatus = { config: true, code: null, bucket: null };
+  try {
+    await checkCode(cfg, code);
+    out.code = true;
+  } catch (e) {
+    if (e instanceof StarmodaError && e.message === "codigo_invalido") out.code = false;
+    else out.error = e instanceof Error ? e.message : "error";
+  }
+  try {
+    const r = await fetch(`${cfg.url}/storage/v1/bucket/${BUCKET}`, { headers: headers(cfg.key) });
+    if (r.ok) {
+      const b = (await r.json()) as { public?: boolean };
+      out.bucket = b.public === true;
+    } else if (r.status === 400 || r.status === 404) {
+      out.bucket = false;
+    } else {
+      out.error = out.error || `storage_${r.status}`;
+    }
+  } catch (e) {
+    out.error = out.error || (e instanceof Error ? e.message : "error");
+  }
+  return out;
+}
+
 export async function createUploadTicket(
   body: UploadRequest,
   cfg: Config = getConfig()

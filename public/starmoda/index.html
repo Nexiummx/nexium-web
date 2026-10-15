@@ -61,7 +61,7 @@
   .addwrap{padding:16px 22px;border-top:1px solid var(--line);}
   .addwrap button{width:100%;}
 
-  main{overflow-x:hidden;}
+  main{overflow-x:hidden;overflow-x:clip;}
   .pad{padding:30px 34px 90px;max-width:1180px;}
   .empty{padding:80px 34px;text-align:center;color:var(--muted);}
   .empty h2{font-family:var(--display);font-size:30px;color:var(--ink);font-weight:500;margin:0 0 8px;}
@@ -80,7 +80,7 @@
   label.f > span{display:block;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
   label.f > span i{font-style:normal;font-size:11px;margin-left:5px;}
   label.f > span i.req{color:var(--req);} label.f > span i.rec{color:var(--rec);} label.f > span i.opt{color:var(--opt);}
-  input[type=text],input[type=number],textarea,select{
+  input[type=text],input[type=number],input[type=search],textarea,select{
     width:100%;font-family:var(--body);font-size:14px;color:var(--ink);
     background:var(--raise);border:1px solid var(--line);padding:9px 11px;
   }
@@ -114,6 +114,7 @@
   .drop{border:1px dashed var(--line);background:var(--surface);padding:22px;text-align:center;}
   .drop.hot{border-color:var(--mocha);background:var(--sunk);}
   .drop p{margin:0 0 10px;font-size:13px;color:var(--muted);}
+  .drop.busy{opacity:.7;pointer-events:none;}
   .shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px;margin-top:14px;}
   .shot{border:1px solid var(--line);background:var(--surface);}
   .shot .thumb{aspect-ratio:3/4;background:var(--sunk);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
@@ -127,6 +128,44 @@
   .shot .rm{margin-top:8px;font-size:11px;padding:4px 8px;width:100%;}
   .shot .up{font-size:11px;margin-top:6px;line-height:1.4;color:var(--muted);}
   .shot .up.ok{color:var(--ok);} .shot .up.err{color:var(--req);}
+  .shot .note{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4;}
+  .shot .crop{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:8px;}
+  .shot .crop button{font-size:10.5px;padding:4px 2px;}
+  .shot .crop button.on{background:var(--ink);color:var(--ground);border-color:var(--ink);}
+  .shot .crop-l{font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:8px;}
+  .shot.busy{opacity:.6;}
+
+  /* pasos de captura */
+  .steps{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 26px;padding:10px;border:1px solid var(--line);background:var(--surface);position:sticky;top:57px;z-index:10;}
+  .step{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid transparent;background:transparent;font-size:12.5px;}
+  .step:hover{border-color:var(--line);}
+  .step .n{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;border:1.5px solid var(--line);color:var(--muted);flex:none;}
+  .step.ok .n{background:var(--ok);border-color:var(--ok);color:#fff;}
+  .step.req .n{border-color:var(--req);color:var(--req);}
+  .step.rec .n{border-color:var(--rec);color:var(--rec);}
+  fieldset{scroll-margin-top:130px;}
+  .banner{border:1px solid var(--gold);background:var(--surface);padding:14px 16px;margin:0 0 22px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:13px;}
+  .banner.err{border-color:var(--req);}
+  .banner b{display:block;font-size:13.5px;margin-bottom:2px;}
+  .banner span{color:var(--muted);}
+  .bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-bottom:0;background:var(--sunk);font-size:12.5px;color:var(--muted);}
+  .bulk input{width:84px;padding:6px 8px;}
+  .bulk button{padding:6px 10px;}
+
+  /* barra lateral */
+  .totals{display:flex;gap:14px;margin-top:10px;font-size:11.5px;color:var(--muted);font-family:var(--mono);}
+  .search{padding:10px 22px;border-bottom:1px solid var(--line);}
+  .search input{padding:7px 10px;font-size:13px;}
+  .noresults{padding:16px 22px;font-size:12.5px;color:var(--muted);}
+
+  /* conexión */
+  .checks{list-style:none;margin:0 0 16px;padding:0;border:1px solid var(--line);background:var(--surface);}
+  .checks li{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line-soft);font-size:13px;line-height:1.45;}
+  .checks li:last-child{border-bottom:0;}
+  .checks .ic{font-weight:700;text-align:center;}
+  .checks li.ok .ic{color:var(--ok);} .checks li.bad .ic{color:var(--req);} .checks li.wait .ic{color:var(--muted);}
+  .checks small{display:block;color:var(--muted);font-size:12px;margin-top:2px;}
+  .codeerr{color:var(--req);font-size:12px;margin-top:6px;min-height:1em;}
 
   /* side panel */
   .panel{position:sticky;top:75px;display:flex;flex-direction:column;gap:16px;}
@@ -165,8 +204,8 @@
   .demo{background:var(--gold);color:#1c1b1a;font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:3px 7px;display:inline-block;}
   :focus-visible{outline:2px solid var(--mocha);outline-offset:2px;}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
-  @media (max-width:1060px){.formgrid{grid-template-columns:1fr;}.panel{position:static;}}
-  @media (max-width:820px){.shell{grid-template-columns:1fr;}aside{border-right:0;border-bottom:1px solid var(--line);}.plist{max-height:230px;}.row.two,.row.three{grid-template-columns:1fr;}.pad{padding:22px 18px 70px;}}
+  @media (max-width:1060px){.formgrid{grid-template-columns:minmax(0,1fr);}.panel{position:static;}}
+  @media (max-width:820px){.shell{grid-template-columns:minmax(0,1fr);}.steps{position:static;}.step{padding:5px 7px;}aside{border-right:0;border-bottom:1px solid var(--line);}.plist{max-height:230px;}.row.two,.row.three{grid-template-columns:1fr;}.pad{padding:22px 18px 70px;}}
 
   /* pendientes de programar */
   .miss li.pend::before{content:"\25B2";color:var(--gold);}
@@ -207,6 +246,7 @@
   <div class="saved" id="saved">&mdash;</div>
   <div class="sep"></div>
   <div class="sync local" id="sync"></div>
+  <button class="ghost" id="btnConn">Conexión</button>
   <button class="ghost" id="btnVocab">Vocabulario</button>
   <button class="ghost" id="btnGuide">Reglas</button>
   <button class="ghost" id="btnBackup">Respaldo</button>
@@ -216,10 +256,12 @@
 <div class="shell">
   <aside>
     <div class="progress">
-      <div class="big" id="pCount">0<span>&thinsp;/&thinsp;15</span></div>
-      <p id="pText">Mínimo para lanzar</p>
+      <div class="big" id="pCount">0</div>
+      <p id="pText">Prendas listas para publicar</p>
       <div class="bar"><i id="pBar" style="width:0%"></i></div>
+      <div class="totals" id="pTotals"></div>
     </div>
+    <div class="search"><input type="search" id="pSearch" placeholder="Buscar prenda, categoría o SKU…" autocomplete="off"></div>
     <div class="plist" id="plist"></div>
     <div class="addwrap"><button class="primary" id="btnAdd">+ Nueva prenda</button></div>
   </aside>
@@ -292,7 +334,7 @@
     fits:["Ajustado","Regular","Holgado","Oversize"]
   };
 
-  var PHOTO={ratio:3/4,tol:0.035,minW:1200,minH:1600,maxBytes:2*1024*1024,warnBytes:600*1024};
+  var PHOTO={ratio:3/4,tol:0.035,minW:1200,minH:1600,maxH:2400,maxBytes:2*1024*1024,warnBytes:600*1024};
   var KEY="starmoda-captura-v2", OLDKEY="starmoda-captura-v1";
   var state={products:[],active:null,vocab:null,vocabT:0,deleted:{}};
   var storageOK=true, savedAt=null;
@@ -588,7 +630,7 @@
      la prenda, así viaja con la sincronización y llega al CSV de Shopify.
      El archivo original solo vive en memoria: si se recarga la página antes
      de subirlo, hay que volver a elegir la foto. */
-  var upFiles={}, upState={};
+  var upFiles={}, upState={}, origFiles={}, busyKeys={};
   function upInfo(f){
     if(f.level==="bad") return null;
     if(f.src) return {cls:"ok",text:"Subida a la nube"};
@@ -634,21 +676,150 @@
     });
   }
 
-  function codeModal(msg){
-    var input=h("input",{type:"text",id:"accessCode",autocomplete:"off",placeholder:"Código de acceso",style:"font-family:var(--mono)"});
-    input.value=getCode();
-    var veil=modal("Código de acceso",[
-      h("p",{class:"hint",style:"margin:0 0 12px",text:msg||"Escribe el código que te dio Nexium. Se guarda en este navegador y no se vuelve a pedir. Sin código, lo que captures se queda solo en este dispositivo."}),
-      input
-    ],[
-      h("button",{class:"primary",text:"Entrar",onclick:function(){
-        var c=input.value.trim(); if(!c) return;
-        setCode(c); veil.remove(); remoteSync();
-      }})
-    ]);
-    input.addEventListener("keydown",function(e){ if(e.key==="Enter"){ var c=input.value.trim(); if(c){ setCode(c); veil.remove(); remoteSync(); } } });
-    setTimeout(function(){ input.focus(); },50);
+  /* ---------- fotos: recorte y compresión en el navegador ---------- */
+  function loadImage(file){
+    return new Promise(function(res){
+      var url=URL.createObjectURL(file),img=new Image();
+      img.onload=function(){ URL.revokeObjectURL(url); res(img); };
+      img.onerror=function(){ URL.revokeObjectURL(url); res(null); };
+      img.src=url;
+    });
   }
+  /* Recorta a 3:4 (pos: start/center/end sobre el eje que sobra), reduce a
+     2400 px de alto como máximo y guarda en JPG bajando la calidad hasta
+     quedar en menos de 2 MB. El fondo blanco cubre la transparencia de PNG. */
+  function processImage(img,pos){
+    var W=img.naturalWidth,H=img.naturalHeight,t=PHOTO.ratio;
+    var x=0,y=0,cw=W,ch=H,axis="";
+    if(Math.abs(W/H-t)>0.005){
+      if(W/H>t){ cw=Math.round(H*t); axis="x"; x=pos==="start"?0:pos==="end"?W-cw:Math.round((W-cw)/2); }
+      else { ch=Math.round(W/t); axis="y"; y=pos==="start"?0:pos==="end"?H-ch:Math.round((H-ch)/2); }
+    }
+    var sc=Math.min(1,PHOTO.maxH/ch), ow=Math.round(cw*sc), oh=Math.round(ch*sc);
+    var c=document.createElement("canvas"); c.width=ow; c.height=oh;
+    var g=c.getContext("2d");
+    g.fillStyle="#fff"; g.fillRect(0,0,ow,oh);
+    g.imageSmoothingQuality="high";
+    g.drawImage(img,x,y,cw,ch,0,0,ow,oh);
+    var qs=[0.88,0.8,0.72,0.62,0.5];
+    function attempt(i){
+      return new Promise(function(res){ c.toBlob(res,"image/jpeg",qs[i]); }).then(function(b){
+        return (b&&b.size>PHOTO.maxBytes&&i<qs.length-1)?attempt(i+1):b;
+      });
+    }
+    return attempt(0).then(function(b){ return {blob:b,w:ow,h:oh,axis:axis,scaled:sc<1}; });
+  }
+
+  /* ---------- conexión ----------
+     Revisa cada pieza por separado para decir exactamente qué falla:
+     la base (y el SQL), el código, el servidor de fotos en Vercel y el
+     bucket de Supabase. */
+  var photoStatus=null; /* null: sin revisar · {ok:true} · {ok:false,msg} */
+  function dbCheck(code){
+    if(!remoteOn()) return Promise.resolve({s:"off"});
+    return fetch(REMOTE.url.replace(/\/$/,"")+"/rest/v1/rpc/starmoda_get",{
+      method:"POST",headers:rHeaders(),body:JSON.stringify({p_code:code||"",p_doc:REMOTE.docId})
+    }).then(function(r){
+      return r.text().then(function(t){
+        if(r.ok) return {s:"ok"};
+        if(/codigo_invalido/.test(t)) return {s:"bad_code"};
+        if(r.status===404||/PGRST202|Could not find the function/i.test(t)) return {s:"no_sql"};
+        if(r.status===401||r.status===403) return {s:"bad_key",msg:t.slice(0,160)};
+        return {s:"err",msg:"HTTP "+r.status+" "+t.slice(0,160)};
+      });
+    },function(){ return {s:"offline"}; });
+  }
+  function photoCheck(code){
+    return fetch("/api/starmoda/check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:code||""})})
+      .then(function(r){ return r.ok?r.json():{missing:true,status:r.status}; },function(){ return {missing:true}; });
+  }
+  function photoVerdict(ph){
+    if(!ph||ph.missing) return {ok:false,msg:"No se encontró el servidor de fotos de nexiummx.com. Abre la app desde nexiummx.com/starmoda."};
+    if(!ph.config) return {ok:false,msg:"Faltan SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en Vercel (y volver a desplegar)."};
+    if(ph.error&&/401|403/.test(ph.error)) return {ok:false,msg:"La llave secreta guardada en Vercel no es válida."};
+    if(ph.bucket===false) return {ok:false,msg:"No existe el espacio de fotos starmoda-fotos (o no es público): corre el SQL completo en Supabase."};
+    if(ph.bucket===null) return {ok:false,msg:"No se pudo revisar el espacio de fotos ("+(ph.error||"error")+")."};
+    return {ok:true};
+  }
+  function refreshPhotoStatus(){
+    if(!remoteOn()||!getCode()) return;
+    photoCheck(getCode()).then(function(ph){
+      var v=photoVerdict(ph), changed=!photoStatus||photoStatus.ok!==v.ok;
+      photoStatus=v; if(changed) paintForm();
+    });
+  }
+  function photoWarnNode(){
+    if(!remoteOn()||!photoStatus||photoStatus.ok) return null;
+    return h("div",{class:"banner err"},[
+      h("div",{},[h("b",{text:"La subida de fotos no está lista"}),h("span",{text:photoStatus.msg})]),
+      h("button",{text:"Ver conexión",onclick:function(){ connModal(); }})
+    ]);
+  }
+
+  function connModal(opts){
+    opts=opts||{};
+    var list=h("ul",{class:"checks"});
+    var input=h("input",{type:"text",autocomplete:"off",placeholder:"sm-xxxx-xxxx-xxxx-xxxx",style:"font-family:var(--mono)"});
+    input.value=getCode();
+    var err=h("div",{class:"codeerr"});
+    var btn=h("button",{class:"primary",text:getCode()?"Guardar y probar":"Entrar"});
+    function row(cls,title,detail){
+      return h("li",{class:cls},[h("span",{class:"ic",text:cls==="ok"?"✓":cls==="bad"?"✕":"…"}),
+        h("div",{},[h("span",{text:title}),detail?h("small",{text:detail}):null])]);
+    }
+    function paint(rows){ list.innerHTML=""; rows.forEach(function(r){ list.appendChild(row.apply(null,r)); }); }
+    function run(code){
+      if(!remoteOn()){ paint([["bad","La app no tiene configurada la conexión","Falta la URL o la llave pública de Supabase en REMOTE (avísale a Nexium)."]]); return Promise.resolve(null); }
+      paint([["wait","Base de datos","Revisando…"],["wait","Código de acceso","Revisando…"],["wait","Subida de fotos","Revisando…"]]);
+      return Promise.all([dbCheck(code),photoCheck(code)]).then(function(res){
+        var db=res[0],ph=res[1],rows=[];
+        if(db.s==="ok"||db.s==="bad_code") rows.push(["ok","Base de datos","Conectada a Supabase."]);
+        else if(db.s==="no_sql") rows.push(["bad","Base de datos","Supabase responde, pero faltan las tablas de Star Moda: corre el SQL en Supabase › SQL Editor."]);
+        else if(db.s==="bad_key") rows.push(["bad","Base de datos","Supabase rechazó la llave pública de la app."]);
+        else if(db.s==="offline") rows.push(["bad","Base de datos","Sin conexión con Supabase. Revisa el internet; si sigue, el proyecto puede estar pausado."]);
+        else rows.push(["bad","Base de datos",db.msg||"Error desconocido"]);
+        if(!code) rows.push(["bad","Código de acceso","Escribe el código que te dio Nexium."]);
+        else if(db.s==="ok") rows.push(["ok","Código de acceso","Válido."]);
+        else if(db.s==="bad_code") rows.push(["bad","Código de acceso","Ese código no existe o fue desactivado."]);
+        else rows.push(["wait","Código de acceso","No se pudo revisar hasta que la base responda."]);
+        var v=photoVerdict(ph);
+        rows.push(v.ok?["ok","Subida de fotos","Servidor y espacio de fotos listos."]:["bad","Subida de fotos",v.msg]);
+        paint(rows);
+        if(code&&db.s==="ok"){ photoStatus=v; }
+        return db;
+      });
+    }
+    function submit(){
+      var c=input.value.trim();
+      if(!c){ err.textContent="Escribe el código."; input.focus(); return; }
+      err.textContent=""; btn.disabled=true;
+      run(c).then(function(db){
+        btn.disabled=false;
+        if(db&&db.s==="bad_code"){ err.textContent="Ese código no es válido. Revísalo con Nexium."; input.select(); return; }
+        if(db&&db.s!=="ok"){ err.textContent="No se pudo comprobar el código: revisa la base de datos arriba."; return; }
+        setCode(c); err.textContent="";
+        btn.textContent="Guardar y probar";
+        setSync("local","Sincronizando…"); remoteSync(); paintForm();
+        if(opts.ask) veil.remove();
+      });
+    }
+    btn.addEventListener("click",submit);
+    input.addEventListener("keydown",function(e){ if(e.key==="Enter") submit(); });
+    var veil=modal(opts.ask?"Bienvenida":"Conexión",[
+      opts.ask?h("p",{class:"hint",style:"margin:0 0 14px",text:opts.msg||"Escribe el código de acceso que te dio Nexium. Con él, lo que captures se guarda en la nube y lo ven todos. Se pide una sola vez en este navegador."}):null,
+      h("span",{class:"kicker",text:"Código de acceso"}),
+      h("div",{style:"display:flex;gap:8px;margin-top:6px"},[input,btn]),
+      err,
+      h("div",{style:"height:14px"}),
+      h("span",{class:"kicker",text:"Estado"}),
+      h("div",{style:"height:6px"}),
+      list,
+      h("p",{class:"hint",style:"margin:0",text:"Sin código, lo que captures se queda solo en este navegador. Puedes volver aquí desde el botón Conexión."})
+    ],[h("button",{text:"Probar de nuevo",onclick:function(){ run(input.value.trim()||getCode()); }})]);
+    run(getCode());
+    setTimeout(function(){ if(!getCode()||opts.ask) input.focus(); },50);
+  }
+  function codeModal(msg){ connModal({ask:true,msg:msg}); }
 
   /* ---------- guardado en la nube (base de datos del artefacto) ----------
      Cada prenda es un documento en "prendas/<id>" y el vocabulario vive en
@@ -870,7 +1041,7 @@
     if(remoteOn()&&okp.some(function(f){ return !f.src; })) req.push("Hay fotos sin subir a la nube");
     if(!okp.length) req.push("Foto principal");
     else if(okp.length<2) rec.push("Foto secundaria (se ve al pasar el mouse)");
-    if(p.photos.some(function(f){ return f.level==="bad"; })) req.push("Hay fotos que no cumplen 3:4");
+    if(p.photos.some(function(f){ return f.level==="bad"; })) req.push("Hay fotos que no sirven: quítalas y vuelve a subirlas");
     if(p.colors.length>1){
       var cov={}; p.photos.forEach(function(f){ if(f.color) cov[f.color]=1; });
       var falta=p.colors.filter(function(c){ return !cov[c]; });
@@ -930,7 +1101,14 @@
   /* ---------- sidebar ---------- */
   function paintList(){
     var wrap=document.getElementById("plist"); wrap.innerHTML="";
-    state.products.forEach(function(p){
+    var q=slug(document.getElementById("pSearch").value).replace(/-/g," ").trim();
+    var shown=state.products.filter(function(p){
+      if(!q) return true;
+      var hay=slug([p.title,p.category].concat(variantList(p).map(function(x){ return x.v.sku; })).join(" ")).replace(/-/g," ");
+      return q.split(" ").every(function(w){ return hay.indexOf(w)>=0; });
+    });
+    if(q&&!shown.length) wrap.appendChild(h("div",{class:"noresults",text:"Ninguna prenda coincide con la búsqueda."}));
+    shown.forEach(function(p){
       var g=grade(p),vl=variantList(p),meta=[];
       if(p.category) meta.push(p.category);
       if(vl.length){ meta.push(vl.length+" var"); meta.push(totalPieces(p)+" pz"); }
@@ -946,10 +1124,16 @@
       ]);
       wrap.appendChild(item);
     });
-    var ready=state.products.filter(function(p){ return !p.demo&&grade(p)!=="req"; }).length;
-    document.getElementById("pCount").innerHTML=ready+'<span>&thinsp;/&thinsp;15</span>';
-    document.getElementById("pBar").style.width=Math.min(100,(ready/15)*100)+"%";
-    document.getElementById("pText").textContent=ready>=15?"Mínimo cubierto":"Prendas listas para publicar";
+    /* Sin tope: cuenta las listas contra todas las capturadas. */
+    var real=state.products.filter(function(p){ return !p.demo; });
+    var ready=real.filter(function(p){ return grade(p)!=="req"; }).length;
+    var pz=real.reduce(function(a,p){ return a+totalPieces(p); },0);
+    document.getElementById("pCount").innerHTML=ready+'<span>&thinsp;/&thinsp;'+real.length+'</span>';
+    document.getElementById("pBar").style.width=(real.length?Math.round(ready/real.length*100):0)+"%";
+    document.getElementById("pText").textContent=!real.length?"Todavía no hay prendas capturadas"
+      :ready===real.length?"Todas las prendas están listas para publicar"
+      :"Prendas listas para publicar · "+(real.length-ready)+" con pendientes";
+    document.getElementById("pTotals").textContent=real.length?(real.length+(real.length===1?" prenda · ":" prendas · ")+pz+(pz===1?" pieza":" piezas")):"";
   }
 
   /* ---------- formulario ---------- */
@@ -1009,11 +1193,25 @@
         h("td",{class:"num"},[qtyIn])
       ]));
     });
-    return h("div",{class:"vtable"},[h("table",{},[
+    /* Llenado rápido: casi siempre llegan las mismas piezas por variante. */
+    var bulk=h("input",{type:"number",min:"0",step:"1",placeholder:"piezas"});
+    function fill(onlyEmpty){
+      if(bulk.value===""){ bulk.focus(); return; }
+      var n=String(Math.max(0,parseInt(bulk.value,10)||0));
+      vl.forEach(function(x){ if(!onlyEmpty||x.v.qty===""||x.v.qty===null) x.v.qty=n; });
+      p.demo=false; save(); repaintVariants(); paintPanel(); paintList();
+    }
+    bulk.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); fill(false); } });
+    var bar=h("div",{class:"bulk"},[
+      h("span",{text:"Mismas piezas para todas:"}),bulk,
+      h("button",{text:"Aplicar a todas",onclick:function(){ fill(false); }}),
+      h("button",{class:"ghost",text:"Solo a las vacías",onclick:function(){ fill(true); }})
+    ]);
+    return h("div",{},[bar,h("div",{class:"vtable"},[h("table",{},[
       h("thead",{},[h("tr",{},[h("th",{text:"Color"}),h("th",{text:"Talla"}),h("th",{text:"SKU"}),h("th",{text:"Piezas"})])]),
       body,
       h("tfoot",{},[h("tr",{},[foot])])
-    ])]);
+    ])])]);
   }
 
   function pickRow(items,isOn,toggle,opts){
@@ -1048,6 +1246,13 @@
       return;
     }
     var pad=h("div",{class:"pad"}),grid=h("div",{class:"formgrid"}),form=h("div",{});
+    if(p.demo) form.appendChild(h("div",{class:"banner"},[
+      h("div",{},[h("b",{text:"Esta es una prenda de ejemplo"}),
+        h("span",{text:"Sirve para ver cómo se llena. No se exporta ni se sube. Cuando crees tu primera prenda, desaparece."})]),
+      h("button",{class:"primary",text:"+ Crear mi primera prenda",onclick:newProduct})
+    ]));
+    stepHost=h("nav",{class:"steps","aria-label":"Pasos de la captura"});
+    form.appendChild(stepHost); paintSteps();
 
     /* 1 identidad */
     var catSel=h("select",{});
@@ -1062,7 +1267,7 @@
       syncVariants(p); save(); paintForm();
     });
 
-    form.appendChild(h("fieldset",{},[
+    form.appendChild(h("fieldset",{id:"sec1"},[
       h("legend",{},[h("span",{class:"kicker",text:"Uno"}),h("div",{class:"secttl",text:"Identidad"})]),
       h("div",{class:"row two"},[
         field("Nombre de la prenda","req",input(p,"title",{placeholder:"Blusa Marfil",maxlength:"60"}),"Sin talla ni color. Máximo 60 caracteres."),
@@ -1106,7 +1311,7 @@
 
     variantHost=h("div",{}); variantHost.appendChild(variantTable(p));
 
-    form.appendChild(h("fieldset",{},[
+    form.appendChild(h("fieldset",{id:"sec2"},[
       h("legend",{},[h("span",{class:"kicker",text:"Dos"}),h("div",{class:"secttl",text:"Color y talla"})]),
       h("p",{class:"hint",text:"Los colores con borde punteado todavía no existen en el diseño de la tienda: se verán beige hasta que Nexium los programe."}),
       field("Colores","req",colorPicks),
@@ -1128,7 +1333,7 @@
       p.fit=fitSel.value; p.demo=false; save(); paintPanel(); paintList();
     });
 
-    form.appendChild(h("fieldset",{},[
+    form.appendChild(h("fieldset",{id:"sec3"},[
       h("legend",{},[h("span",{class:"kicker",text:"Tres"}),h("div",{class:"secttl",text:"Ficha técnica"})]),
       h("p",{class:"hint",text:"Es lo que aparece en los desplegables de la página de producto."}),
       h("div",{class:"row two"},[
@@ -1171,7 +1376,16 @@
           st.retry?h("button",{class:"ghost",style:"margin-top:6px;font-size:11px;padding:4px 8px;width:100%",text:"Reintentar",
             onclick:function(){ uploadPhoto(p,f,paintShots); }}):null
         ]);
-        shots.appendChild(h("div",{class:"shot"},[
+        var crop=null;
+        if(f.crop&&origFiles[f.key]){
+          var labels=f.crop.axis==="x"?["◀","Centro","▶"]:["▲","Centro","▼"];
+          var tips=f.crop.axis==="x"?["Mostrar más la izquierda","Centrar","Mostrar más la derecha"]:["Mostrar más arriba","Centrar","Mostrar más abajo"];
+          crop=h("div",{},[h("div",{class:"crop-l",text:"Encuadre"}),h("div",{class:"crop"},["start","center","end"].map(function(ps,j){
+            return h("button",{class:f.crop.pos===ps?"on":"",text:labels[j],title:tips[j],"aria-label":tips[j],disabled:busyKeys[f.key]?"disabled":null,
+              onclick:function(){ if(f.crop.pos!==ps) recrop(f,ps); }});
+          }))]);
+        }
+        shots.appendChild(h("div",{class:"shot"+(busyKeys[f.key]?" busy":"")},[
           h("div",{class:"thumb"},[
             (f.url||f.src)?h("img",{src:f.url||f.src,alt:""}):h("span",{text:"sin vista"}),
             h("span",{class:"flag "+cls,text:txt})
@@ -1179,7 +1393,9 @@
           h("div",{class:"body"},[
             h("div",{class:"rename",text:f.target}),
             h("div",{class:"meta",text:f.w+"×"+f.h+" · "+(f.bytes/1024).toFixed(0)+" KB"}),
+            (f.notes||[]).length?h("div",{class:"note",text:f.notes.join(" ")}):null,
             f.issues.length?h("div",{class:"issue",text:f.issues.join(". ")}):null,
+            crop,
             up,
             sel,
             h("button",{class:"rm ghost danger",text:"Quitar",onclick:function(){
@@ -1190,42 +1406,65 @@
         ]));
       });
     }
-    function inspect(file){
-      return new Promise(function(res){
-        var issues=[],level="ok";
-        var ext=(file.name.split(".").pop()||"").toLowerCase();
-        if(!(ext==="jpg"||ext==="jpeg"||ext==="webp"||ext==="png")){ issues.push("Formato "+ext.toUpperCase()+" — se necesita JPG, PNG o WEBP"); level="bad"; }
-        if(file.size>PHOTO.maxBytes){ issues.push("Pesa más de 2 MB"); level="bad"; }
-        else if(file.size>PHOTO.warnBytes&&level!=="bad"){ issues.push("Pesa más de 600 KB, conviene comprimirla"); level="warn"; }
-        var url=URL.createObjectURL(file),img=new Image(),key=Math.random().toString(36).slice(2,8);
-        upFiles[key]=file;
-        img.onload=function(){
-          var w=img.naturalWidth,ht=img.naturalHeight,r=w/ht;
-          if(Math.abs(r-PHOTO.ratio)>PHOTO.tol){ issues.push("Proporción "+r.toFixed(2)+" — se necesita 3:4 (0.75)"); level="bad"; }
-          if(w<PHOTO.minW||ht<PHOTO.minH){ issues.push("Mínimo 1200×1600 px"); if(level!=="bad") level="warn"; }
-          res({name:file.name,ext:(ext==="jpeg"?"jpg":ext),w:w,h:ht,bytes:file.size,url:url,level:level,issues:issues,color:"",target:"",key:key,src:""});
-        };
-        img.onerror=function(){
-          res({name:file.name,ext:ext,w:0,h:0,bytes:file.size,url:"",level:"bad",
-            issues:["No se pudo leer la imagen"+(ext==="heic"?" — HEIC no sirve, cambia la cámara a 'Más compatible'":"")],color:"",target:"",key:key,src:""});
-        };
-        img.src=url;
+    function inspect(file,pos){
+      var ext=(file.name.split(".").pop()||"").toLowerCase();
+      var key=Math.random().toString(36).slice(2,8);
+      origFiles[key]=file;
+      return loadImage(file).then(function(img){
+        if(!img) return {name:file.name,ext:ext,w:0,h:0,bytes:file.size,url:"",level:"bad",notes:[],crop:null,
+          issues:["No se pudo leer la imagen"+(ext==="heic"||ext==="heif"?" — HEIC no sirve, cambia la cámara a 'Más compatible' o mándala por WhatsApp":"")],
+          color:"",target:"",key:key,src:""};
+        var W=img.naturalWidth,H=img.naturalHeight;
+        var keep=(ext==="jpg"||ext==="jpeg")&&Math.abs(W/H-PHOTO.ratio)<=0.005&&H<=PHOTO.maxH&&file.size<=PHOTO.warnBytes;
+        var job=keep?Promise.resolve({blob:file,w:W,h:H,axis:"",scaled:false}):processImage(img,pos||"center");
+        return job.then(function(o){
+          var notes=[],issues=[],level="ok";
+          if(o.axis) notes.push("Recortada a 3:4 (llegó en "+W+"×"+H+"). Revisa el encuadre.");
+          else if(o.scaled) notes.push("Reducida de "+W+"×"+H+".");
+          if(!keep&&ext!=="jpg"&&ext!=="jpeg") notes.push("Convertida a JPG.");
+          if(o.w<PHOTO.minW||o.h<PHOTO.minH){ issues.push("Queda de "+o.w+"×"+o.h+" px; lo ideal es 1200×1600 o más, puede verse borrosa"); level="warn"; }
+          if(!o.blob||o.blob.size>PHOTO.maxBytes){ issues.push("No se pudo dejar en menos de 2 MB"); level="bad"; }
+          if(o.blob) upFiles[key]=o.blob;
+          return {name:file.name,ext:"jpg",w:o.w,h:o.h,bytes:o.blob?o.blob.size:file.size,
+            url:o.blob?URL.createObjectURL(o.blob):"",level:level,issues:issues,notes:notes,
+            crop:o.axis?{axis:o.axis,pos:pos||"center"}:null,color:"",target:"",key:key,src:""};
+        });
       });
     }
     function addFiles(list){
       var files=Array.prototype.slice.call(list).filter(function(f){ return f.size>0; });
-      Promise.all(files.map(inspect)).then(function(res){
+      if(!files.length) return;
+      drop.classList.add("busy"); dropMsg.textContent="Preparando "+files.length+" foto"+(files.length>1?"s":"")+"…";
+      Promise.all(files.map(function(f){ return inspect(f); })).then(function(res){
+        drop.classList.remove("busy"); dropMsg.textContent=dropText;
         res.forEach(function(r){ p.photos.push(r); });
         p.demo=false; renameAll(); save(); paintShots(); paintPanel(); paintList();
         res.forEach(function(r){ if(r.level!=="bad") uploadPhoto(p,r,paintShots); });
       });
     }
+    /* Mover el encuadre vuelve a recortar desde la foto original (sigue en
+       memoria mientras no se recargue la página) y la sube otra vez. */
+    function recrop(f,pos){
+      var file=origFiles[f.key]; if(!file) return;
+      busyKeys[f.key]=1; paintShots();
+      var oldKey=f.key, oldUrl=f.url;
+      inspect(file,pos).then(function(r){
+        delete busyKeys[oldKey];
+        if(oldUrl) URL.revokeObjectURL(oldUrl);
+        ["ext","w","h","bytes","url","level","issues","notes","crop","key"].forEach(function(k){ f[k]=r[k]; });
+        f.src=""; renameAll(); save(); paintShots(); paintPanel(); paintList();
+        if(f.level!=="bad") uploadPhoto(p,f,paintShots);
+        if(oldKey!==f.key){ delete upFiles[oldKey]; delete origFiles[oldKey]; }
+      });
+    }
     var fileIn=h("input",{type:"file",accept:"image/*",multiple:"multiple",style:"display:none"});
     fileIn.addEventListener("change",function(){ addFiles(fileIn.files); fileIn.value=""; });
+    var dropText=remoteOn()
+      ?"Arrastra aquí las fotos de esta prenda, o elígelas. Se recortan a 3:4, se comprimen y se suben solas a la nube; van directo al CSV de Shopify."
+      :"Arrastra aquí las fotos de esta prenda, o elígelas. Se recortan a 3:4 y se comprimen aquí mismo; no se suben a ningún lado.";
+    var dropMsg=h("p",{text:dropText});
     var drop=h("div",{class:"drop"},[
-      h("p",{text:remoteOn()
-        ?"Arrastra aquí las fotos de esta prenda, o elígelas. Las que cumplen se suben solas a la nube y van directo al CSV de Shopify."
-        :"Arrastra aquí las fotos de esta prenda, o elígelas. No se suben a ningún lado — solo se revisan en tu computadora."}),
+      dropMsg,
       h("button",{class:"ghost",text:"Elegir fotos",onclick:function(){ fileIn.click(); }}),
       fileIn
     ]);
@@ -1234,10 +1473,10 @@
     drop.addEventListener("drop",function(e){ if(e.dataTransfer&&e.dataTransfer.files) addFiles(e.dataTransfer.files); });
     renameAll(); paintShots();
 
-    form.appendChild(h("fieldset",{},[
+    form.appendChild(h("fieldset",{id:"sec4"},[
       h("legend",{},[h("span",{class:"kicker",text:"Cuatro"}),h("div",{class:"secttl",text:"Fotos"})]),
-      h("p",{class:"hint",text:"Vertical 3:4, mínimo 1200×1600 px, JPG, PNG o WEBP. La app revisa cada foto y te dice con qué nombre guardarla."}),
-      drop,shots
+      h("p",{class:"hint",text:"JPG, PNG o WEBP, de preferencia vertical y de 1200×1600 px o más. Si la foto llega en otra proporción, la app la recorta a 3:4 y tú eliges el encuadre. La primera foto es la principal."}),
+      photoWarnNode(),drop,shots
     ]));
 
     /* 5 etiquetas */
@@ -1250,7 +1489,7 @@
         p.demo=false; save(); paintForm();
       },{focus:"tags"});
 
-    form.appendChild(h("fieldset",{},[
+    form.appendChild(h("fieldset",{id:"sec5"},[
       h("legend",{},[h("span",{class:"kicker",text:"Cinco"}),h("div",{class:"secttl",text:"Etiquetas"})]),
       h("p",{class:"hint",text:"Las etiquetas son lo que mete la prenda en las colecciones. Si agregas una nueva, queda marcada para que Nexium cree su colección."}),
       tagPicks,
@@ -1277,9 +1516,46 @@
   }
 
   /* ---------- panel lateral ---------- */
+  /* ---------- pasos de la captura ----------
+     Una barra arriba del formulario: cada paso dice si le falta algo
+     obligatorio (rojo), algo recomendado (ámbar) o si ya está (palomita),
+     y al tocarlo lleva a esa sección. */
+  var stepHost=null;
+  function steps(p){
+    var vl=variantList(p);
+    var okp=p.photos.filter(function(f){ return f.level!=="bad"; });
+    var faltaQty=vl.some(function(x){ return x.v.qty===""||x.v.qty===null; });
+    var faltaSku=vl.some(function(x){ return !x.v.sku.trim(); });
+    var fotosReq=!okp.length||p.photos.some(function(f){ return f.level==="bad"; })||(remoteOn()&&okp.some(function(f){ return !f.src; }));
+    return [
+      {id:"sec1",t:"Identidad",s:(!p.title.trim()||!(Number(p.price)>0))?"req":(!p.category||!p.body.trim())?"rec":"ok"},
+      {id:"sec2",t:"Color y talla",s:(!p.colors.length||!p.sizes.length||faltaQty||faltaSku)?"req":"ok"},
+      {id:"sec3",t:"Ficha técnica",s:(!p.material.trim()||!p.fit||!p.care.trim())?"rec":"ok"},
+      {id:"sec4",t:"Fotos",s:fotosReq?"req":okp.length<2?"rec":"ok"},
+      {id:"sec5",t:"Etiquetas",s:p.tags.length?"ok":"rec"}
+    ];
+  }
+  function paintSteps(){
+    var p=cur(); if(!p||!stepHost) return;
+    stepHost.innerHTML="";
+    steps(p).forEach(function(st,i){
+      stepHost.appendChild(h("button",{class:"step ghost "+st.s,
+        title:st.s==="ok"?"Completo":st.s==="req"?"Le falta algo obligatorio":"Le falta algo recomendado",
+        onclick:function(){ var el=document.getElementById(st.id); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); }
+      },[h("span",{class:"n",text:st.s==="ok"?"✓":String(i+1)}),h("span",{text:st.t})]));
+    });
+  }
+  function newProduct(){
+    /* La prenda de ejemplo sobra en cuanto hay una real. */
+    state.products=state.products.filter(function(x){ return !x.demo; });
+    var p=blank(); state.products.push(p); state.active=p.id; save(); paintAll();
+    var el=document.querySelector('#main input[type="text"]'); if(el) el.focus();
+    window.scrollTo(0,0);
+  }
+
   var panelHost=null;
   function panelNode(){ panelHost=h("div",{class:"panel"}); fillPanel(); return panelHost; }
-  function paintPanel(){ if(panelHost) fillPanel(); }
+  function paintPanel(){ paintSteps(); if(panelHost) fillPanel(); }
   function fillPanel(){
     var p=cur(); if(!p||!panelHost) return;
     panelHost.innerHTML="";
@@ -1805,7 +2081,7 @@
         ["opt","Opcional — suma, se agrega después"]
       ]),
       block("Lo que no cambia",[
-        ["req","Las fotos van en vertical 3:4. Otra proporción se recorta mal."],
+        ["req","Las fotos van en vertical 3:4. Si llegan en otra proporción, la app las recorta: revisa que no se corte la prenda."],
         ["req","Un modelo es una prenda con variantes, nunca varias prendas."],
         ["req","El SKU tiene que ser el mismo que en Eleventa."],
         ["pend","Un color nuevo se ve beige en la tienda hasta que se programa."]
@@ -1823,10 +2099,9 @@
   /* ---------- arranque ---------- */
   function paintAll(){ paintList(); paintForm(); }
 
-  document.getElementById("btnAdd").addEventListener("click",function(){
-    var p=blank(); state.products.push(p); state.active=p.id; save(); paintAll();
-    var el=document.querySelector('input[type="text"]'); if(el) el.focus();
-  });
+  document.getElementById("btnAdd").addEventListener("click",newProduct);
+  document.getElementById("pSearch").addEventListener("input",paintList);
+  document.getElementById("btnConn").addEventListener("click",function(){ connModal(); });
   document.getElementById("btnExport").addEventListener("click",exportModal);
   document.getElementById("btnBackup").addEventListener("click",backupModal);
   document.getElementById("btnGuide").addEventListener("click",guideModal);
@@ -1835,12 +2110,13 @@
   load(); primeSigs(); paintAll(); paintSaved();
   if(remoteOn()){
     remoteSync();
+    refreshPhotoStatus();
     /* trae lo que capturen otros mientras la app está abierta */
     setInterval(function(){ if(!document.hidden&&getCode()) remoteSync(); },45000);
     document.addEventListener("visibilitychange",function(){ if(!document.hidden&&getCode()) remoteSync(); });
     var syncEl=document.getElementById("sync");
     syncEl.style.cursor="pointer";
-    syncEl.title="Sincronizar ahora";
+    syncEl.title="Sincronizar ahora (Conexión para ver el detalle)";
     syncEl.addEventListener("click",function(){ if(getCode()) remoteSync(); else codeModal(); });
   } else cloudInit();
   if(!storageOK) setTimeout(function(){ alert("Este navegador no permite guardar automáticamente. Exporta un respaldo seguido para no perder el trabajo."); },400);
