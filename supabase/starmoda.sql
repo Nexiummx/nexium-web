@@ -1,0 +1,131 @@
+-- ============================================================
+-- Star Moda · Captura de catálogo — Supabase
+-- Córrelo completo en SQL Editor › New query › Run.
+-- Se puede volver a correr sin perder datos.
+-- ============================================================
+
+create extension if not exists pgcrypto with schema extensions;
+
+-- Catálogo: un documento con todas las prendas y el vocabulario.
+create table if not exists public.starmoda_catalogo (
+  id          text primary key,
+  payload     jsonb not null,
+  updated_at  timestamptz not null default now(),
+  updated_by  text
+);
+
+-- Historial: cada guardado deja una copia. Si algo se pisa o se borra,
+-- de aquí se recupera.
+create table if not exists public.starmoda_historial (
+  id        bigint generated always as identity primary key,
+  doc       text not null,
+  payload   jsonb not null,
+  saved_at  timestamptz not null default now(),
+  saved_by  text
+);
+create index if not exists starmoda_historial_doc_idx
+  on public.starmoda_historial (doc, saved_at desc);
+
+-- Códigos de acceso. Se guarda el hash, nunca el código.
+create table if not exists public.starmoda_acceso (
+  code_hash  text primary key,
+  nombre     text not null,
+  activo     boolean not null default true,
+  creado     timestamptz not null default now()
+);
+
+-- RLS encendido y SIN políticas: con la llave pública (anon) nadie
+-- puede leer ni escribir estas tablas directamente. Solo se entra por
+-- las dos funciones de abajo, que validan el código.
+alter table public.starmoda_catalogo  enable row level security;
+alter table public.starmoda_historial enable row level security;
+alter table public.starmoda_acceso    enable row level security;
+revoke all on public.starmoda_catalogo, public.starmoda_historial, public.starmoda_acceso from anon, authenticated;
+
+-- Valida el código y regresa a quién pertenece.
+create or replace function public.starmoda_quien(p_code text)
+returns text
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare v_nombre text;
+begin
+  select nombre into v_nombre
+    from starmoda_acceso
+   where code_hash = encode(digest(coalesce(p_code, ''), 'sha256'), 'hex')
+     and activo;
+  if v_nombre is null then
+    perform pg_sleep(0.5);  -- frena intentos al azar
+    raise exception 'codigo_invalido' using errcode = '28000';
+  end if;
+  return v_nombre;
+end $$;
+
+-- Leer el catálogo.
+create or replace function public.starmoda_get(p_code text, p_doc text default 'principal')
+returns table (payload jsonb, updated_at timestamptz, updated_by text)
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+begin
+  perform starmoda_quien(p_code);
+  return query
+    select c.payload, c.updated_at, c.updated_by
+      from starmoda_catalogo c
+     where c.id = p_doc;
+end $$;
+
+-- Guardar el catálogo (la app ya juntó los cambios prenda por prenda).
+create or replace function public.starmoda_save(p_code text, p_payload jsonb, p_doc text default 'principal')
+returns timestamptz
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_quien text;
+  v_when  timestamptz := now();
+begin
+  v_quien := starmoda_quien(p_code);
+  if coalesce(jsonb_typeof(p_payload -> 'products'), '') <> 'array' then
+    raise exception 'payload_invalido';
+  end if;
+  insert into starmoda_catalogo (id, payload, updated_at, updated_by)
+       values (p_doc, p_payload, v_when, v_quien)
+  on conflict (id) do update
+       set payload = excluded.payload,
+           updated_at = excluded.updated_at,
+           updated_by = excluded.updated_by;
+  insert into starmoda_historial (doc, payload, saved_at, saved_by)
+       values (p_doc, p_payload, v_when, v_quien);
+  return v_when;
+end $$;
+
+revoke all on function public.starmoda_quien(text) from public, anon, authenticated;
+revoke all on function public.starmoda_get(text, text) from public;
+revoke all on function public.starmoda_save(text, jsonb, text) from public;
+grant execute on function public.starmoda_get(text, text) to anon, authenticated;
+grant execute on function public.starmoda_save(text, jsonb, text) to anon, authenticated;
+
+-- ============================================================
+-- CÓDIGOS: cambia los textos entre comillas por códigos largos y
+-- difíciles de adivinar (ej. "sm-7Kq2-vX9p-Lm4t"). Uno por persona,
+-- así el historial dice quién guardó.
+-- ============================================================
+insert into public.starmoda_acceso (code_hash, nombre)
+values
+  (encode(extensions.digest('CAMBIA-ESTE-CODIGO-CAPTURA', 'sha256'), 'hex'), 'Captura Star Moda'),
+  (encode(extensions.digest('CAMBIA-ESTE-CODIGO-NEXIUM',  'sha256'), 'hex'), 'Nexium')
+on conflict (code_hash) do nothing;
+
+-- Útiles:
+-- Quitar acceso a alguien:
+--   update public.starmoda_acceso set activo = false where nombre = 'Captura Star Moda';
+-- Ver los últimos guardados:
+--   select id, saved_at, saved_by, jsonb_array_length(payload->'products') as prendas
+--     from public.starmoda_historial order by saved_at desc limit 20;
+-- Recuperar una versión del historial (cambia el id):
+--   update public.starmoda_catalogo c set payload = h.payload, updated_at = now()
+--     from public.starmoda_historial h where h.id = 123 and c.id = h.doc;

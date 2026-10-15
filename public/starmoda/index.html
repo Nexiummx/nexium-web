@@ -1,0 +1,1770 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow"><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Captura Star Moda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --ink:#1c1b1a; --ground:#f7f3ee; --surface:#fffdfa; --sunk:#f0ebe3; --raise:#fff;
+    --line:#e3dbd0; --line-soft:#ede6dc; --beige:#dccdb8; --mocha:#9b7b6c; --gold:#d8b16a;
+    --muted:#7a7169; --req:#9c4a34; --rec:#a8792a; --opt:#8b8279; --ok:#5e7a55;
+    --display:"Cormorant Garamond",Georgia,serif;
+    --body:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ink:#f1ebe3; --ground:#191715; --surface:#211e1b; --sunk:#1f1c19; --raise:#282420;
+    --line:#3a3430; --line-soft:#2c2825; --beige:#c9b89f; --mocha:#c3a190; --gold:#ddb96f;
+    --muted:#a1968b; --req:#e08a6f; --rec:#d6ab5b; --opt:#9a9089; --ok:#93b087;
+  }}
+  :root[data-theme="dark"]{
+    --ink:#f1ebe3; --ground:#191715; --surface:#211e1b; --sunk:#1f1c19; --raise:#282420;
+    --line:#3a3430; --line-soft:#2c2825; --beige:#c9b89f; --mocha:#c3a190; --gold:#ddb96f;
+    --muted:#a1968b; --req:#e08a6f; --rec:#d6ab5b; --opt:#9a9089; --ok:#93b087;
+  }
+  *{box-sizing:border-box;}
+  body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+
+  /* topbar */
+  .top{display:flex;align-items:center;gap:18px;padding:14px 24px;border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:20;flex-wrap:wrap;}
+  .top .mark{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-.01em;}
+  .top .mark em{font-style:italic;color:var(--mocha);}
+  .top .sep{flex:1;}
+  .saved{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;}
+  .saved b{color:var(--ok);font-weight:600;}
+  button{font-family:var(--body);font-size:12.5px;font-weight:500;cursor:pointer;border:1px solid var(--line);background:var(--raise);color:var(--ink);padding:8px 14px;transition:background .15s,border-color .15s;}
+  button:hover{border-color:var(--mocha);}
+  button.primary{background:var(--ink);color:var(--ground);border-color:var(--ink);}
+  button.primary:hover{background:var(--mocha);border-color:var(--mocha);}
+  button.ghost{background:transparent;}
+  button.danger:hover{border-color:var(--req);color:var(--req);}
+  button[disabled]{opacity:.45;cursor:not-allowed;}
+
+  /* shell */
+  .shell{display:grid;grid-template-columns:288px minmax(0,1fr);min-height:calc(100vh - 57px);}
+  aside{border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;}
+  .progress{padding:20px 22px;border-bottom:1px solid var(--line);}
+  .progress .big{font-family:var(--display);font-size:40px;line-height:1;font-weight:500;}
+  .progress .big span{font-size:16px;color:var(--muted);font-family:var(--body);}
+  .progress p{margin:6px 0 12px;font-size:12px;color:var(--muted);}
+  .bar{height:4px;background:var(--sunk);overflow:hidden;}
+  .bar i{display:block;height:100%;background:var(--mocha);transition:width .3s;}
+  .plist{flex:1;overflow-y:auto;}
+  .pitem{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:13px 22px;border-bottom:1px solid var(--line-soft);cursor:pointer;align-items:center;}
+  .pitem:hover{background:var(--sunk);}
+  .pitem.on{background:var(--sunk);box-shadow:inset 3px 0 0 var(--mocha);}
+  .pitem b{font-weight:600;font-size:13.5px;display:block;line-height:1.3;}
+  .pitem small{color:var(--muted);font-size:11.5px;font-family:var(--mono);}
+  .dots{display:flex;gap:3px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--line);}
+  .dot.req{background:var(--req);} .dot.rec{background:var(--rec);} .dot.ok{background:var(--ok);}
+  .addwrap{padding:16px 22px;border-top:1px solid var(--line);}
+  .addwrap button{width:100%;}
+
+  main{overflow-x:hidden;}
+  .pad{padding:30px 34px 90px;max-width:1180px;}
+  .empty{padding:80px 34px;text-align:center;color:var(--muted);}
+  .empty h2{font-family:var(--display);font-size:30px;color:var(--ink);font-weight:500;margin:0 0 8px;}
+
+  .formgrid{display:grid;grid-template-columns:minmax(0,1fr) 268px;gap:38px;align-items:start;}
+  fieldset{border:0;padding:0;margin:0 0 34px;}
+  legend{padding:0;}
+  .kicker{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--mocha);display:block;margin-bottom:4px;}
+  .secttl{font-family:var(--display);font-size:25px;font-weight:500;margin:0 0 16px;line-height:1.15;}
+  .hint{font-size:12.5px;color:var(--muted);margin:-10px 0 14px;max-width:62ch;}
+
+  .row{display:grid;gap:14px;margin-bottom:14px;}
+  .row.two{grid-template-columns:1fr 1fr;}
+  .row.three{grid-template-columns:1fr 1fr 1fr;}
+  label.f{display:block;}
+  label.f > span{display:block;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+  label.f > span i{font-style:normal;font-size:11px;margin-left:5px;}
+  label.f > span i.req{color:var(--req);} label.f > span i.rec{color:var(--rec);} label.f > span i.opt{color:var(--opt);}
+  input[type=text],input[type=number],textarea,select{
+    width:100%;font-family:var(--body);font-size:14px;color:var(--ink);
+    background:var(--raise);border:1px solid var(--line);padding:9px 11px;
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--mocha);}
+  textarea{resize:vertical;min-height:78px;line-height:1.5;}
+  .mono input,input.mono{font-family:var(--mono);font-size:12.5px;}
+  .cnt{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:4px;}
+  .cnt.over{color:var(--req);}
+
+  .picks{display:flex;flex-wrap:wrap;gap:7px;}
+  .pick{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--raise);padding:7px 12px;cursor:pointer;font-size:13px;user-select:none;}
+  .pick:hover{border-color:var(--mocha);}
+  .pick.on{border-color:var(--ink);background:var(--ink);color:var(--ground);}
+  .pick .sw{width:15px;height:15px;border-radius:50%;border:1px solid rgba(0,0,0,.2);flex:none;}
+  .pick.sz{font-family:var(--mono);font-size:12.5px;min-width:46px;justify-content:center;}
+
+  .vtable{border:1px solid var(--line);background:var(--surface);overflow-x:auto;}
+  table{border-collapse:collapse;width:100%;min-width:560px;font-size:13px;}
+  th{text-align:left;font-size:9.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--line);background:var(--sunk);white-space:nowrap;}
+  td{padding:7px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle;}
+  tr:last-child td{border-bottom:0;}
+  td input{padding:6px 8px;}
+  td.num input{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12.5px;}
+  .vcolor{display:flex;align-items:center;gap:8px;white-space:nowrap;}
+  .vcolor .sw{width:13px;height:13px;border-radius:50%;border:1px solid rgba(0,0,0,.2);flex:none;}
+  .vsize{font-family:var(--mono);font-size:12.5px;}
+  .zero{color:var(--req);}
+  tfoot td{background:var(--sunk);font-weight:600;border-top:1px solid var(--line);font-size:12px;}
+
+  /* photos */
+  .drop{border:1px dashed var(--line);background:var(--surface);padding:22px;text-align:center;}
+  .drop.hot{border-color:var(--mocha);background:var(--sunk);}
+  .drop p{margin:0 0 10px;font-size:13px;color:var(--muted);}
+  .shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px;margin-top:14px;}
+  .shot{border:1px solid var(--line);background:var(--surface);}
+  .shot .thumb{aspect-ratio:3/4;background:var(--sunk);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+  .shot .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .shot .flag{position:absolute;top:0;left:0;font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:4px 8px;color:#fff;}
+  .shot .flag.bad{background:var(--req);} .shot .flag.warn{background:var(--rec);} .shot .flag.ok{background:var(--ok);}
+  .shot .body{padding:10px;}
+  .shot .rename{font-family:var(--mono);font-size:10.5px;word-break:break-all;line-height:1.5;color:var(--ink);}
+  .shot .issue{font-size:11px;color:var(--req);margin-top:6px;line-height:1.4;}
+  .shot .meta{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:5px;}
+  .shot .rm{margin-top:8px;font-size:11px;padding:4px 8px;width:100%;}
+
+  /* side panel */
+  .panel{position:sticky;top:75px;display:flex;flex-direction:column;gap:16px;}
+  .card{border:1px solid var(--line);background:var(--surface);}
+  .card h4{margin:0;padding:13px 16px;font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);}
+  .card .in{padding:14px 16px;}
+  .miss{list-style:none;margin:0;padding:0;}
+  .miss li{display:grid;grid-template-columns:14px 1fr;gap:9px;padding:7px 16px;font-size:12.5px;border-bottom:1px solid var(--line-soft);align-items:baseline;line-height:1.4;}
+  .miss li:last-child{border-bottom:0;}
+  .miss li::before{font-size:11px;line-height:1.3;}
+  .miss li.req::before{content:"\25CF";color:var(--req);}
+  .miss li.rec::before{content:"\25D0";color:var(--rec);}
+  .miss li.opt::before{content:"\25CB";color:var(--opt);}
+  .allgood{padding:16px;font-size:12.5px;color:var(--ok);display:grid;grid-template-columns:14px 1fr;gap:9px;align-items:baseline;}
+  .allgood::before{content:"\2713";font-weight:700;}
+  .willbe{display:flex;flex-wrap:wrap;gap:5px;}
+  .willbe span{font-size:11.5px;border:1px solid var(--line);padding:4px 9px;color:var(--muted);}
+  .willbe span.auto{border-color:var(--beige);color:var(--ink);}
+  .stat{display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;}
+  .stat b{font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12.5px;}
+
+  /* modal */
+  .veil{position:fixed;inset:0;background:rgba(28,27,26,.55);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60;}
+  .modal{background:var(--ground);border:1px solid var(--line);max-width:600px;width:100%;max-height:88vh;overflow-y:auto;}
+  .modal .mh{padding:20px 24px;border-bottom:1px solid var(--line);}
+  .modal .mh h3{font-family:var(--display);font-size:26px;font-weight:500;margin:0;}
+  .modal .mb{padding:22px 24px;}
+  .modal .mf{padding:16px 24px;border-top:1px solid var(--line);display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;}
+  .exp{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line-soft);}
+  .exp:last-of-type{border-bottom:0;}
+  .exp b{display:block;font-weight:600;font-size:13.5px;}
+  .exp span{font-size:12px;color:var(--muted);line-height:1.45;display:block;margin-top:2px;}
+  .warn{border-left:2px solid var(--rec);padding:2px 0 2px 16px;margin:16px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5;}
+  .warn b{color:var(--ink);}
+  .out{width:100%;font-family:var(--mono);font-size:11px;min-height:150px;margin-top:12px;}
+  .demo{background:var(--gold);color:#1c1b1a;font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:3px 7px;display:inline-block;}
+  :focus-visible{outline:2px solid var(--mocha);outline-offset:2px;}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+  @media (max-width:1060px){.formgrid{grid-template-columns:1fr;}.panel{position:static;}}
+  @media (max-width:820px){.shell{grid-template-columns:1fr;}aside{border-right:0;border-bottom:1px solid var(--line);}.plist{max-height:230px;}.row.two,.row.three{grid-template-columns:1fr;}.pad{padding:22px 18px 70px;}}
+
+  /* pendientes de programar */
+  .miss li.pend::before{content:"\25B2";color:var(--gold);}
+  .nuevo{background:var(--gold);color:#1c1b1a;font-size:8.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;padding:2px 6px;margin-left:7px;vertical-align:middle;}
+  .pick.isnew{border-style:dashed;}
+  .pick.isnew.on{border-style:solid;}
+  .willbe span.pend{border-color:var(--gold);color:var(--ink);}
+
+  /* vocabulario */
+  .vsec{margin-bottom:26px;}
+  .vsec > h5{margin:0 0 4px;font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--mocha);}
+  .vsec > p{margin:0 0 11px;font-size:12px;color:var(--muted);line-height:1.45;max-width:60ch;}
+  .vlist{border:1px solid var(--line);background:var(--surface);}
+  .vrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:9px 13px;border-bottom:1px solid var(--line-soft);font-size:13px;}
+  .vrow:last-child{border-bottom:0;}
+  .vrow .sw{width:15px;height:15px;border-radius:50%;border:1px solid rgba(0,0,0,.2);}
+  .vrow .tag{font-family:var(--mono);font-size:11.5px;color:var(--muted);}
+  .vrow button{padding:4px 9px;font-size:11px;}
+  .vhead{font-size:9.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);background:var(--sunk);padding:8px 13px;border-bottom:1px solid var(--line);}
+  .addform{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px;align-items:end;padding:12px 13px;background:var(--sunk);border-top:1px solid var(--line);}
+  .addform label{display:block;}
+  .addform label span{display:block;font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+  .addform input[type=text],.addform select{padding:7px 9px;font-size:13px;}
+  .addform input[type=color]{width:100%;height:34px;padding:2px;border:1px solid var(--line);background:var(--raise);cursor:pointer;}
+  .addform button{height:34px;}
+  .conseq{grid-column:1/-1;font-size:11.5px;color:var(--muted);line-height:1.45;padding-top:2px;}
+  .conseq b{color:var(--ink);}
+  .inuse{font-size:11px;color:var(--muted);font-family:var(--mono);}
+
+  /* sync */
+  .sync{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;}
+  .sync b{font-weight:600;}
+  .sync.up b{color:var(--ok);} .sync.down b{color:var(--req);} .sync.local b{color:var(--muted);}
+</style>
+
+<header class="top">
+  <div class="mark">Star <em>Moda</em></div>
+  <div class="saved" id="saved">&mdash;</div>
+  <div class="sep"></div>
+  <div class="sync local" id="sync"></div>
+  <button class="ghost" id="btnVocab">Vocabulario</button>
+  <button class="ghost" id="btnGuide">Reglas</button>
+  <button class="ghost" id="btnBackup">Respaldo</button>
+  <button class="primary" id="btnExport">Exportar</button>
+</header>
+
+<div class="shell">
+  <aside>
+    <div class="progress">
+      <div class="big" id="pCount">0<span>&thinsp;/&thinsp;15</span></div>
+      <p id="pText">Mínimo para lanzar</p>
+      <div class="bar"><i id="pBar" style="width:0%"></i></div>
+    </div>
+    <div class="plist" id="plist"></div>
+    <div class="addwrap"><button class="primary" id="btnAdd">+ Nueva prenda</button></div>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     SINCRONIZACIÓN CON SUPABASE
+     1. Corre supabase.sql en el SQL Editor de tu proyecto.
+     2. Pega aquí la Project URL y la llave "anon public"
+        (Settings › API). La llave anon es pública por diseño:
+        la tabla está cerrada y solo se entra con código de acceso.
+     3. Sube este archivo a Vercel.
+     Vacío = la app guarda solo en el navegador.
+     ============================================================ */
+  var REMOTE = {
+    url:   "",
+    key:   "",
+    docId: "principal"
+  };
+
+  /* ---------- vocabulario base (espejo del tema) ---------- */
+  var BUILTIN = {
+    colors:[
+      {n:"Negro",  hex:"#1c1b1a", ab:"NEG", tema:true},
+      {n:"Blanco", hex:"#f7f3ee", ab:"BLA", tema:true},
+      {n:"Crema",  hex:"#f7f3ee", ab:"CRE", tema:true},
+      {n:"Beige",  hex:"#dccdb8", ab:"BEI", tema:true},
+      {n:"Arena",  hex:"#dccdb8", ab:"ARE", tema:true},
+      {n:"Nude",   hex:"#d8b6b6", ab:"NUD", tema:true},
+      {n:"Rosa",   hex:"#d8b6b6", ab:"ROS", tema:true},
+      {n:"Mocha",  hex:"#9b7b6c", ab:"MOC", tema:true},
+      {n:"Café",   hex:"#9b7b6c", ab:"CAF", tema:true},
+      {n:"Dorado", hex:"#d8b16a", ab:"DOR", tema:true}
+    ],
+    systems:{
+      "Letras":    ["XS","S","M","L","XL"],
+      "Mezclilla": ["26","28","30","32","34"],
+      "Calzado":   ["22","23","24","25","26","27"],
+      "Única":     ["Unitalla"]
+    },
+    cats:[
+      {n:"Blusa",     ab:"BLU", sys:"Letras",    col:"Blusas"},
+      {n:"Playera",   ab:"PLA", sys:"Letras",    col:"Blusas"},
+      {n:"Vestido",   ab:"VES", sys:"Letras",    col:"Vestidos"},
+      {n:"Falda",     ab:"FAL", sys:"Letras",    col:"Faldas"},
+      {n:"Pantalón",  ab:"PAN", sys:"Mezclilla", col:"Pantalones"},
+      {n:"Jeans",     ab:"JEA", sys:"Mezclilla", col:"Pantalones"},
+      {n:"Short",     ab:"SHO", sys:"Mezclilla", col:"Pantalones"},
+      {n:"Chaqueta",  ab:"CHA", sys:"Letras",    col:"Chaquetas"},
+      {n:"Suéter",    ab:"SUE", sys:"Letras",    col:"Chaquetas"},
+      {n:"Conjunto",  ab:"CON", sys:"Letras",    col:"Conjuntos"},
+      {n:"Accesorio", ab:"ACC", sys:"Única",     col:"Accesorios"},
+      {n:"Calzado",   ab:"CAL", sys:"Calzado",   col:"Accesorios"}
+    ],
+    tags:[
+      {t:"western",       col:"Western"},
+      {t:"clean-girl",    col:"Clean Girl"},
+      {t:"sale",          col:"Ofertas"},
+      {t:"ultima-pieza",  col:""},
+      {t:"casual",        col:""},
+      {t:"oficina",       col:""},
+      {t:"fiesta",        col:""},
+      {t:"fin-de-semana", col:""}
+    ],
+    fits:["Ajustado","Regular","Holgado","Oversize"]
+  };
+
+  var PHOTO={ratio:3/4,tol:0.035,minW:1200,minH:1600,maxBytes:2*1024*1024,warnBytes:600*1024};
+  var KEY="starmoda-captura-v2", OLDKEY="starmoda-captura-v1";
+  var state={products:[],active:null,vocab:null,vocabT:0,deleted:{}};
+  var storageOK=true, savedAt=null;
+
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function uid(){ return "p"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+  function slug(s){
+    return (s||"").toString().toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g,"")
+      .replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,50);
+  }
+  function abbr(s){ return slug(s).replace(/-/g,"").toUpperCase().slice(0,6)||"MODELO"; }
+  /* El código de modelo del SKU: quita la categoría del inicio del nombre y
+     se queda con la última palabra, que es donde vive el nombre del modelo.
+     "Blusa Marfil" -> MARFIL.  "Jeans Wide Leg Dakota" -> DAKOTA. */
+  function modelAbbr(title,catName){
+    var t=(title||"").trim();
+    if(catName){
+      var re=new RegExp("^"+catName.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\s+","i");
+      t=t.replace(re,"");
+    }
+    var w=t.split(/\s+/).filter(Boolean);
+    return abbr(w.length?w[w.length-1]:t);
+  }
+
+  /* ---------- acceso al vocabulario ---------- */
+  function V(){ return state.vocab; }
+  function color(n){ var a=V().colors; for(var i=0;i<a.length;i++) if(a[i].n===n) return a[i]; return null; }
+  function cat(n){ var a=V().cats; for(var i=0;i<a.length;i++) if(a[i].n===n) return a[i]; return null; }
+  function tagDef(t){ var a=V().tags; for(var i=0;i<a.length;i++) if(a[i].t===t) return a[i]; return null; }
+  function sizesFor(catName){
+    var c=cat(catName);
+    if(c && V().systems[c.sys]) return V().systems[c.sys];
+    return V().systems["Letras"]||[];
+  }
+  function isNewColor(n){ var c=color(n); return !!(c && !c.tema); }
+  function isNewCat(n){ var c=cat(n); return !!(c && c.nuevo); }
+  function isNewTag(t){ var d=tagDef(t); return !!(d && d.nuevo); }
+
+  /* cuántas prendas usan un valor — bloquea borrados destructivos */
+  function usage(kind,val){
+    return state.products.filter(function(p){
+      if(kind==="color") return p.colors.indexOf(val)>=0;
+      if(kind==="cat")   return p.category===val;
+      if(kind==="tag")   return p.tags.indexOf(val)>=0;
+      if(kind==="fit")   return p.fit===val;
+      if(kind==="size")  return p.sizes.indexOf(val)>=0;
+      return false;
+    }).length;
+  }
+
+  /* ---------- estado ---------- */
+  function blank(){
+    return {id:uid(),title:"",category:"",body:"",price:"",compareAt:"",
+      colors:[],sizes:[],variants:{},tags:[],
+      material:"",fit:"",care:"",modelInfo:"",measurements:"",origin:"",
+      photos:[],notes:"",demo:false};
+  }
+  function seed(){
+    var p=blank(); p.demo=true;
+    p.title="Blusa Marfil"; p.category="Blusa";
+    p.body="Blusa de manga larga con corte holgado y cuello alto. Cae suave y combina con jeans o falda midi.";
+    p.price="450"; p.colors=["Crema","Negro"]; p.sizes=["S","M","L"]; p.tags=["clean-girl","casual"];
+    p.material="100% algodón"; p.fit="Holgado";
+    p.care="Lavar a mano con agua fría\nNo usar secadora\nPlanchar a temperatura baja";
+    p.modelInfo="La modelo mide 1.68 m y usa talla S";
+    syncVariants(p);
+    var q={"Crema|S":3,"Crema|M":5,"Crema|L":2,"Negro|S":4,"Negro|M":6,"Negro|L":1};
+    Object.keys(p.variants).forEach(function(k){ p.variants[k].qty=q[k]!=null?String(q[k]):"0"; });
+    return p;
+  }
+  function freshVocab(){ return clone(BUILTIN); }
+
+  function adopt(d){
+    state.products = Array.isArray(d.products)?d.products:[];
+    state.vocab = d.vocab && d.vocab.colors ? d.vocab : freshVocab();
+    ["colors","cats","tags","fits"].forEach(function(k){ if(!Array.isArray(state.vocab[k])) state.vocab[k]=clone(BUILTIN[k]); });
+    if(!state.vocab.systems || typeof state.vocab.systems!=="object") state.vocab.systems=clone(BUILTIN.systems);
+    state.products.forEach(function(p){ (p.photos||[]).forEach(function(f){ f.url=""; }); });
+    state.active = state.products.length?state.products[0].id:null;
+    state.vocabT = +d.vocabT||0;
+    state.deleted = d.deleted && typeof d.deleted==="object" ? d.deleted : {};
+  }
+
+  function load(){
+    var raw=null;
+    try{ raw=localStorage.getItem(KEY)||localStorage.getItem(OLDKEY); }catch(e){ storageOK=false; }
+    if(raw){
+      try{
+        var d=JSON.parse(raw);
+        if(d&&Array.isArray(d.products)){ adopt(d); return; }
+      }catch(e){}
+    }
+    state.vocab=freshVocab();
+    var s=seed(); state.products=[s]; state.active=s.id;
+  }
+
+  function payload(){
+    var clean=clone(state.products);
+    clean.forEach(function(p){ (p.photos||[]).forEach(function(f){ delete f.url; }); });
+    return {version:2,exportedAt:new Date().toISOString(),vocab:state.vocab,products:clean,
+      vocabT:state.vocabT,deleted:state.deleted};
+  }
+
+  /* Firma estable de una prenda o del vocabulario: llaves ordenadas, sin la
+     URL temporal de las fotos ni la marca de tiempo. Sirve para saber qué
+     cambió de verdad y qué ya está en la nube. */
+  function stable(o){
+    if(Array.isArray(o)) return "["+o.map(stable).join(",")+"]";
+    if(o&&typeof o==="object") return "{"+Object.keys(o).sort().map(function(k){ return JSON.stringify(k)+":"+stable(o[k]); }).join(",")+"}";
+    return JSON.stringify(o===undefined?null:o);
+  }
+  function strip(p){ var c=clone(p); delete c._t; (c.photos||[]).forEach(function(f){ delete f.url; }); return c; }
+  function sig(p){ return stable(strip(p)); }
+
+  /* Marca con la hora cada cambio real hecho en este navegador. */
+  var localSig={}, localVocabSig=null;
+  function primeSigs(){
+    localSig={};
+    state.products.forEach(function(p){ if(!p.demo) localSig[p.id]=sig(p); });
+    localVocabSig=stable(state.vocab);
+  }
+  function stampChanges(){
+    var now=Date.now(), here={};
+    state.products.forEach(function(p){
+      if(p.demo) return;
+      here[p.id]=1;
+      var s=sig(p);
+      if(localSig[p.id]!==s){ p._t=now; localSig[p.id]=s; delete state.deleted[p.id]; }
+    });
+    Object.keys(localSig).forEach(function(id){
+      if(!here[id]){ state.deleted[id]=now; delete localSig[id]; }
+    });
+    var vs=stable(state.vocab);
+    if(vs!==localVocabSig){ state.vocabT=now; localVocabSig=vs; }
+  }
+  function persist(){
+    try{ localStorage.setItem(KEY,JSON.stringify(payload())); }catch(e){ storageOK=false; }
+  }
+
+  var pushTimer=null;
+  function save(){
+    savedAt=new Date();
+    stampChanges();
+    persist();
+    paintSaved();
+    cloudQueue();
+    if(remoteOn()){
+      clearTimeout(pushTimer);
+      pushTimer=setTimeout(remoteSync,1500);
+    }
+  }
+  function paintSaved(){
+    var el=document.getElementById("saved");
+    if(!storageOK){ el.innerHTML='<b style="color:var(--req)">Sin guardado automático</b>'; return; }
+    if(!savedAt){ el.textContent=""; return; }
+    var hh=String(savedAt.getHours()).padStart(2,"0"),mm=String(savedAt.getMinutes()).padStart(2,"0");
+    el.innerHTML='<b>Guardado</b> '+hh+":"+mm;
+  }
+
+  /* ---------- sincronización opcional ---------- */
+  function remoteOn(){ return !!(REMOTE.url&&REMOTE.key); }
+  function rHeaders(extra){
+    var h={apikey:REMOTE.key,Authorization:"Bearer "+REMOTE.key,"Content-Type":"application/json"};
+    if(extra) Object.keys(extra).forEach(function(k){ h[k]=extra[k]; });
+    return h;
+  }
+  function setSync(cls,txt){
+    var el=document.getElementById("sync");
+    if(!el) return;
+    el.className="sync "+cls;
+    el.innerHTML=txt?('<b>&bull;</b> '+txt):"";
+  }
+  /* Código de acceso: se pide una vez y se recuerda en este navegador.
+     Nunca va en el código de la página. */
+  var CODEKEY="starmoda-codigo";
+  function getCode(){ try{ return localStorage.getItem(CODEKEY)||""; }catch(e){ return ""; } }
+  function setCode(c){ try{ if(c) localStorage.setItem(CODEKEY,c); else localStorage.removeItem(CODEKEY); }catch(e){} }
+
+  function rpc(fn,args){
+    return fetch(REMOTE.url.replace(/\/$/,"")+"/rest/v1/rpc/"+fn,{
+      method:"POST",headers:rHeaders(),body:JSON.stringify(args)
+    }).then(function(r){
+      return r.text().then(function(t){
+        var body=null; try{ body=t?JSON.parse(t):null; }catch(e){}
+        if(!r.ok){
+          var msg=(body&&(body.message||body.hint))||("HTTP "+r.status);
+          var err=new Error(msg); err.badCode=/codigo_invalido/.test(msg); throw err;
+        }
+        return body;
+      });
+    });
+  }
+
+  /* Junta lo que hay en el servidor con lo de este navegador, prenda por
+     prenda: gana el cambio más reciente, y un borrado gana a una versión
+     más vieja. Así dos personas pueden capturar sin pisarse. */
+  function mergeIn(r){
+    var changed=false, activeHit=false, byId={};
+    var rdel=(r&&r.deleted)||{};
+    Object.keys(rdel).forEach(function(id){
+      if(!state.deleted[id]||state.deleted[id]<rdel[id]){ state.deleted[id]=rdel[id]; }
+    });
+    state.products.forEach(function(p){ byId[p.id]=p; });
+    ((r&&r.products)||[]).forEach(function(rp){
+      if(!rp||!rp.id||rp.demo) return;
+      var loc=byId[rp.id], rt=+rp._t||0, del=state.deleted[rp.id]||0;
+      if(!loc){
+        if(del&&del>=rt) return;
+        var np=clone(rp); (np.photos||[]).forEach(function(f){ f.url=""; });
+        state.products.push(np); localSig[np.id]=sig(np); byId[np.id]=np; changed=true;
+        return;
+      }
+      if(rt>(+loc._t||0)){
+        var urls={};
+        (loc.photos||[]).forEach(function(f){ if(f.url) urls[f.name]=f.url; });
+        Object.keys(loc).forEach(function(k){ delete loc[k]; });
+        var fresh=clone(rp);
+        Object.keys(fresh).forEach(function(k){ loc[k]=fresh[k]; });
+        (loc.photos||[]).forEach(function(f){ f.url=urls[f.name]||""; });
+        localSig[loc.id]=sig(loc); changed=true;
+        if(loc.id===state.active) activeHit=true;
+      }
+    });
+    state.products=state.products.filter(function(p){
+      var d=state.deleted[p.id];
+      if(d&&!p.demo&&(+p._t||0)<=d){
+        delete localSig[p.id]; changed=true;
+        if(p.id===state.active) activeHit=true;
+        return false;
+      }
+      return true;
+    });
+    if(r&&r.vocab&&r.vocab.colors&&(+r.vocabT||0)>(+state.vocabT||0)){
+      state.vocab=clone(r.vocab); state.vocabT=+r.vocabT;
+      localVocabSig=stable(state.vocab); changed=true; activeHit=true;
+    }
+    if(state.products.some(function(p){ return !p.demo; })){
+      var n=state.products.length;
+      state.products=state.products.filter(function(p){
+        if(p.demo&&p.id===state.active) activeHit=true;
+        return !p.demo;
+      });
+      if(state.products.length!==n) changed=true;
+    }
+    if(!state.products.some(function(p){ return p.id===state.active; })){
+      state.active=state.products.length?state.products[0].id:null; activeHit=true;
+    }
+    if(changed){ persist(); if(activeHit) paintAll(); else paintList(); }
+    return changed;
+  }
+  function core(d){
+    var c={vocab:d.vocab||null,vocabT:+d.vocabT||0,deleted:d.deleted||{},
+      products:(d.products||[]).filter(function(p){ return p&&!p.demo; }).map(function(p){
+        var x=clone(p); (x.photos||[]).forEach(function(f){ delete f.url; }); return x; })};
+    return stable(c);
+  }
+
+  var syncing=false, syncAgain=false, askedCode=false;
+  function remoteSync(){
+    if(!remoteOn()) return;
+    var code=getCode();
+    if(!code){ setSync("down","Falta código — toca aquí"); if(!askedCode){ askedCode=true; codeModal(); } return; }
+    if(syncing){ syncAgain=true; return; }
+    syncing=true;
+    setSync("local","Sincronizando…");
+    rpc("starmoda_get",{p_code:code,p_doc:REMOTE.docId}).then(function(rows){
+      var row=Array.isArray(rows)?rows[0]:rows;
+      var remote=(row&&row.payload)||{};
+      mergeIn(remote);
+      var mine=payload();
+      if(core(mine)===core(remote)) return null;
+      return rpc("starmoda_save",{p_code:code,p_payload:mine,p_doc:REMOTE.docId});
+    }).then(function(){
+      syncing=false;
+      setSync("up","Sincronizado "+hhmm(new Date()));
+      if(syncAgain){ syncAgain=false; remoteSync(); }
+    },function(e){
+      syncing=false; syncAgain=false;
+      if(e&&e.badCode){
+        setCode(""); setSync("down","Código no válido — toca aquí");
+        codeModal("Ese código no es válido. Revísalo con Nexium.");
+      } else {
+        setSync("down","Sin conexión — guardado aquí");
+      }
+    });
+  }
+  function remotePull(){ remoteSync(); }
+
+  function codeModal(msg){
+    var input=h("input",{type:"text",id:"accessCode",autocomplete:"off",placeholder:"Código de acceso",style:"font-family:var(--mono)"});
+    input.value=getCode();
+    var veil=modal("Código de acceso",[
+      h("p",{class:"hint",style:"margin:0 0 12px",text:msg||"Escribe el código que te dio Nexium. Se guarda en este navegador y no se vuelve a pedir. Sin código, lo que captures se queda solo en este dispositivo."}),
+      input
+    ],[
+      h("button",{class:"primary",text:"Entrar",onclick:function(){
+        var c=input.value.trim(); if(!c) return;
+        setCode(c); veil.remove(); remoteSync();
+      }})
+    ]);
+    input.addEventListener("keydown",function(e){ if(e.key==="Enter"){ var c=input.value.trim(); if(c){ setCode(c); veil.remove(); remoteSync(); } } });
+    setTimeout(function(){ input.focus(); },50);
+  }
+
+  /* ---------- guardado en la nube (base de datos del artefacto) ----------
+     Cada prenda es un documento en "prendas/<id>" y el vocabulario vive en
+     "config/vocab". Este navegador sigue guardando su copia local; la nube
+     es lo que comparten todos los que abren la app. Gana el cambio más
+     reciente de cada prenda. Lo que solo existe en un navegador se sube
+     solo la primera vez que abre esta versión. */
+  var cloud={db:null,write:true,ready:false,gotP:false,gotV:false,
+    sent:{},vocabSent:null,timer:null,busy:false,again:false};
+
+  function hhmm(d){ return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+  function cloudQueue(){
+    if(!cloud.db||!cloud.write||!cloud.ready) return;
+    clearTimeout(cloud.timer);
+    cloud.timer=setTimeout(cloudFlush,1200);
+  }
+  function cloudReadOnly(){
+    cloud.write=false;
+    setSync("local","Solo en este navegador — pide acceso de edición");
+  }
+  function cloudFlush(){
+    if(!cloud.db||!cloud.write||!cloud.ready) return;
+    if(cloud.busy){ cloud.again=true; return; }
+    var jobs=[];
+    state.products.forEach(function(p,i){
+      if(p.demo) return;
+      var s=sig(p);
+      if(cloud.sent[p.id]!==s) jobs.push({path:"prendas/"+p.id,id:p.id,s:s,
+        body:{p:strip(p),t:p._t||1,o:i,deleted:false}});
+    });
+    Object.keys(state.deleted).forEach(function(id){
+      if(cloud.sent[id]!=="__del") jobs.push({path:"prendas/"+id,id:id,s:"__del",
+        body:{deleted:true,t:state.deleted[id]}});
+    });
+    var vs=stable(state.vocab);
+    if(cloud.vocabSent!==vs) jobs.push({path:"config/vocab",vocab:true,s:vs,
+      body:{v:clone(state.vocab),t:state.vocabT||1}});
+    if(!jobs.length){ setSync("up","En la nube "+hhmm(new Date())); return; }
+    cloud.busy=true;
+    setSync("local","Guardando en la nube…");
+    var chain=Promise.resolve();
+    jobs.forEach(function(j){
+      chain=chain.then(function(){
+        return cloud.db.doc(j.path).set(j.body).then(function(){
+          if(j.vocab) cloud.vocabSent=j.s; else cloud.sent[j.id]=j.s;
+        });
+      });
+    });
+    chain.then(function(){
+      cloud.busy=false;
+      setSync("up","En la nube "+hhmm(new Date()));
+      if(cloud.again){ cloud.again=false; cloudFlush(); }
+    },function(e){
+      cloud.busy=false; cloud.again=false;
+      var code=e&&e.code;
+      if(code==="invalid_argument"||code==="not_granted"||code==="revoked") cloudReadOnly();
+      else if(code==="quota_exceeded") setSync("down","Nube llena — guardado solo aquí");
+      else { setSync("down","Sin conexión — guardado aquí"); setTimeout(cloudQueue,8000); }
+    });
+  }
+
+  function cloudProducts(snap){
+    var byId={}, activeHit=false, changed=false, incoming=[];
+    state.products.forEach(function(p){ byId[p.id]=p; });
+    snap.docs.forEach(function(d){
+      var r=d.data()||{}, id=d.id, loc=byId[id], rt=+r.t||0;
+      if(r.deleted){
+        if(loc && !loc.demo){
+          if((loc._t||0)<=rt){
+            state.products=state.products.filter(function(x){ return x.id!==id; });
+            delete localSig[id]; state.deleted[id]=rt; cloud.sent[id]="__del";
+            if(id===state.active) activeHit=true;
+            changed=true;
+          }
+          /* si aquí es más reciente, se vuelve a subir */
+        } else {
+          cloud.sent[id]="__del";
+          if(!state.deleted[id]||state.deleted[id]<rt) state.deleted[id]=rt;
+        }
+        return;
+      }
+      if(!r.p) return;
+      var rs=stable(r.p);
+      if(!loc){
+        if(state.deleted[id] && state.deleted[id]>=rt) return; /* lo borraron aquí después */
+        delete state.deleted[id];
+        var np=clone(r.p); np._t=rt;
+        (np.photos||[]).forEach(function(f){ f.url=""; });
+        incoming.push({p:np,o:+r.o||0});
+        cloud.sent[id]=rs; localSig[id]=rs; changed=true;
+        return;
+      }
+      if(rt>(loc._t||0)){
+        var urls={};
+        (loc.photos||[]).forEach(function(f){ if(f.url) urls[f.name]=f.url; });
+        Object.keys(loc).forEach(function(k){ delete loc[k]; });
+        var fresh=clone(r.p);
+        Object.keys(fresh).forEach(function(k){ loc[k]=fresh[k]; });
+        loc._t=rt;
+        (loc.photos||[]).forEach(function(f){ f.url=urls[f.name]||""; });
+        cloud.sent[id]=rs; localSig[id]=rs;
+        if(id===state.active) activeHit=true;
+        changed=true;
+      } else {
+        cloud.sent[id]=rs; /* lo que hay en la nube; si difiere, se sube lo de aquí */
+      }
+    });
+    if(incoming.length){
+      incoming.sort(function(a,b){ return a.o-b.o; });
+      incoming.forEach(function(x){ state.products.push(x.p); });
+    }
+    /* la prenda de ejemplo sobra en cuanto hay prendas reales */
+    if(state.products.some(function(p){ return !p.demo; })){
+      var before=state.products.length;
+      state.products=state.products.filter(function(p){
+        if(p.demo&&p.id===state.active) activeHit=true;
+        return !p.demo;
+      });
+      if(state.products.length!==before) changed=true;
+    }
+    if(!state.products.some(function(p){ return p.id===state.active; })){
+      state.active=state.products.length?state.products[0].id:null;
+      activeHit=true;
+    }
+    if(changed){
+      persist();
+      if(activeHit) paintAll(); else paintList();
+    }
+  }
+
+  function cloudVocab(snap){
+    if(!snap.exists){ cloud.vocabSent=null; return; }
+    var r=snap.data()||{};
+    if(!r.v||!r.v.colors) return;
+    var rs=stable(r.v), rt=+r.t||0;
+    if(rt>(state.vocabT||0)){
+      state.vocab=clone(r.v); state.vocabT=rt;
+      localVocabSig=rs; cloud.vocabSent=rs;
+      persist(); paintAll();
+    } else {
+      cloud.vocabSent=rs;
+    }
+  }
+
+  function cloudMaybeReady(){
+    if(cloud.ready||!cloud.gotP||!cloud.gotV) return;
+    cloud.ready=true;
+    if(cloud.write) cloudFlush();
+    else cloudReadOnly();
+  }
+
+  function cloudInit(){
+    if(!(window.claude&&typeof window.claude.use==="function")){
+      setSync("local","Solo en este navegador");
+      return;
+    }
+    setSync("local","Conectando con la nube…");
+    var dbP=window.claude.use("db"), userP=window.claude.use("user");
+    Promise.all([dbP,userP]).then(function(res){
+      var db=res[0], user=res[1];
+      if(!db){ setSync("local","Solo en este navegador"); return; }
+      cloud.db=db;
+      var canP=user&&typeof user.can==="function" ? user.can("data.write").catch(function(){ return null; }) : Promise.resolve(null);
+      canP.then(function(can){
+        if(can===false) cloud.write=false;
+        db.collection("prendas").onSnapshot(function(snap){
+          cloud.gotP=true; cloudProducts(snap); cloudMaybeReady();
+          if(cloud.ready&&cloud.write) cloudQueue();
+        },function(){ setSync("down","Sin conexión con la nube — guardado aquí"); });
+        db.doc("config/vocab").onSnapshot(function(snap){
+          cloud.gotV=true; cloudVocab(snap); cloudMaybeReady();
+          if(cloud.ready&&cloud.write) cloudQueue();
+        },function(){ setSync("down","Sin conexión con la nube — guardado aquí"); });
+      });
+    },function(){ setSync("local","Solo en este navegador"); });
+  }
+
+  /* ---------- variantes ---------- */
+  function vkey(c,s){ return c+"|"+s; }
+  function makeSKU(p,c,s){
+    var ct=cat(p.category),cl=color(c);
+    return ["STM",ct?ct.ab:"XXX",modelAbbr(p.title,p.category),cl?cl.ab:"XXX",String(s).toUpperCase()].join("-");
+  }
+  function syncVariants(p){
+    var next={};
+    p.colors.forEach(function(c){ p.sizes.forEach(function(s){
+      var k=vkey(c,s),old=p.variants[k];
+      next[k]=old?old:{sku:makeSKU(p,c,s),qty:"",skuTouched:false};
+      if(!next[k].skuTouched) next[k].sku=makeSKU(p,c,s);
+    });});
+    p.variants=next;
+  }
+  function variantList(p){
+    var out=[];
+    p.colors.forEach(function(c){ p.sizes.forEach(function(s){
+      var v=p.variants[vkey(c,s)]; if(v) out.push({color:c,size:s,v:v,key:vkey(c,s)});
+    });});
+    return out;
+  }
+  function totalPieces(p){
+    return variantList(p).reduce(function(a,x){ var n=parseInt(x.v.qty,10); return a+(isNaN(n)?0:n); },0);
+  }
+
+  /* ---------- auditoría ---------- */
+  function audit(p){
+    var req=[],rec=[],opt=[],pend=[];
+    if(!p.title.trim()) req.push("Nombre de la prenda");
+    if(!p.price||Number(p.price)<=0) req.push("Precio");
+    if(!p.colors.length) req.push("Al menos un color");
+    if(!p.sizes.length) req.push("Al menos una talla");
+    var vl=variantList(p);
+    var sinQty=vl.filter(function(x){ return x.v.qty===""||x.v.qty===null; });
+    if(vl.length&&sinQty.length) req.push(sinQty.length+" variante"+(sinQty.length>1?"s":"")+" sin inventario");
+    var skus=vl.map(function(x){ return x.v.sku.trim(); }).filter(Boolean);
+    var dup=skus.filter(function(s,i){ return skus.indexOf(s)!==i; });
+    if(dup.length) req.push("SKU repetido: "+dup[0]);
+    if(vl.length&&skus.length<vl.length) req.push("Hay variantes sin SKU");
+    var okp=p.photos.filter(function(f){ return f.level!=="bad"; });
+    if(!okp.length) req.push("Foto principal");
+    else if(okp.length<2) rec.push("Foto secundaria (se ve al pasar el mouse)");
+    if(p.photos.some(function(f){ return f.level==="bad"; })) req.push("Hay fotos que no cumplen 3:4");
+    if(p.colors.length>1){
+      var cov={}; p.photos.forEach(function(f){ if(f.color) cov[f.color]=1; });
+      var falta=p.colors.filter(function(c){ return !cov[c]; });
+      if(falta.length&&okp.length) rec.push("Foto propia para: "+falta.join(", "));
+    }
+    if(!p.category) rec.push("Categoría");
+    if(!p.body.trim()) rec.push("Descripción");
+    if(!p.tags.length) rec.push("Al menos una etiqueta");
+    if(!p.material.trim()) rec.push("Material");
+    if(!p.fit) rec.push("Fit");
+    if(!p.care.trim()) rec.push("Instrucciones de cuidado");
+    if(!p.modelInfo.trim()) opt.push("Info de la modelo");
+    if(!p.measurements.trim()) opt.push("Medidas por talla");
+    if(!p.origin.trim()) opt.push("Origen");
+    if(!p.compareAt) opt.push("Precio antes (solo si hay descuento)");
+
+    var nc=p.colors.filter(isNewColor);
+    if(nc.length) pend.push("Color sin programar en el tema: "+nc.join(", "));
+    if(p.category&&isNewCat(p.category)) pend.push("Categoría nueva: "+p.category);
+    var nt=p.tags.filter(isNewTag);
+    if(nt.length) pend.push("Etiqueta nueva: "+nt.join(", "));
+    return {req:req,rec:rec,opt:opt,pend:pend};
+  }
+  function grade(p){
+    var a=audit(p);
+    if(a.req.length) return "req";
+    if(a.rec.length) return "rec";
+    return "ok";
+  }
+  function collectionsOf(p){
+    var out=[{n:"Nuevos ingresos",pend:false}];
+    p.tags.forEach(function(t){
+      var d=tagDef(t);
+      if(d&&d.col) out.push({n:d.col,pend:!!d.nuevo});
+    });
+    var c=cat(p.category);
+    if(c&&c.col) out.push({n:c.col,pend:!!c.nuevo});
+    var seen={};
+    return out.filter(function(x){ if(seen[x.n]) return false; seen[x.n]=1; return true; });
+  }
+
+  /* ---------- dom ---------- */
+  function h(tag,attrs,kids){
+    var el=document.createElement(tag);
+    if(attrs) Object.keys(attrs).forEach(function(k){
+      if(k==="class") el.className=attrs[k];
+      else if(k==="text") el.textContent=attrs[k];
+      else if(k==="html") el.innerHTML=attrs[k];
+      else if(k.slice(0,2)==="on") el.addEventListener(k.slice(2),attrs[k]);
+      else if(attrs[k]!==null&&attrs[k]!==false&&attrs[k]!==undefined) el.setAttribute(k,attrs[k]);
+    });
+    (kids||[]).forEach(function(c){ if(c) el.appendChild(typeof c==="string"?document.createTextNode(c):c); });
+    return el;
+  }
+  function cur(){ for(var i=0;i<state.products.length;i++) if(state.products[i].id===state.active) return state.products[i]; return null; }
+
+  /* ---------- sidebar ---------- */
+  function paintList(){
+    var wrap=document.getElementById("plist"); wrap.innerHTML="";
+    state.products.forEach(function(p){
+      var g=grade(p),vl=variantList(p),meta=[];
+      if(p.category) meta.push(p.category);
+      if(vl.length){ meta.push(vl.length+" var"); meta.push(totalPieces(p)+" pz"); }
+      var name=h("b",{text:p.title||"Prenda sin nombre"});
+      if(p.demo) name.appendChild(h("span",{class:"nuevo",text:"ejemplo"}));
+      var item=h("div",{class:"pitem"+(p.id===state.active?" on":""),onclick:function(){ state.active=p.id; paintAll(); }},[
+        h("div",{},[name,h("small",{text:meta.join(" · ")||"vacía"})]),
+        h("div",{class:"dots"},[
+          h("span",{class:"dot "+(g==="ok"?"ok":g==="rec"?"rec":"req")}),
+          h("span",{class:"dot "+(g==="ok"?"ok":g==="rec"?"rec":"")}),
+          h("span",{class:"dot "+(g==="ok"?"ok":"")})
+        ])
+      ]);
+      wrap.appendChild(item);
+    });
+    var ready=state.products.filter(function(p){ return !p.demo&&grade(p)!=="req"; }).length;
+    document.getElementById("pCount").innerHTML=ready+'<span>&thinsp;/&thinsp;15</span>';
+    document.getElementById("pBar").style.width=Math.min(100,(ready/15)*100)+"%";
+    document.getElementById("pText").textContent=ready>=15?"Mínimo cubierto":"Prendas listas para publicar";
+  }
+
+  /* ---------- formulario ---------- */
+  function field(labelText,level,node,hint){
+    var sp=h("span",{},[labelText]);
+    if(level) sp.appendChild(h("i",{class:level,text:level==="req"?"●":level==="rec"?"◐":"○"}));
+    var l=h("label",{class:"f"},[sp,node]);
+    if(hint) l.appendChild(h("div",{class:"cnt",text:hint}));
+    return l;
+  }
+  function input(p,key,attrs){
+    var el=h("input",Object.assign({type:"text",value:p[key]||""},attrs||{}));
+    el.addEventListener("input",function(){
+      p[key]=el.value; p.demo=false;
+      if(key==="title") syncVariants(p);
+      save(); paintList(); paintPanel();
+      if(key==="title") repaintVariants();
+    });
+    return el;
+  }
+  function area(p,key,attrs){
+    var el=h("textarea",attrs||{}); el.value=p[key]||"";
+    el.addEventListener("input",function(){ p[key]=el.value; p.demo=false; save(); paintPanel(); paintList(); });
+    return el;
+  }
+
+  var variantHost=null;
+  function repaintVariants(){
+    if(!variantHost) return;
+    var p=cur(); if(!p) return;
+    variantHost.innerHTML=""; variantHost.appendChild(variantTable(p));
+  }
+  function variantTable(p){
+    var vl=variantList(p);
+    if(!vl.length) return h("div",{class:"drop"},[h("p",{text:"Elige al menos un color y una talla para generar las variantes."})]);
+    var body=h("tbody",{});
+    var foot=h("td",{colspan:"4",text:totalPieces(p)+" piezas en total"});
+    vl.forEach(function(x){
+      var cl=color(x.color);
+      var skuIn=h("input",{type:"text",class:"mono",value:x.v.sku});
+      skuIn.addEventListener("input",function(){ x.v.sku=skuIn.value; x.v.skuTouched=true; p.demo=false; save(); paintPanel(); paintList(); });
+      var qtyIn=h("input",{type:"number",min:"0",step:"1",value:x.v.qty});
+      qtyIn.addEventListener("input",function(){
+        x.v.qty=qtyIn.value; p.demo=false; save(); paintPanel(); paintList();
+        qtyIn.classList.toggle("zero",qtyIn.value==="0");
+        foot.textContent=totalPieces(p)+" piezas en total";
+      });
+      if(x.v.qty==="0") qtyIn.classList.add("zero");
+      var swatch=h("span",{class:"sw",style:"background:"+(cl?cl.hex:"#ccc")});
+      var nameSpan=h("span",{text:x.color});
+      var cell=h("div",{class:"vcolor"},[swatch,nameSpan]);
+      if(isNewColor(x.color)) cell.appendChild(h("span",{class:"nuevo",text:"nuevo"}));
+      body.appendChild(h("tr",{},[
+        h("td",{},[cell]),
+        h("td",{class:"vsize",text:x.size}),
+        h("td",{},[skuIn]),
+        h("td",{class:"num"},[qtyIn])
+      ]));
+    });
+    return h("div",{class:"vtable"},[h("table",{},[
+      h("thead",{},[h("tr",{},[h("th",{text:"Color"}),h("th",{text:"Talla"}),h("th",{text:"SKU"}),h("th",{text:"Piezas"})])]),
+      body,
+      h("tfoot",{},[h("tr",{},[foot])])
+    ])]);
+  }
+
+  function pickRow(items,isOn,toggle,opts){
+    var box=h("div",{class:"picks"});
+    items.forEach(function(it){
+      var cls="pick"+(opts&&opts.sz?" sz":"")+(it.nuevo?" isnew":"")+(isOn(it)?" on":"");
+      var kids=[];
+      if(it.hex) kids.push(h("span",{class:"sw",style:"background:"+it.hex}));
+      kids.push(h("span",{text:it.label}));
+      var b=h("div",{class:cls,role:"button",tabindex:"0"},kids);
+      function go(){ toggle(it); }
+      b.addEventListener("click",go);
+      b.addEventListener("keydown",function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
+      box.appendChild(b);
+    });
+    var add=h("div",{class:"pick",role:"button",tabindex:"0",style:"border-style:dashed;color:var(--mocha)"},[h("span",{text:"+ agregar"})]);
+    function openVocab(){ vocabModal(opts&&opts.focus); }
+    add.addEventListener("click",openVocab);
+    add.addEventListener("keydown",function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openVocab(); } });
+    box.appendChild(add);
+    return box;
+  }
+
+  function paintForm(){
+    var main=document.getElementById("main"); main.innerHTML="";
+    var p=cur();
+    if(!p){
+      main.appendChild(h("div",{class:"empty"},[
+        h("h2",{text:"Sin prendas todavía"}),
+        h("p",{text:"Empieza con la primera. Toma unos dos minutos por prenda."})
+      ]));
+      return;
+    }
+    var pad=h("div",{class:"pad"}),grid=h("div",{class:"formgrid"}),form=h("div",{});
+
+    /* 1 identidad */
+    var catSel=h("select",{});
+    catSel.appendChild(h("option",{value:"",text:"Elegir…"}));
+    V().cats.forEach(function(c){ catSel.appendChild(h("option",{value:c.n,text:c.n+(c.nuevo?" (nueva)":""),selected:p.category===c.n?"selected":null})); });
+    catSel.appendChild(h("option",{value:"__add",text:"+ Agregar categoría…"}));
+    catSel.addEventListener("change",function(){
+      if(catSel.value==="__add"){ catSel.value=p.category||""; vocabModal("cats"); return; }
+      p.category=catSel.value; p.demo=false;
+      var allowed=sizesFor(p.category);
+      p.sizes=p.sizes.filter(function(z){ return allowed.indexOf(z)>=0; });
+      syncVariants(p); save(); paintForm();
+    });
+
+    form.appendChild(h("fieldset",{},[
+      h("legend",{},[h("span",{class:"kicker",text:"Uno"}),h("div",{class:"secttl",text:"Identidad"})]),
+      h("div",{class:"row two"},[
+        field("Nombre de la prenda","req",input(p,"title",{placeholder:"Blusa Marfil",maxlength:"60"}),"Sin talla ni color. Máximo 60 caracteres."),
+        field("Categoría","rec",catSel,"Define qué tallas aplican y en qué colección entra.")
+      ]),
+      h("div",{class:"row"},[field("Descripción","rec",area(p,"body",{placeholder:"Cómo se ve, cómo cae, con qué combina."}),"El material y los cuidados NO van aquí — tienen su propio campo.")]),
+      h("div",{class:"row two"},[
+        field("Precio","req",(function(){
+          var el=h("input",{type:"number",min:"0",step:"1",value:p.price,placeholder:"450"});
+          el.addEventListener("input",function(){ p.price=el.value; p.demo=false; save(); paintPanel(); paintList(); });
+          return el;
+        })(),"Solo el número, en pesos, con impuestos incluidos."),
+        field("Precio antes","opt",(function(){
+          var el=h("input",{type:"number",min:"0",step:"1",value:p.compareAt,placeholder:"opcional"});
+          el.addEventListener("input",function(){ p.compareAt=el.value; p.demo=false; save(); paintPanel(); paintList(); });
+          return el;
+        })(),"Solo si hay descuento real. Dispara la etiqueta Sale.")
+      ])
+    ]));
+
+    /* 2 color y talla */
+    var colorPicks=pickRow(
+      V().colors.map(function(c){ return {label:c.n,hex:c.hex,nuevo:!c.tema,raw:c}; }),
+      function(it){ return p.colors.indexOf(it.label)>=0; },
+      function(it){
+        var i=p.colors.indexOf(it.label);
+        if(i>=0) p.colors.splice(i,1); else p.colors.push(it.label);
+        p.demo=false; syncVariants(p); save(); paintForm();
+      },{focus:"colors"});
+
+    var sizeSet=sizesFor(p.category);
+    var sizePicks=pickRow(
+      sizeSet.map(function(s){ return {label:s}; }),
+      function(it){ return p.sizes.indexOf(it.label)>=0; },
+      function(it){
+        var i=p.sizes.indexOf(it.label);
+        if(i>=0) p.sizes.splice(i,1); else p.sizes.push(it.label);
+        p.sizes.sort(function(a,z){ return sizeSet.indexOf(a)-sizeSet.indexOf(z); });
+        p.demo=false; syncVariants(p); save(); paintForm();
+      },{sz:true,focus:"sizes"});
+
+    variantHost=h("div",{}); variantHost.appendChild(variantTable(p));
+
+    form.appendChild(h("fieldset",{},[
+      h("legend",{},[h("span",{class:"kicker",text:"Dos"}),h("div",{class:"secttl",text:"Color y talla"})]),
+      h("p",{class:"hint",text:"Los colores con borde punteado todavía no existen en el diseño de la tienda: se verán beige hasta que Nexium los programe."}),
+      field("Colores","req",colorPicks),
+      h("div",{style:"height:16px"}),
+      field("Tallas","req",sizePicks,p.category?("Sistema: "+(cat(p.category)?cat(p.category).sys:"Letras")):"Elige la categoría para ajustar el sistema de tallas."),
+      h("div",{style:"height:18px"}),
+      h("span",{class:"kicker",text:"Variantes generadas"}),
+      h("div",{style:"height:8px"}),
+      variantHost
+    ]));
+
+    /* 3 ficha */
+    var fitSel=h("select",{});
+    fitSel.appendChild(h("option",{value:"",text:"Elegir…"}));
+    V().fits.forEach(function(f){ fitSel.appendChild(h("option",{value:f,text:f,selected:p.fit===f?"selected":null})); });
+    fitSel.appendChild(h("option",{value:"__add",text:"+ Agregar fit…"}));
+    fitSel.addEventListener("change",function(){
+      if(fitSel.value==="__add"){ fitSel.value=p.fit||""; vocabModal("fits"); return; }
+      p.fit=fitSel.value; p.demo=false; save(); paintPanel(); paintList();
+    });
+
+    form.appendChild(h("fieldset",{},[
+      h("legend",{},[h("span",{class:"kicker",text:"Tres"}),h("div",{class:"secttl",text:"Ficha técnica"})]),
+      h("p",{class:"hint",text:"Es lo que aparece en los desplegables de la página de producto."}),
+      h("div",{class:"row two"},[
+        field("Material","rec",input(p,"material",{placeholder:"65% poliéster, 35% viscosa"})),
+        field("Fit","rec",fitSel)
+      ]),
+      h("div",{class:"row"},[field("Instrucciones de cuidado","rec",area(p,"care",{placeholder:"Una instrucción por línea"}),"Una por línea: lavado, secado, planchado.")]),
+      h("div",{class:"row two"},[
+        field("Info de la modelo","opt",input(p,"modelInfo",{placeholder:"La modelo mide 1.68 m y usa talla S"})),
+        field("Origen","opt",input(p,"origin",{placeholder:"Hecho en México"}))
+      ]),
+      h("div",{class:"row"},[field("Medidas por talla","opt",area(p,"measurements",{placeholder:"S: busto 88 cm, largo 62 cm"}))])
+    ]));
+
+    /* 4 fotos */
+    var shots=h("div",{class:"shots"});
+    function renameAll(){
+      var base=slug(p.title)||"prenda",n={};
+      p.photos.forEach(function(f){
+        var k=f.color?slug(f.color):"_";
+        n[k]=(n[k]||0)+1;
+        f.target=base+(f.color?"-"+slug(f.color):"")+"-"+n[k]+"."+(f.ext||"jpg");
+      });
+    }
+    function paintShots(){
+      shots.innerHTML="";
+      p.photos.forEach(function(f,i){
+        var cls=f.level==="bad"?"bad":f.level==="warn"?"warn":"ok";
+        var txt=f.level==="bad"?"No sirve":f.level==="warn"?"Revisar":"OK";
+        var sel=null;
+        if(p.colors.length>1){
+          sel=h("select",{style:"margin-top:8px;font-size:12px;padding:5px 7px"});
+          sel.appendChild(h("option",{value:"",text:"Todos los colores"}));
+          p.colors.forEach(function(c){ sel.appendChild(h("option",{value:c,text:c,selected:f.color===c?"selected":null})); });
+          sel.addEventListener("change",function(){ f.color=sel.value; renameAll(); save(); paintShots(); paintPanel(); });
+        }
+        shots.appendChild(h("div",{class:"shot"},[
+          h("div",{class:"thumb"},[
+            f.url?h("img",{src:f.url,alt:""}):h("span",{text:"sin vista"}),
+            h("span",{class:"flag "+cls,text:txt})
+          ]),
+          h("div",{class:"body"},[
+            h("div",{class:"rename",text:f.target}),
+            h("div",{class:"meta",text:f.w+"×"+f.h+" · "+(f.bytes/1024).toFixed(0)+" KB"}),
+            f.issues.length?h("div",{class:"issue",text:f.issues.join(". ")}):null,
+            sel,
+            h("button",{class:"rm ghost danger",text:"Quitar",onclick:function(){
+              if(f.url) URL.revokeObjectURL(f.url);
+              p.photos.splice(i,1); renameAll(); save(); paintShots(); paintPanel(); paintList();
+            }})
+          ])
+        ]));
+      });
+    }
+    function inspect(file){
+      return new Promise(function(res){
+        var issues=[],level="ok";
+        var ext=(file.name.split(".").pop()||"").toLowerCase();
+        if(!(ext==="jpg"||ext==="jpeg"||ext==="webp")){ issues.push("Formato "+ext.toUpperCase()+" — se necesita JPG o WEBP"); level="bad"; }
+        if(file.size>PHOTO.maxBytes){ issues.push("Pesa más de 2 MB"); level="bad"; }
+        else if(file.size>PHOTO.warnBytes&&level!=="bad"){ issues.push("Pesa más de 600 KB, conviene comprimirla"); level="warn"; }
+        var url=URL.createObjectURL(file),img=new Image();
+        img.onload=function(){
+          var w=img.naturalWidth,ht=img.naturalHeight,r=w/ht;
+          if(Math.abs(r-PHOTO.ratio)>PHOTO.tol){ issues.push("Proporción "+r.toFixed(2)+" — se necesita 3:4 (0.75)"); level="bad"; }
+          if(w<PHOTO.minW||ht<PHOTO.minH){ issues.push("Mínimo 1200×1600 px"); if(level!=="bad") level="warn"; }
+          res({name:file.name,ext:(ext==="jpeg"?"jpg":ext),w:w,h:ht,bytes:file.size,url:url,level:level,issues:issues,color:"",target:""});
+        };
+        img.onerror=function(){
+          res({name:file.name,ext:ext,w:0,h:0,bytes:file.size,url:"",level:"bad",
+            issues:["No se pudo leer la imagen"+(ext==="heic"?" — HEIC no sirve, cambia la cámara a 'Más compatible'":"")],color:"",target:""});
+        };
+        img.src=url;
+      });
+    }
+    function addFiles(list){
+      var files=Array.prototype.slice.call(list).filter(function(f){ return f.size>0; });
+      Promise.all(files.map(inspect)).then(function(res){
+        res.forEach(function(r){ p.photos.push(r); });
+        p.demo=false; renameAll(); save(); paintShots(); paintPanel(); paintList();
+      });
+    }
+    var fileIn=h("input",{type:"file",accept:"image/*",multiple:"multiple",style:"display:none"});
+    fileIn.addEventListener("change",function(){ addFiles(fileIn.files); fileIn.value=""; });
+    var drop=h("div",{class:"drop"},[
+      h("p",{text:"Arrastra aquí las fotos de esta prenda, o elígelas. No se suben a ningún lado — solo se revisan en tu computadora."}),
+      h("button",{class:"ghost",text:"Elegir fotos",onclick:function(){ fileIn.click(); }}),
+      fileIn
+    ]);
+    ["dragenter","dragover"].forEach(function(ev){ drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.add("hot"); }); });
+    ["dragleave","drop"].forEach(function(ev){ drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.remove("hot"); }); });
+    drop.addEventListener("drop",function(e){ if(e.dataTransfer&&e.dataTransfer.files) addFiles(e.dataTransfer.files); });
+    renameAll(); paintShots();
+
+    form.appendChild(h("fieldset",{},[
+      h("legend",{},[h("span",{class:"kicker",text:"Cuatro"}),h("div",{class:"secttl",text:"Fotos"})]),
+      h("p",{class:"hint",text:"Vertical 3:4, mínimo 1200×1600 px, JPG o WEBP. La app revisa cada foto y te dice con qué nombre guardarla."}),
+      drop,shots
+    ]));
+
+    /* 5 etiquetas */
+    var tagPicks=pickRow(
+      V().tags.map(function(t){ return {label:t.t,nuevo:!!t.nuevo}; }),
+      function(it){ return p.tags.indexOf(it.label)>=0; },
+      function(it){
+        var i=p.tags.indexOf(it.label);
+        if(i>=0) p.tags.splice(i,1); else p.tags.push(it.label);
+        p.demo=false; save(); paintForm();
+      },{focus:"tags"});
+
+    form.appendChild(h("fieldset",{},[
+      h("legend",{},[h("span",{class:"kicker",text:"Cinco"}),h("div",{class:"secttl",text:"Etiquetas"})]),
+      h("p",{class:"hint",text:"Las etiquetas son lo que mete la prenda en las colecciones. Si agregas una nueva, queda marcada para que Nexium cree su colección."}),
+      tagPicks,
+      h("div",{style:"height:18px"}),
+      h("div",{class:"row"},[field("Notas para Nexium","opt",area(p,"notes",{placeholder:"Cualquier cosa que quieras avisarnos de esta prenda"}))])
+    ]));
+
+    form.appendChild(h("div",{style:"display:flex;gap:9px;flex-wrap:wrap"},[
+      h("button",{class:"ghost",text:"Duplicar prenda",onclick:function(){
+        var copy=clone(p); copy.id=uid(); copy.title=p.title+" (copia)"; copy.photos=[]; copy.demo=false;
+        Object.keys(copy.variants).forEach(function(k){ copy.variants[k].skuTouched=false; });
+        syncVariants(copy); state.products.push(copy); state.active=copy.id; save(); paintAll();
+      }}),
+      h("button",{class:"ghost danger",text:"Eliminar prenda",onclick:function(){
+        if(!confirm("¿Eliminar \""+(p.title||"esta prenda")+"\"? No se puede deshacer.")) return;
+        state.products=state.products.filter(function(x){ return x.id!==p.id; });
+        state.active=state.products.length?state.products[0].id:null;
+        save(); paintAll();
+      }})
+    ]));
+
+    grid.appendChild(form); grid.appendChild(panelNode());
+    pad.appendChild(grid); main.appendChild(pad);
+  }
+
+  /* ---------- panel lateral ---------- */
+  var panelHost=null;
+  function panelNode(){ panelHost=h("div",{class:"panel"}); fillPanel(); return panelHost; }
+  function paintPanel(){ if(panelHost) fillPanel(); }
+  function fillPanel(){
+    var p=cur(); if(!p||!panelHost) return;
+    panelHost.innerHTML="";
+    var a=audit(p);
+    var card=h("div",{class:"card"},[h("h4",{text:"Estado de la prenda"})]);
+    if(!a.req.length&&!a.rec.length&&!a.opt.length&&!a.pend.length){
+      card.appendChild(h("div",{class:"allgood",text:"Completa"}));
+    }else{
+      var ul=h("ul",{class:"miss"});
+      a.req.forEach(function(t){ ul.appendChild(h("li",{class:"req",text:t})); });
+      a.pend.forEach(function(t){ ul.appendChild(h("li",{class:"pend",text:t})); });
+      a.rec.forEach(function(t){ ul.appendChild(h("li",{class:"rec",text:t})); });
+      a.opt.forEach(function(t){ ul.appendChild(h("li",{class:"opt",text:t})); });
+      card.appendChild(ul);
+    }
+    panelHost.appendChild(card);
+
+    var vl=variantList(p);
+    panelHost.appendChild(h("div",{class:"card"},[
+      h("h4",{text:"Resumen"}),
+      h("div",{class:"in"},[
+        h("div",{class:"stat"},[h("span",{text:"Variantes"}),h("b",{text:String(vl.length)})]),
+        h("div",{class:"stat"},[h("span",{text:"Piezas"}),h("b",{text:String(totalPieces(p))})]),
+        h("div",{class:"stat"},[h("span",{text:"Fotos válidas"}),h("b",{text:String(p.photos.filter(function(f){return f.level!=="bad";}).length)})]),
+        h("div",{class:"stat"},[h("span",{text:"Valor inventario"}),h("b",{text:"$"+(totalPieces(p)*(Number(p.price)||0)).toLocaleString("es-MX")})])
+      ])
+    ]));
+
+    var willbe=h("div",{class:"willbe"});
+    collectionsOf(p).forEach(function(c){ willbe.appendChild(h("span",{class:c.pend?"pend":"auto",text:c.n+(c.pend?" (por crear)":"")})); });
+    if(p.compareAt&&Number(p.compareAt)>Number(p.price)) willbe.appendChild(h("span",{class:"auto",text:"Ofertas"}));
+    panelHost.appendChild(h("div",{class:"card"},[h("h4",{text:"Aparecerá en"}),h("div",{class:"in"},[willbe])]));
+  }
+
+  /* ---------- modal genérico ---------- */
+  function modal(title,bodyNodes,footNodes){
+    var veil=h("div",{class:"veil"});
+    var m=h("div",{class:"modal"},[
+      h("div",{class:"mh"},[h("h3",{text:title})]),
+      h("div",{class:"mb"},bodyNodes),
+      h("div",{class:"mf"},(footNodes||[]).concat([h("button",{class:"ghost",text:"Cerrar",onclick:function(){ veil.remove(); }})]))
+    ]);
+    veil.appendChild(m);
+    veil.addEventListener("click",function(e){ if(e.target===veil) veil.remove(); });
+    function onEsc(e){ if(e.key==="Escape"){ veil.remove(); document.removeEventListener("keydown",onEsc); } }
+    document.addEventListener("keydown",onEsc);
+    document.body.appendChild(veil);
+    return veil;
+  }
+
+  /* ---------- VOCABULARIO ---------- */
+  function vocabModal(focus){
+    var veil=null;
+    function rebuild(){
+      if(veil) veil.remove();
+      veil=modal("Vocabulario del catálogo",sections(),[]);
+      if(focus){
+        var el=veil.querySelector('[data-sec="'+focus+'"]');
+        if(el) setTimeout(function(){ el.scrollIntoView({block:"start",behavior:"auto"}); },30);
+        focus=null;
+      }
+    }
+    function chip(nuevo){ return nuevo?h("span",{class:"nuevo",text:"nuevo"}):null; }
+    function delBtn(kind,val,onDel){
+      var n=usage(kind,val);
+      if(n>0) return h("span",{class:"inuse",text:n+" prenda"+(n>1?"s":"")});
+      return h("button",{class:"ghost danger",text:"Quitar",onclick:function(){ onDel(); save(); rebuild(); paintAll(); }});
+    }
+
+    function sections(){
+      var out=[];
+
+      /* --- COLORES --- */
+      var cl=h("div",{class:"vlist"},[h("div",{class:"vhead",text:"Color · Hex · Código de SKU"})]);
+      V().colors.forEach(function(c,i){
+        var name=h("div",{},[document.createTextNode(c.n)]);
+        if(!c.tema) name.appendChild(h("span",{class:"nuevo",text:"por programar"}));
+        cl.appendChild(h("div",{class:"vrow"},[
+          h("span",{class:"sw",style:"background:"+c.hex}),
+          name,
+          h("div",{style:"display:flex;gap:9px;align-items:center"},[
+            h("span",{class:"tag",text:c.ab}),
+            c.tema?h("span",{class:"inuse",text:"del tema"}):delBtn("color",c.n,function(){ V().colors.splice(i,1); })
+          ])
+        ]));
+      });
+      var cName=h("input",{type:"text",placeholder:"Vino"});
+      var cHex=h("input",{type:"color",value:"#7b2d3b"});
+      var cAb=h("input",{type:"text",placeholder:"VIN",maxlength:"4"});
+      cl.appendChild(h("div",{class:"addform"},[
+        h("label",{},[h("span",{text:"Nombre"}),cName]),
+        h("label",{},[h("span",{text:"Color aprox."}),cHex]),
+        h("label",{},[h("span",{text:"SKU"}),cAb]),
+        h("button",{class:"primary",text:"Agregar",onclick:function(){
+          var n=cName.value.trim(); if(!n) return;
+          if(color(n)){ alert("Ese color ya existe."); return; }
+          V().colors.push({n:n,hex:cHex.value,ab:(cAb.value.trim()||abbr(n)).toUpperCase().slice(0,4),tema:false,nuevo:true});
+          save(); rebuild(); paintAll();
+        }}),
+        h("div",{class:"conseq"},[h("b",{text:"Qué pasa al agregar: "}),document.createTextNode("la prenda se puede capturar, pero en la tienda el círculo de color se verá beige hasta que Nexium lo programe en el tema. Sale en el reporte de pendientes.")])
+      ]));
+      out.push(h("div",{class:"vsec","data-sec":"colors"},[
+        h("h5",{text:"Colores"}),
+        h("p",{text:"Los diez primeros existen en el diseño. Los que agregues quedan marcados como pendientes de programar."}),
+        cl
+      ]));
+
+      /* --- TALLAS --- */
+      var sl=h("div",{class:"vlist"},[h("div",{class:"vhead",text:"Sistema · Valores"})]);
+      Object.keys(V().systems).forEach(function(sys){
+        var vals=V().systems[sys];
+        var chips=h("div",{style:"display:flex;flex-wrap:wrap;gap:5px"});
+        vals.forEach(function(v,i){
+          var c=h("span",{class:"chip",style:"padding:4px 9px;font-size:11.5px",text:v});
+          if(usage("size",v)===0){
+            c.style.cursor="pointer"; c.title="Clic para quitar";
+            c.addEventListener("click",function(){
+              if(!confirm("¿Quitar la talla "+v+" de "+sys+"?")) return;
+              vals.splice(i,1); save(); rebuild(); paintAll();
+            });
+          }
+          chips.appendChild(c);
+        });
+        sl.appendChild(h("div",{class:"vrow"},[h("span",{}),h("div",{},[h("b",{text:sys}),chips]),h("span",{})]));
+      });
+      var sSys=h("select",{});
+      Object.keys(V().systems).forEach(function(s){ sSys.appendChild(h("option",{value:s,text:s})); });
+      sSys.appendChild(h("option",{value:"__new",text:"+ Sistema nuevo…"}));
+      var sVal=h("input",{type:"text",placeholder:"XXL"});
+      sl.appendChild(h("div",{class:"addform"},[
+        h("label",{},[h("span",{text:"Sistema"}),sSys]),
+        h("label",{},[h("span",{text:"Talla"}),sVal]),
+        h("button",{class:"primary",text:"Agregar",onclick:function(){
+          var v=sVal.value.trim(); if(!v) return;
+          var sys=sSys.value;
+          if(sys==="__new"){
+            sys=prompt("Nombre del sistema nuevo (ej. Infantil):","");
+            if(!sys) return; sys=sys.trim(); if(!sys) return;
+            if(!V().systems[sys]) V().systems[sys]=[];
+          }
+          if(V().systems[sys].indexOf(v)>=0){ alert("Esa talla ya está en "+sys+"."); return; }
+          V().systems[sys].push(v); save(); rebuild(); paintAll();
+        }}),
+        h("div",{class:"conseq"},[h("b",{text:"Qué pasa al agregar: "}),document.createTextNode("nada en el tema. Las tallas son valores libres en Shopify. Lo único que importa es escribirlas siempre igual.")])
+      ]));
+      out.push(h("div",{class:"vsec","data-sec":"sizes"},[
+        h("h5",{text:"Tallas"}),
+        h("p",{text:"Agrupadas por sistema. Cada categoría usa uno. Clic en una talla sin usar para quitarla."}),
+        sl
+      ]));
+
+      /* --- CATEGORÍAS --- */
+      var kl=h("div",{class:"vlist"},[h("div",{class:"vhead",text:"Categoría · Sistema de tallas · Colección · SKU"})]);
+      V().cats.forEach(function(c,i){
+        var name=h("div",{},[document.createTextNode(c.n)]);
+        if(c.nuevo) name.appendChild(h("span",{class:"nuevo",text:"por crear"}));
+        kl.appendChild(h("div",{class:"vrow"},[
+          h("span",{}),
+          h("div",{},[name,h("div",{class:"tag",text:c.sys+" · "+(c.col||"sin colección")})]),
+          h("div",{style:"display:flex;gap:9px;align-items:center"},[
+            h("span",{class:"tag",text:c.ab}),
+            delBtn("cat",c.n,function(){ V().cats.splice(i,1); })
+          ])
+        ]));
+      });
+      var kName=h("input",{type:"text",placeholder:"Bolso"});
+      var kSys=h("select",{});
+      Object.keys(V().systems).forEach(function(s){ kSys.appendChild(h("option",{value:s,text:s,selected:s==="Única"?"selected":null})); });
+      var kCol=h("input",{type:"text",placeholder:"Bolsos"});
+      var kAb=h("input",{type:"text",placeholder:"BOL",maxlength:"4"});
+      kl.appendChild(h("div",{class:"addform"},[
+        h("label",{},[h("span",{text:"Nombre"}),kName]),
+        h("label",{},[h("span",{text:"Tallas"}),kSys]),
+        h("label",{},[h("span",{text:"Colección"}),kCol]),
+        h("label",{},[h("span",{text:"SKU"}),kAb]),
+        h("button",{class:"primary",text:"Agregar",onclick:function(){
+          var n=kName.value.trim(); if(!n) return;
+          if(cat(n)){ alert("Esa categoría ya existe."); return; }
+          V().cats.push({n:n,ab:(kAb.value.trim()||abbr(n)).toUpperCase().slice(0,4),sys:kSys.value,col:kCol.value.trim(),nuevo:true});
+          save(); rebuild(); paintAll();
+        }}),
+        h("div",{class:"conseq"},[h("b",{text:"Qué pasa al agregar: "}),document.createTextNode("Nexium tiene que crear la colección automática y, si va en el menú, la entrada de navegación. Sale en el reporte de pendientes.")])
+      ]));
+      out.push(h("div",{class:"vsec","data-sec":"cats"},[
+        h("h5",{text:"Categorías"}),
+        h("p",{text:"Cada categoría define qué tallas aplican y en qué colección cae la prenda."}),
+        kl
+      ]));
+
+      /* --- ETIQUETAS --- */
+      var tl=h("div",{class:"vlist"},[h("div",{class:"vhead",text:"Etiqueta · Colección que alimenta"})]);
+      V().tags.forEach(function(t,i){
+        var name=h("div",{},[h("span",{class:"tag",text:t.t})]);
+        if(t.nuevo) name.appendChild(h("span",{class:"nuevo",text:"por crear"}));
+        tl.appendChild(h("div",{class:"vrow"},[
+          h("span",{}),
+          h("div",{},[name,h("div",{class:"tag",style:"color:var(--muted)",text:t.col||"no alimenta ninguna colección"})]),
+          delBtn("tag",t.t,function(){ V().tags.splice(i,1); })
+        ]));
+      });
+      var tName=h("input",{type:"text",placeholder:"boho"});
+      var tCol=h("input",{type:"text",placeholder:"Boho (opcional)"});
+      tl.appendChild(h("div",{class:"addform"},[
+        h("label",{},[h("span",{text:"Etiqueta"}),tName]),
+        h("label",{},[h("span",{text:"Colección"}),tCol]),
+        h("button",{class:"primary",text:"Agregar",onclick:function(){
+          var raw=tName.value.trim(); if(!raw) return;
+          var t=slug(raw);
+          if(!t){ alert("Nombre no válido."); return; }
+          if(tagDef(t)){ alert("Esa etiqueta ya existe."); return; }
+          V().tags.push({t:t,col:tCol.value.trim(),nuevo:true});
+          save(); rebuild(); paintAll();
+        }}),
+        h("div",{class:"conseq"},[h("b",{text:"Se normaliza sola: "}),document.createTextNode("minúsculas, sin acentos y con guiones. Si pones colección, Nexium tiene que crearla como colección automática por esa etiqueta.")])
+      ]));
+      out.push(h("div",{class:"vsec","data-sec":"tags"},[
+        h("h5",{text:"Etiquetas"}),
+        h("p",{text:"Se escriben solas en el formato correcto. Una etiqueta con colección necesita trabajo en Shopify."}),
+        tl
+      ]));
+
+      /* --- FIT --- */
+      var fl=h("div",{class:"vlist"},[h("div",{class:"vhead",text:"Fit"})]);
+      V().fits.forEach(function(f,i){
+        fl.appendChild(h("div",{class:"vrow"},[h("span",{}),h("div",{text:f}),delBtn("fit",f,function(){ V().fits.splice(i,1); })]));
+      });
+      var fName=h("input",{type:"text",placeholder:"Entallado"});
+      fl.appendChild(h("div",{class:"addform"},[
+        h("label",{},[h("span",{text:"Nombre"}),fName]),
+        h("button",{class:"primary",text:"Agregar",onclick:function(){
+          var n=fName.value.trim(); if(!n) return;
+          if(V().fits.indexOf(n)>=0){ alert("Ese fit ya existe."); return; }
+          V().fits.push(n); save(); rebuild(); paintAll();
+        }}),
+        h("div",{class:"conseq"},[h("b",{text:"Qué pasa al agregar: "}),document.createTextNode("nada. El fit es texto libre en la ficha técnica; la lista existe solo para que sea consistente.")])
+      ]));
+      out.push(h("div",{class:"vsec","data-sec":"fits"},[h("h5",{text:"Fit"}),h("p",{text:"Solo para mantener consistencia entre prendas."}),fl]));
+
+      /* --- pendientes --- */
+      var pend=pendientes();
+      if(pend.length){
+        var pl=h("div",{class:"vlist"},[h("div",{class:"vhead",text:"Pendientes para Nexium"})]);
+        pend.forEach(function(x){
+          pl.appendChild(h("div",{class:"vrow"},[
+            h("span",{}),
+            h("div",{},[h("b",{text:x.valor}),h("div",{class:"tag",style:"color:var(--muted)",text:x.tipo+" — "+x.accion})]),
+            h("span",{class:"inuse",text:x.usos+" prenda"+(x.usos===1?"":"s")})
+          ]));
+        });
+        out.push(h("div",{class:"vsec"},[
+          h("h5",{text:"Pendientes"}),
+          h("p",{text:"Todo lo que agregaste y necesita trabajo antes de publicar. Se exporta desde el botón Exportar."}),
+          pl
+        ]));
+      }
+      return out;
+    }
+    rebuild();
+  }
+
+  function pendientes(){
+    var out=[];
+    V().colors.forEach(function(c){
+      if(c.tema) return;
+      out.push({tipo:"Color",valor:c.n,accion:"Programar el swatch en star-product-card.liquid ("+c.hex+")",usos:usage("color",c.n)});
+    });
+    V().cats.forEach(function(c){
+      if(!c.nuevo) return;
+      out.push({tipo:"Categoría",valor:c.n,accion:"Crear colección automática"+(c.col?' "'+c.col+'"':"")+" y entrada de menú",usos:usage("cat",c.n)});
+    });
+    V().tags.forEach(function(t){
+      if(!t.nuevo) return;
+      out.push({tipo:"Etiqueta",valor:t.t,accion:t.col?('Crear colección automática "'+t.col+'" por esta etiqueta'):"Ninguna — solo filtro",usos:usage("tag",t.t)});
+    });
+    return out;
+  }
+
+  /* ---------- exportación ---------- */
+  function esc(v){
+    v=v===null||v===undefined?"":String(v);
+    return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
+  }
+  function rowsToCSV(rows){ return rows.map(function(r){ return r.map(esc).join(","); }).join("\r\n"); }
+
+  var SHOPIFY_COLS=["Handle","Title","Body (HTML)","Vendor","Type","Tags","Published",
+    "Option1 Name","Option1 Value","Option2 Name","Option2 Value",
+    "Variant SKU","Variant Inventory Tracker","Variant Inventory Qty","Variant Inventory Policy",
+    "Variant Fulfillment Service","Variant Price","Variant Compare At Price",
+    "Variant Requires Shipping","Variant Taxable","Image Src","Image Position","Image Alt Text","Status",
+    "Material (product.metafields.custom.material)",
+    "Fit (product.metafields.custom.fit)",
+    "Cuidados (product.metafields.custom.care_instructions)",
+    "Info modelo (product.metafields.custom.model_info)",
+    "Medidas (product.metafields.custom.measurements)",
+    "Origen (product.metafields.custom.origin)"];
+
+  function shopifyCSV(){
+    var rows=[SHOPIFY_COLS.slice()];
+    state.products.filter(function(p){ return !p.demo; }).forEach(function(p){
+      var handle=slug(p.title)||("prenda-"+p.id),vl=variantList(p);
+      if(!vl.length) return;
+      vl.forEach(function(x,i){
+        var f=(i===0),r=[];
+        r.push(handle);
+        r.push(f?p.title:"");
+        r.push(f?(p.body?"<p>"+p.body.replace(/\n+/g,"</p><p>")+"</p>":""):"");
+        r.push(f?"Star Moda":"");
+        r.push(f?p.category:"");
+        r.push(f?p.tags.join(", "):"");
+        r.push(f?"TRUE":"");
+        r.push(f?"Color":""); r.push(x.color);
+        r.push(f?"Talla":"");  r.push(x.size);
+        r.push(x.v.sku);
+        r.push("shopify");
+        r.push(x.v.qty===""?"0":x.v.qty);
+        r.push("deny"); r.push("manual");
+        r.push(p.price); r.push(p.compareAt||"");
+        r.push("TRUE"); r.push("TRUE");
+        r.push(""); r.push(""); r.push("");
+        r.push(f?"active":"");
+        r.push(f?p.material:""); r.push(f?p.fit:""); r.push(f?p.care:"");
+        r.push(f?p.modelInfo:""); r.push(f?p.measurements:""); r.push(f?p.origin:"");
+        rows.push(r);
+      });
+    });
+    return rowsToCSV(rows);
+  }
+  function photoCSV(){
+    var rows=[["Handle","Posición","Color","Nombre de archivo","Ancho","Alto","KB","Estado"]];
+    state.products.filter(function(p){ return !p.demo; }).forEach(function(p){
+      var handle=slug(p.title)||("prenda-"+p.id);
+      p.photos.forEach(function(f,i){
+        rows.push([handle,String(i+1),f.color||"todos",f.target,String(f.w),String(f.h),(f.bytes/1024).toFixed(0),
+          f.level==="ok"?"OK":f.level==="warn"?"Revisar":"No sirve"]);
+      });
+    });
+    return rowsToCSV(rows);
+  }
+  function pendCSV(){
+    var rows=[["Tipo","Valor","Qué necesita","Prendas que lo usan"]];
+    pendientes().forEach(function(x){ rows.push([x.tipo,x.valor,x.accion,String(x.usos)]); });
+    return rowsToCSV(rows);
+  }
+
+  /* Las descargas solo funcionan para quien tiene permiso en este artefacto.
+     Si no hay permiso, se muestra el texto para copiarlo y mandarlo. */
+  var dlP=(window.claude&&typeof window.claude.use==="function")
+    ? window.claude.use("downloads").then(function(d){ return d; },function(){ return null; })
+    : Promise.resolve(null);
+  function deliver(filename,text,mime){
+    /* Fuera de Claude (Vercel) la descarga normal del navegador funciona. */
+    if(!(window.claude&&typeof window.claude.use==="function")){
+      try{
+        var bom=(mime==="text/csv"||/\.csv$/i.test(filename))?"﻿":"";
+        var blob=new Blob([bom+text],{type:(mime||"text/plain")+";charset=utf-8"});
+        var a=document.createElement("a");
+        a.href=URL.createObjectURL(blob); a.download=filename;
+        document.body.appendChild(a); a.click();
+        setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500);
+      }catch(e){ showText(filename,text); }
+      return;
+    }
+    dlP.then(function(d){
+      if(!d||typeof d.save!=="function"){ showText(filename,text); return; }
+      d.save({filename:filename,data:text}).catch(function(e){
+        if(e&&(e.code==="declined"||e.code==="rate_limited")) return;
+        showText(filename,text);
+      });
+    });
+  }
+  function showText(filename,text){
+    var t=h("textarea",{class:"out",readonly:"readonly"}); t.value=text;
+    var status=h("span",{class:"cnt",text:""});
+    modal("Copiar: "+filename,[
+      h("p",{class:"hint",style:"margin:0 0 6px",text:"La descarga no está disponible en este dispositivo. Copia el texto y mándalo por WhatsApp o correo; se puede volver a cargar desde Respaldo › Pegar respaldo."}),
+      t,
+      h("div",{style:"display:flex;gap:9px;align-items:center;margin-top:10px"},[
+        h("button",{class:"primary",text:"Copiar todo",onclick:function(){
+          function ok(){ status.textContent="Copiado"; }
+          if(navigator.clipboard&&navigator.clipboard.writeText){
+            navigator.clipboard.writeText(text).then(ok,function(){ t.focus(); t.select(); status.textContent="Selecciona y copia a mano"; });
+          } else { t.focus(); t.select(); try{ document.execCommand("copy"); ok(); }catch(e){ status.textContent="Selecciona y copia a mano"; } }
+        }}),
+        status
+      ])
+    ],[]);
+  }
+
+  function exportModal(){
+    var real=state.products.filter(function(p){ return !p.demo; });
+    var listos=real.filter(function(p){ return grade(p)!=="req"; });
+    var pend=pendientes();
+    var body=[
+      h("p",{class:"hint",text:real.length+" prenda(s) capturada(s), "+listos.length+" sin pendientes obligatorios."}),
+      h("div",{class:"exp"},[
+        h("div",{},[h("b",{text:"CSV de importación de Shopify"}),h("span",{text:"Productos, variantes, inventario y ficha técnica. Una fila por variante."})]),
+        h("button",{class:"primary",text:"Descargar",onclick:function(){ deliver("starmoda-productos.csv",shopifyCSV(),"text/csv"); }})
+      ]),
+      h("div",{class:"exp"},[
+        h("div",{},[h("b",{text:"Lista de fotos"}),h("span",{text:"Qué archivo va con qué prenda, en qué orden y con qué nombre."})]),
+        h("button",{text:"Descargar",onclick:function(){ deliver("starmoda-fotos.csv",photoCSV(),"text/csv"); }})
+      ]),
+      h("div",{class:"exp"},[
+        h("div",{},[
+          h("b",{text:"Pendientes para Nexium"}),
+          h("span",{text:pend.length?(pend.length+" valor(es) agregado(s) que necesitan trabajo antes de publicar."):"Nada pendiente: todo el vocabulario usado ya existe."})
+        ]),
+        h("button",{text:"Descargar",disabled:pend.length?null:"disabled",onclick:function(){ deliver("starmoda-pendientes.csv",pendCSV(),"text/csv"); }})
+      ]),
+      h("div",{class:"exp"},[
+        h("div",{},[h("b",{text:"Respaldo completo"}),h("span",{text:"Prendas y vocabulario en un archivo. Sirve para recuperarlo o pasarlo a otra computadora."})]),
+        h("button",{text:"Descargar",onclick:function(){ deliver("starmoda-respaldo.json",JSON.stringify(payload(),null,2),"application/json"); }})
+      ]),
+      h("div",{class:"warn"},[h("b",{text:"Para Nexium: "}),document.createTextNode("las columnas de metacampos usan el formato de exportación nativo de Shopify. Verifícalas contra una exportación de prueba antes de importar en producción.")])
+    ];
+    modal("Exportar",body,[]);
+  }
+
+  /* Combina un respaldo con lo que ya hay: agrega las prendas nuevas y
+     actualiza las que coinciden. Nunca borra nada. */
+  function mergeBackup(d){
+    var byId={}, added=0, updated=0;
+    state.products.forEach(function(p){ byId[p.id]=p; });
+    d.products.forEach(function(p){
+      if(!p||!p.id||p.demo) return;
+      var np=clone(p); delete np._t;
+      (np.photos||[]).forEach(function(f){ f.url=""; });
+      delete state.deleted[np.id];
+      if(byId[np.id]){
+        var i=state.products.indexOf(byId[np.id]);
+        if(sig(byId[np.id])!==sig(np)){ state.products[i]=np; updated++; }
+      } else { state.products.push(np); added++; }
+    });
+    if(d.vocab&&d.vocab.colors){
+      var v=state.vocab;
+      [["colors","n"],["cats","n"],["tags","t"]].forEach(function(x){
+        var have={}; (v[x[0]]||[]).forEach(function(it){ have[it[x[1]]]=1; });
+        (d.vocab[x[0]]||[]).forEach(function(it){ if(it&&!have[it[x[1]]]) v[x[0]].push(clone(it)); });
+      });
+      (d.vocab.fits||[]).forEach(function(f){ if(v.fits.indexOf(f)<0) v.fits.push(f); });
+      Object.keys(d.vocab.systems||{}).forEach(function(k){
+        if(!v.systems[k]) v.systems[k]=clone(d.vocab.systems[k]);
+        else (d.vocab.systems[k]||[]).forEach(function(s){ if(v.systems[k].indexOf(s)<0) v.systems[k].push(s); });
+      });
+    }
+    if(state.products.some(function(p){ return !p.demo; }))
+      state.products=state.products.filter(function(p){ return !p.demo; });
+    if(!state.products.some(function(p){ return p.id===state.active; }))
+      state.active=state.products.length?state.products[0].id:null;
+    save(); paintAll();
+    return {added:added,updated:updated};
+  }
+  function importText(raw){
+    var d;
+    try{ d=JSON.parse(String(raw||"").replace(/^﻿/,"").trim()); }catch(e){ d=null; }
+    if(!d||!Array.isArray(d.products)){ alert("No se pudo leer. Pega el respaldo completo, desde la primera { hasta la última }."); return false; }
+    var r=mergeBackup(d);
+    alert("Respaldo cargado: "+r.added+" prenda(s) nueva(s), "+r.updated+" actualizada(s).");
+    return true;
+  }
+
+  function backupModal(){
+    var fi=h("input",{type:"file",accept:".json,application/json,text/plain",style:"display:none"});
+    var veil;
+    fi.addEventListener("change",function(){
+      var f=fi.files[0]; if(!f) return;
+      var rd=new FileReader();
+      rd.onload=function(){ if(importText(rd.result)&&veil) veil.remove(); };
+      rd.readAsText(f);
+    });
+    var paste=h("textarea",{class:"out",placeholder:"Pega aquí el texto del respaldo",style:"min-height:110px"});
+    var cloudOn=(cloud.db&&cloud.write)||(remoteOn()&&!!getCode());
+    veil=modal("Respaldo",[
+      h("p",{class:"hint",style:"margin:0 0 6px",text:cloudOn
+        ? "Lo que capturas se guarda en la nube y en este navegador. Aun así, saca un respaldo de vez en cuando."
+        : "Ahora mismo lo capturado vive solo en este navegador. Si borras el historial o cambias de dispositivo, se pierde. Saca un respaldo al terminar cada sesión."}),
+      h("div",{class:"exp"},[
+        h("div",{},[h("b",{text:"Sacar respaldo"}),h("span",{text:state.products.filter(function(p){ return !p.demo; }).length+" prendas y el vocabulario completo. Las fotos no van, solo sus nombres. Si este dispositivo no permite descargar, te muestra el texto para copiarlo."})]),
+        h("button",{class:"primary",text:"Respaldar",onclick:function(){ deliver("starmoda-respaldo.json",JSON.stringify(payload(),null,2),"application/json"); }})
+      ]),
+      h("div",{class:"exp"},[
+        h("div",{},[h("b",{text:"Cargar archivo de respaldo"}),h("span",{text:"Agrega las prendas del archivo y actualiza las que ya existen. No borra nada."})]),
+        h("button",{text:"Elegir archivo",onclick:function(){ fi.click(); }})
+      ]),
+      h("div",{style:"padding-top:14px"},[
+        h("b",{text:"Pegar respaldo",style:"display:block;font-size:13.5px"}),
+        h("span",{class:"cnt",text:"Para el texto que te mandaron por WhatsApp o correo. También combina, no borra."}),
+        paste,
+        h("div",{style:"margin-top:10px"},[
+          h("button",{text:"Cargar texto pegado",onclick:function(){ if(importText(paste.value)) veil.remove(); }})
+        ])
+      ]),
+      fi
+    ],[]);
+  }
+
+  function guideModal(){
+    function block(t,items){
+      var ul=h("ul",{class:"miss",style:"border:1px solid var(--line);background:var(--surface)"});
+      items.forEach(function(x){ ul.appendChild(h("li",{class:x[0],text:x[1]})); });
+      return h("div",{style:"margin-bottom:18px"},[h("span",{class:"kicker",text:t}),h("div",{style:"height:7px"}),ul]);
+    }
+    modal("Reglas del catálogo",[
+      block("Los niveles",[
+        ["req","Obligatorio — sin esto la prenda no se puede publicar"],
+        ["pend","Por programar — se puede capturar, pero Nexium tiene que hacer algo antes de publicar"],
+        ["rec","Necesario — se publica, pero se ve incompleta"],
+        ["opt","Opcional — suma, se agrega después"]
+      ]),
+      block("Lo que no cambia",[
+        ["req","Las fotos van en vertical 3:4. Otra proporción se recorta mal."],
+        ["req","Un modelo es una prenda con variantes, nunca varias prendas."],
+        ["req","El SKU tiene que ser el mismo que en Eleventa."],
+        ["pend","Un color nuevo se ve beige en la tienda hasta que se programa."]
+      ]),
+      block("Lo que la tienda hace sola",[
+        ["opt","Etiqueta Nuevo — primeros 30 días desde que se publica"],
+        ["opt","Etiqueta Sale — cuando hay precio antes mayor al precio"],
+        ["opt","Etiqueta Agotado y Agotándose — según el inventario"],
+        ["opt","Colecciones Nuevos ingresos y Más vendidos — solas"]
+      ]),
+      h("p",{class:"hint",style:"margin:0",text:"Ya puedes agregar colores, tallas, categorías y etiquetas desde el botón Vocabulario. Lo que agregues queda marcado y sale en el reporte de pendientes."})
+    ],[]);
+  }
+
+  /* ---------- arranque ---------- */
+  function paintAll(){ paintList(); paintForm(); }
+
+  document.getElementById("btnAdd").addEventListener("click",function(){
+    var p=blank(); state.products.push(p); state.active=p.id; save(); paintAll();
+    var el=document.querySelector('input[type="text"]'); if(el) el.focus();
+  });
+  document.getElementById("btnExport").addEventListener("click",exportModal);
+  document.getElementById("btnBackup").addEventListener("click",backupModal);
+  document.getElementById("btnGuide").addEventListener("click",guideModal);
+  document.getElementById("btnVocab").addEventListener("click",function(){ vocabModal(null); });
+
+  load(); primeSigs(); paintAll(); paintSaved();
+  if(remoteOn()){
+    remoteSync();
+    /* trae lo que capturen otros mientras la app está abierta */
+    setInterval(function(){ if(!document.hidden&&getCode()) remoteSync(); },45000);
+    document.addEventListener("visibilitychange",function(){ if(!document.hidden&&getCode()) remoteSync(); });
+    var syncEl=document.getElementById("sync");
+    syncEl.style.cursor="pointer";
+    syncEl.title="Sincronizar ahora";
+    syncEl.addEventListener("click",function(){ if(getCode()) remoteSync(); else codeModal(); });
+  } else cloudInit();
+  if(!storageOK) setTimeout(function(){ alert("Este navegador no permite guardar automáticamente. Exporta un respaldo seguido para no perder el trabajo."); },400);
+})();
+
+</script>
+
+</body></html>
