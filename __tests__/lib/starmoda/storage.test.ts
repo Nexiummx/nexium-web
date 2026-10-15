@@ -1,4 +1,4 @@
-import { buildPath, checkSetup, createUploadTicket, getConfig, StarmodaError } from "@/lib/starmoda/storage";
+import { buildPath, checkSetup, createUploadTicket, getConfig, keyKind, StarmodaError } from "@/lib/starmoda/storage";
 
 const cfg = { url: "https://abc.supabase.co", key: "sb_secret_x" };
 
@@ -97,7 +97,7 @@ describe("checkSetup", () => {
 
   it("todo bien", async () => {
     fetchMock.mockResolvedValueOnce(res(200, '"Nexium"')).mockResolvedValueOnce(res(200, { id: "starmoda-fotos", public: true }));
-    expect(await checkSetup("sm-1", env)).toEqual({ config: true, code: true, bucket: true });
+    expect(await checkSetup("sm-1", env)).toEqual({ config: true, code: true, bucket: true, keyKind: "secret", project: "abc" });
     expect(fetchMock.mock.calls[1][0]).toBe("https://abc.supabase.co/storage/v1/bucket/starmoda-fotos");
   });
 
@@ -105,11 +105,33 @@ describe("checkSetup", () => {
     fetchMock
       .mockResolvedValueOnce(res(403, { message: "codigo_invalido" }))
       .mockResolvedValueOnce(res(400, { statusCode: "404", error: "Bucket not found" }));
-    expect(await checkSetup("malo", env)).toEqual({ config: true, code: false, bucket: false });
+    expect(await checkSetup("malo", env)).toMatchObject({ config: true, code: false, bucket: false });
   });
 
   it("llave secreta incorrecta", async () => {
     fetchMock.mockResolvedValueOnce(res(401, { message: "Invalid API key" })).mockResolvedValueOnce(res(401, {}));
-    expect(await checkSetup("sm-1", env)).toMatchObject({ config: true, code: null, bucket: null, error: "supabase_401" });
+    expect(await checkSetup("sm-1", env)).toMatchObject({
+      config: true, code: null, bucket: null, error: "supabase_401", detail: "Invalid API key", keyKind: "secret",
+    });
+  });
+});
+
+describe("keyKind y limpieza de variables", () => {
+  const jwt = (role: string) => ["x", Buffer.from(JSON.stringify({ role })).toString("base64url"), "y"].join(".");
+
+  it("reconoce cada tipo de llave", () => {
+    expect(keyKind("sb_secret_abc")).toBe("secret");
+    expect(keyKind("sb_publishable_abc")).toBe("publishable");
+    expect(keyKind(jwt("service_role"))).toBe("service_role");
+    expect(keyKind(jwt("anon"))).toBe("anon");
+    expect(keyKind("cualquier-cosa")).toBe("desconocida");
+  });
+
+  it("quita espacios, saltos de línea y comillas pegados en Vercel", () => {
+    const cfg = getConfig({
+      SUPABASE_URL: ' "https://abc.supabase.co/" \n',
+      SUPABASE_SERVICE_ROLE_KEY: "'sb_secret_x'\n",
+    } as unknown as NodeJS.ProcessEnv);
+    expect(cfg).toEqual({ url: "https://abc.supabase.co", key: "sb_secret_x" });
   });
 });

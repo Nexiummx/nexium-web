@@ -15,6 +15,7 @@ const EXTS: Record<string, string> = {
 };
 
 export class StarmodaError extends Error {
+  detail?: string;
   constructor(
     message: string,
     public status: number
@@ -40,9 +41,14 @@ interface Config {
   key: string;
 }
 
+/** Quita espacios, saltos de línea y comillas que se cuelan al pegar en Vercel. */
+function clean(v: string | undefined): string {
+  return (v || "").trim().replace(/^["']|["']$/g, "").trim();
+}
+
 export function getConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  const url = (env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "");
-  const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SECRET_KEY || "";
+  const url = clean(env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL).replace(/\/+$/, "");
+  const key = clean(env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SECRET_KEY);
   if (!url || !key) throw new StarmodaError("storage_no_configurado", 501);
   return { url, key };
 }
@@ -65,6 +71,35 @@ function headers(key: string, extra?: Record<string, string>): Record<string, st
   return { apikey: key, Authorization: `Bearer ${key}`, ...extra };
 }
 
+/** Qué tipo de llave hay en Vercel, sin exponerla: la pública (publishable
+ *  o anon) en lugar de la secreta es el error más común. */
+export type KeyKind = "secret" | "service_role" | "publishable" | "anon" | "desconocida";
+export function keyKind(key: string): KeyKind {
+  if (key.startsWith("sb_secret_")) return "secret";
+  if (key.startsWith("sb_publishable_")) return "publishable";
+  const parts = key.split(".");
+  if (parts.length === 3) {
+    try {
+      const role = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8")).role;
+      if (role === "service_role" || role === "anon") return role;
+    } catch {
+      /* no es un JWT legible */
+    }
+  }
+  return "desconocida";
+}
+
+/** Mensaje corto de Supabase para el diagnóstico (nunca incluye la llave). */
+async function detailOf(r: Response): Promise<string> {
+  const text = await r.text().catch(() => "");
+  try {
+    const j = JSON.parse(text) as { message?: string; msg?: string; error?: string; hint?: string };
+    return String(j.message || j.msg || j.error || j.hint || text).slice(0, 200);
+  } catch {
+    return text.slice(0, 200);
+  }
+}
+
 async function checkCode(cfg: Config, code: unknown): Promise<void> {
   if (typeof code !== "string" || !code.trim() || code.length > 200) {
     throw new StarmodaError("codigo_invalido", 403);
@@ -75,9 +110,11 @@ async function checkCode(cfg: Config, code: unknown): Promise<void> {
     body: JSON.stringify({ p_code: code }),
   });
   if (r.ok) return;
-  const text = await r.text();
-  if (/codigo_invalido/.test(text)) throw new StarmodaError("codigo_invalido", 403);
-  throw new StarmodaError(`supabase_${r.status}`, 502);
+  const detail = await detailOf(r);
+  if (/codigo_invalido/.test(detail)) throw new StarmodaError("codigo_invalido", 403);
+  const e = new StarmodaError(`supabase_${r.status}`, 502);
+  e.detail = detail;
+  throw e;
 }
 
 export interface SetupStatus {
@@ -88,6 +125,12 @@ export interface SetupStatus {
   /** El bucket de fotos existe y es público (null: no se pudo revisar) */
   bucket: boolean | null;
   error?: string;
+  /** Lo que respondió Supabase cuando algo falló */
+  detail?: string;
+  /** Tipo de llave configurada en Vercel */
+  keyKind?: KeyKind;
+  /** Proyecto al que apunta Vercel (p. ej. wxcmlfxcaunvtcegyupc) */
+  project?: string;
 }
 
 /** Diagnóstico para la pantalla de conexión de la app: nunca lanza. */
@@ -101,13 +144,22 @@ export async function checkSetup(
   } catch {
     return { config: false, code: null, bucket: null, error: "storage_no_configurado" };
   }
-  const out: SetupStatus = { config: true, code: null, bucket: null };
+  const out: SetupStatus = {
+    config: true,
+    code: null,
+    bucket: null,
+    keyKind: keyKind(cfg.key),
+    project: /^https:\/\/([a-z0-9]+)\.supabase\.co$/.exec(cfg.url)?.[1] || cfg.url.replace(/^https?:\/\//, ""),
+  };
   try {
     await checkCode(cfg, code);
     out.code = true;
   } catch (e) {
     if (e instanceof StarmodaError && e.message === "codigo_invalido") out.code = false;
-    else out.error = e instanceof Error ? e.message : "error";
+    else {
+      out.error = e instanceof Error ? e.message : "error";
+      if (e instanceof StarmodaError && e.detail) out.detail = e.detail;
+    }
   }
   try {
     const r = await fetch(`${cfg.url}/storage/v1/bucket/${BUCKET}`, { headers: headers(cfg.key) });
@@ -117,7 +169,11 @@ export async function checkSetup(
     } else if (r.status === 400 || r.status === 404) {
       out.bucket = false;
     } else {
-      out.error = out.error || `storage_${r.status}`;
+      const detail = await detailOf(r);
+      if (!out.error) {
+        out.error = `storage_${r.status}`;
+        out.detail = detail;
+      }
     }
   } catch (e) {
     out.error = out.error || (e instanceof Error ? e.message : "error");

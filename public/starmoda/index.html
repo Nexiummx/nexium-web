@@ -736,9 +736,18 @@
   function photoVerdict(ph){
     if(!ph||ph.missing) return {ok:false,msg:"No se encontró el servidor de fotos de nexiummx.com. Abre la app desde nexiummx.com/starmoda."};
     if(!ph.config) return {ok:false,msg:"Faltan SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en Vercel (y volver a desplegar)."};
-    if(ph.error&&/401|403/.test(ph.error)) return {ok:false,msg:"La llave secreta guardada en Vercel no es válida."};
+    var proj=REMOTE.url.replace(/^https:\/\//,"").replace(/\.supabase\.co\/?$/,"");
+    if(ph.project&&ph.project!==proj) return {ok:false,msg:"SUPABASE_URL en Vercel apunta a otro proyecto ("+ph.project+"); debe ser https://"+proj+".supabase.co. Corrígelo y vuelve a desplegar."};
+    if(ph.keyKind==="publishable"||ph.keyKind==="anon") return {ok:false,msg:"En SUPABASE_SERVICE_ROLE_KEY de Vercel está la llave pública ("+(ph.keyKind==="anon"?"anon":"sb_publishable_…")+"). Debe ser la Secret key (sb_secret_…) de Supabase › Project Settings › API Keys. Cámbiala y vuelve a desplegar."};
+    var det=ph.detail||"";
+    if(/permission denied for function/i.test(det)) return {ok:false,msg:"La llave es correcta, pero falta un permiso en la base: corre el SQL completo otra vez en Supabase (incluye «grant execute … to service_role»)."};
+    if(/Could not find the function|PGRST202/i.test(det)) return {ok:false,msg:"La llave es correcta, pero faltan las funciones de Star Moda: corre el SQL en Supabase."};
+    if(ph.error&&/401|403/.test(ph.error)) return {ok:false,msg:(ph.keyKind==="desconocida"
+      ?"Lo que hay en SUPABASE_SERVICE_ROLE_KEY de Vercel no parece una llave de Supabase (debe empezar con sb_secret_). "
+      :"Supabase no reconoce la llave secreta de Vercel: puede ser de otro proyecto, estar borrada o mal copiada. Copia de nuevo la Secret key. ")
+      +(det?"Supabase respondió: «"+det+"».":"")};
     if(ph.bucket===false) return {ok:false,msg:"No existe el espacio de fotos starmoda-fotos (o no es público): corre el SQL completo en Supabase."};
-    if(ph.bucket===null) return {ok:false,msg:"No se pudo revisar el espacio de fotos ("+(ph.error||"error")+")."};
+    if(ph.bucket===null) return {ok:false,msg:"No se pudo revisar el espacio de fotos ("+(ph.error||"error")+(ph.detail?": "+ph.detail:"")+")."};
     return {ok:true};
   }
   function refreshPhotoStatus(){
