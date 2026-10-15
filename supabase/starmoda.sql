@@ -109,6 +109,20 @@ revoke all on function public.starmoda_save(text, jsonb, text) from public;
 grant execute on function public.starmoda_get(text, text) to anon, authenticated;
 grant execute on function public.starmoda_save(text, jsonb, text) to anon, authenticated;
 
+-- El servidor de Nexium (Vercel) valida el código antes de firmar una
+-- subida de fotos. Usa la llave secreta, que nunca llega al navegador.
+grant execute on function public.starmoda_quien(text) to service_role;
+
+-- Fotos: bucket público de solo lectura (Shopify las descarga al importar
+-- el CSV). Sin políticas: con la llave pública nadie puede subir, listar ni
+-- borrar; solo se sube con la URL firmada que da /api/starmoda/upload.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('starmoda-fotos', 'starmoda-fotos', true, 2097152, array['image/jpeg', 'image/webp'])
+on conflict (id) do update
+  set public = excluded.public,
+      file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
+
 -- ============================================================
 -- CÓDIGOS: cambia los textos entre comillas por códigos largos y
 -- difíciles de adivinar (ej. "sm-7Kq2-vX9p-Lm4t"). Uno por persona,

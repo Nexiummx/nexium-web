@@ -125,6 +125,8 @@
   .shot .issue{font-size:11px;color:var(--req);margin-top:6px;line-height:1.4;}
   .shot .meta{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:5px;}
   .shot .rm{margin-top:8px;font-size:11px;padding:4px 8px;width:100%;}
+  .shot .up{font-size:11px;margin-top:6px;line-height:1.4;color:var(--muted);}
+  .shot .up.ok{color:var(--ok);} .shot .up.err{color:var(--req);}
 
   /* side panel */
   .panel{position:sticky;top:75px;display:flex;flex-direction:column;gap:16px;}
@@ -580,6 +582,58 @@
   }
   function remotePull(){ remoteSync(); }
 
+  /* ---------- subida de fotos ----------
+     /api/starmoda/upload valida el código y regresa una URL firmada; la foto
+     se sube directo a Supabase Storage y su URL pública (f.src) se guarda en
+     la prenda, así viaja con la sincronización y llega al CSV de Shopify.
+     El archivo original solo vive en memoria: si se recarga la página antes
+     de subirlo, hay que volver a elegir la foto. */
+  var upFiles={}, upState={};
+  function upInfo(f){
+    if(f.level==="bad") return null;
+    if(f.src) return {cls:"ok",text:"Subida a la nube"};
+    if(!remoteOn()) return null;
+    var s=upState[f.key];
+    if(s==="subiendo") return {cls:"",text:"Subiendo…"};
+    var hasFile=!!(f.key&&upFiles[f.key]);
+    if(s&&s!=="subiendo") return {cls:"err",text:s+(hasFile?"":" — vuelve a elegir la foto"),retry:hasFile};
+    return {cls:"err",text:hasFile?"Sin subir":"Sin subir — vuelve a elegir la foto",retry:hasFile};
+  }
+  function uploadPhoto(p,f,repaint){
+    var file=f.key&&upFiles[f.key];
+    if(!remoteOn()||!file||f.level==="bad") return;
+    var code=getCode();
+    if(!code){ upState[f.key]="Falta el código de acceso"; repaint(); codeModal(); return; }
+    upState[f.key]="subiendo"; repaint();
+    var name=(f.target||"foto").replace(/\.[a-z]+$/,"")+"-"+f.key+"."+(f.ext==="webp"?"webp":"jpg");
+    fetch("/api/starmoda/upload",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({code:code,productId:p.id,fileName:name})
+    }).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(t){
+        if(!r.ok){
+          var e=new Error(t.error==="codigo_invalido"?"Código no válido":"No se pudo subir ("+(t.error||r.status)+")");
+          e.badCode=t.error==="codigo_invalido"; throw e;
+        }
+        return t;
+      });
+    }).then(function(t){
+      var fd=new FormData();
+      fd.append("cacheControl","31536000");
+      fd.append("",file,name);
+      return fetch(t.uploadUrl,{method:"PUT",headers:{apikey:REMOTE.key,Authorization:"Bearer "+REMOTE.key,"x-upsert":"true"},body:fd}).then(function(r){
+        if(!r.ok) throw new Error("No se pudo subir ("+r.status+")");
+        return t.publicUrl;
+      });
+    }).then(function(src){
+      delete upState[f.key];
+      f.src=src; save(); repaint(); paintPanel(); paintList();
+    },function(e){
+      upState[f.key]=(e&&e.message)||"No se pudo subir";
+      if(e&&e.badCode){ setCode(""); codeModal("Ese código no es válido. Revísalo con Nexium."); }
+      repaint();
+    });
+  }
+
   function codeModal(msg){
     var input=h("input",{type:"text",id:"accessCode",autocomplete:"off",placeholder:"Código de acceso",style:"font-family:var(--mono)"});
     input.value=getCode();
@@ -813,6 +867,7 @@
     if(dup.length) req.push("SKU repetido: "+dup[0]);
     if(vl.length&&skus.length<vl.length) req.push("Hay variantes sin SKU");
     var okp=p.photos.filter(function(f){ return f.level!=="bad"; });
+    if(remoteOn()&&okp.some(function(f){ return !f.src; })) req.push("Hay fotos sin subir a la nube");
     if(!okp.length) req.push("Foto principal");
     else if(okp.length<2) rec.push("Foto secundaria (se ve al pasar el mouse)");
     if(p.photos.some(function(f){ return f.level==="bad"; })) req.push("Hay fotos que no cumplen 3:4");
@@ -1110,15 +1165,22 @@
           p.colors.forEach(function(c){ sel.appendChild(h("option",{value:c,text:c,selected:f.color===c?"selected":null})); });
           sel.addEventListener("change",function(){ f.color=sel.value; renameAll(); save(); paintShots(); paintPanel(); });
         }
+        var st=upInfo(f), up=null;
+        if(st) up=h("div",{class:"up "+st.cls},[
+          document.createTextNode(st.text),
+          st.retry?h("button",{class:"ghost",style:"margin-top:6px;font-size:11px;padding:4px 8px;width:100%",text:"Reintentar",
+            onclick:function(){ uploadPhoto(p,f,paintShots); }}):null
+        ]);
         shots.appendChild(h("div",{class:"shot"},[
           h("div",{class:"thumb"},[
-            f.url?h("img",{src:f.url,alt:""}):h("span",{text:"sin vista"}),
+            (f.url||f.src)?h("img",{src:f.url||f.src,alt:""}):h("span",{text:"sin vista"}),
             h("span",{class:"flag "+cls,text:txt})
           ]),
           h("div",{class:"body"},[
             h("div",{class:"rename",text:f.target}),
             h("div",{class:"meta",text:f.w+"×"+f.h+" · "+(f.bytes/1024).toFixed(0)+" KB"}),
             f.issues.length?h("div",{class:"issue",text:f.issues.join(". ")}):null,
+            up,
             sel,
             h("button",{class:"rm ghost danger",text:"Quitar",onclick:function(){
               if(f.url) URL.revokeObjectURL(f.url);
@@ -1135,16 +1197,17 @@
         if(!(ext==="jpg"||ext==="jpeg"||ext==="webp")){ issues.push("Formato "+ext.toUpperCase()+" — se necesita JPG o WEBP"); level="bad"; }
         if(file.size>PHOTO.maxBytes){ issues.push("Pesa más de 2 MB"); level="bad"; }
         else if(file.size>PHOTO.warnBytes&&level!=="bad"){ issues.push("Pesa más de 600 KB, conviene comprimirla"); level="warn"; }
-        var url=URL.createObjectURL(file),img=new Image();
+        var url=URL.createObjectURL(file),img=new Image(),key=Math.random().toString(36).slice(2,8);
+        upFiles[key]=file;
         img.onload=function(){
           var w=img.naturalWidth,ht=img.naturalHeight,r=w/ht;
           if(Math.abs(r-PHOTO.ratio)>PHOTO.tol){ issues.push("Proporción "+r.toFixed(2)+" — se necesita 3:4 (0.75)"); level="bad"; }
           if(w<PHOTO.minW||ht<PHOTO.minH){ issues.push("Mínimo 1200×1600 px"); if(level!=="bad") level="warn"; }
-          res({name:file.name,ext:(ext==="jpeg"?"jpg":ext),w:w,h:ht,bytes:file.size,url:url,level:level,issues:issues,color:"",target:""});
+          res({name:file.name,ext:(ext==="jpeg"?"jpg":ext),w:w,h:ht,bytes:file.size,url:url,level:level,issues:issues,color:"",target:"",key:key,src:""});
         };
         img.onerror=function(){
           res({name:file.name,ext:ext,w:0,h:0,bytes:file.size,url:"",level:"bad",
-            issues:["No se pudo leer la imagen"+(ext==="heic"?" — HEIC no sirve, cambia la cámara a 'Más compatible'":"")],color:"",target:""});
+            issues:["No se pudo leer la imagen"+(ext==="heic"?" — HEIC no sirve, cambia la cámara a 'Más compatible'":"")],color:"",target:"",key:key,src:""});
         };
         img.src=url;
       });
@@ -1154,12 +1217,15 @@
       Promise.all(files.map(inspect)).then(function(res){
         res.forEach(function(r){ p.photos.push(r); });
         p.demo=false; renameAll(); save(); paintShots(); paintPanel(); paintList();
+        res.forEach(function(r){ if(r.level!=="bad") uploadPhoto(p,r,paintShots); });
       });
     }
     var fileIn=h("input",{type:"file",accept:"image/*",multiple:"multiple",style:"display:none"});
     fileIn.addEventListener("change",function(){ addFiles(fileIn.files); fileIn.value=""; });
     var drop=h("div",{class:"drop"},[
-      h("p",{text:"Arrastra aquí las fotos de esta prenda, o elígelas. No se suben a ningún lado — solo se revisan en tu computadora."}),
+      h("p",{text:remoteOn()
+        ?"Arrastra aquí las fotos de esta prenda, o elígelas. Las que cumplen se suben solas a la nube y van directo al CSV de Shopify."
+        :"Arrastra aquí las fotos de esta prenda, o elígelas. No se suben a ningún lado — solo se revisan en tu computadora."}),
       h("button",{class:"ghost",text:"Elegir fotos",onclick:function(){ fileIn.click(); }}),
       fileIn
     ]);
@@ -1502,7 +1568,7 @@
     "Option1 Name","Option1 Value","Option2 Name","Option2 Value",
     "Variant SKU","Variant Inventory Tracker","Variant Inventory Qty","Variant Inventory Policy",
     "Variant Fulfillment Service","Variant Price","Variant Compare At Price",
-    "Variant Requires Shipping","Variant Taxable","Image Src","Image Position","Image Alt Text","Status",
+    "Variant Requires Shipping","Variant Taxable","Image Src","Image Position","Image Alt Text","Variant Image","Status",
     "Material (product.metafields.custom.material)",
     "Fit (product.metafields.custom.fit)",
     "Cuidados (product.metafields.custom.care_instructions)",
@@ -1515,6 +1581,12 @@
     state.products.filter(function(p){ return !p.demo; }).forEach(function(p){
       var handle=slug(p.title)||("prenda-"+p.id),vl=variantList(p);
       if(!vl.length) return;
+      /* Fotos ya subidas: una por fila (en las filas de variantes y, si
+         sobran, en filas extra solo con Handle + imagen). Cada variante
+         apunta a la primera foto de su color. */
+      var imgs=p.photos.filter(function(f){ return f.level!=="bad"&&f.src; });
+      function alt(f){ return p.title+(f.color?" — "+f.color:""); }
+      function colorImg(c){ var m=imgs.filter(function(f){ return f.color===c; })[0]; return m?m.src:""; }
       vl.forEach(function(x,i){
         var f=(i===0),r=[];
         r.push(handle);
@@ -1532,22 +1604,31 @@
         r.push("deny"); r.push("manual");
         r.push(p.price); r.push(p.compareAt||"");
         r.push("TRUE"); r.push("TRUE");
-        r.push(""); r.push(""); r.push("");
+        var im=imgs[i];
+        r.push(im?im.src:""); r.push(im?String(i+1):""); r.push(im?alt(im):"");
+        r.push(colorImg(x.color));
         r.push(f?"active":"");
         r.push(f?p.material:""); r.push(f?p.fit:""); r.push(f?p.care:"");
         r.push(f?p.modelInfo:""); r.push(f?p.measurements:""); r.push(f?p.origin:"");
         rows.push(r);
       });
+      var col=function(n){ return SHOPIFY_COLS.indexOf(n); };
+      for(var j=vl.length;j<imgs.length;j++){
+        var e=SHOPIFY_COLS.map(function(){ return ""; });
+        e[col("Handle")]=handle; e[col("Image Src")]=imgs[j].src;
+        e[col("Image Position")]=String(j+1); e[col("Image Alt Text")]=alt(imgs[j]);
+        rows.push(e);
+      }
     });
     return rowsToCSV(rows);
   }
   function photoCSV(){
-    var rows=[["Handle","Posición","Color","Nombre de archivo","Ancho","Alto","KB","Estado"]];
+    var rows=[["Handle","Posición","Color","Nombre de archivo","Ancho","Alto","KB","Estado","URL en la nube"]];
     state.products.filter(function(p){ return !p.demo; }).forEach(function(p){
       var handle=slug(p.title)||("prenda-"+p.id);
       p.photos.forEach(function(f,i){
         rows.push([handle,String(i+1),f.color||"todos",f.target,String(f.w),String(f.h),(f.bytes/1024).toFixed(0),
-          f.level==="ok"?"OK":f.level==="warn"?"Revisar":"No sirve"]);
+          f.level==="ok"?"OK":f.level==="warn"?"Revisar":"No sirve",f.src||""]);
       });
     });
     return rowsToCSV(rows);
@@ -1691,7 +1772,7 @@
         ? "Lo que capturas se guarda en la nube y en este navegador. Aun así, saca un respaldo de vez en cuando."
         : "Ahora mismo lo capturado vive solo en este navegador. Si borras el historial o cambias de dispositivo, se pierde. Saca un respaldo al terminar cada sesión."}),
       h("div",{class:"exp"},[
-        h("div",{},[h("b",{text:"Sacar respaldo"}),h("span",{text:state.products.filter(function(p){ return !p.demo; }).length+" prendas y el vocabulario completo. Las fotos no van, solo sus nombres. Si este dispositivo no permite descargar, te muestra el texto para copiarlo."})]),
+        h("div",{},[h("b",{text:"Sacar respaldo"}),h("span",{text:state.products.filter(function(p){ return !p.demo; }).length+" prendas y el vocabulario completo. Las fotos no van, solo sus nombres (y su URL si ya se subieron). Si este dispositivo no permite descargar, te muestra el texto para copiarlo."})]),
         h("button",{class:"primary",text:"Respaldar",onclick:function(){ deliver("starmoda-respaldo.json",JSON.stringify(payload(),null,2),"application/json"); }})
       ]),
       h("div",{class:"exp"},[
