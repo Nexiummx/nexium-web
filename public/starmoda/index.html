@@ -82,6 +82,27 @@
   .sync.local b{background:var(--rec);}
   .top .tb{display:flex;gap:6px;flex-wrap:wrap;}
 
+  button.icon{padding:9px;}
+  .seg{display:flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:11px;background:var(--surface);}
+  .seg button{border:0;box-shadow:none;padding:6px 9px;}
+  .seg button.icon{padding:6px;}
+  #btnSave .badge{font-style:normal;font-size:11px;font-weight:800;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#fff;color:var(--accent);display:none;align-items:center;justify-content:center;}
+  #btnSave.dirty .badge{display:inline-flex;}
+  #btnSave:not(.dirty){background:var(--surface);color:var(--ink);border-color:var(--line);box-shadow:var(--shadow-sm);}
+  #btnSave:not(.dirty):hover{background:var(--surface-2);}
+  .menu{position:relative;}
+  .menu-pop{position:absolute;right:0;top:calc(100% + 6px);min-width:220px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-lg);padding:6px;display:flex;flex-direction:column;gap:2px;z-index:40;animation:pop .14s ease-out;}
+  .menu-pop[hidden]{display:none;}
+  .menu-pop button{justify-content:flex-start;width:100%;border:0;padding:9px 10px;}
+  .hist{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;max-height:56vh;overflow-y:auto;}
+  .hist li{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--line-soft);}
+  .hist li:last-child{border-bottom:0;}
+  .hist li b{display:block;font-size:13.5px;font-weight:600;line-height:1.35;}
+  .hist li small{display:block;font-size:12px;color:var(--muted);margin-top:2px;}
+  .hist li.on{background:var(--accent-soft);}
+  .hist li.future{opacity:.6;}
+  .hist li button{padding:6px 11px;font-size:12.5px;flex:none;}
+
   /* estructura */
   .shell{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:calc(100vh - 64px);}
   aside{border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;position:sticky;top:64px;height:calc(100vh - 64px);}
@@ -319,7 +340,7 @@
     .steps{position:static;}
     .step{padding:6px 8px;flex:0 1 auto;}
     .top{padding:10px 14px;gap:8px;}
-    .top .tb button span{display:none;}
+    .top .tb > button span,.seg button span{display:none;}
     .top .tb button{padding:9px 10px;}
     .saved{display:none;}
   }
@@ -334,11 +355,22 @@
   <div class="sep"></div>
   <div class="sync local" id="sync"></div>
   <div class="tb">
-    <button class="ghost" id="btnConn" data-ic="wifi" title="Conexión"><span>Conexión</span></button>
-    <button class="ghost" id="btnVocab" data-ic="book" title="Vocabulario"><span>Vocabulario</span></button>
-    <button class="ghost" id="btnGuide" data-ic="info" title="Reglas"><span>Reglas</span></button>
-    <button class="ghost" id="btnBackup" data-ic="archive" title="Respaldo"><span>Respaldo</span></button>
-    <button class="primary" id="btnExport" data-ic="download" title="Exportar"><span>Exportar</span></button>
+    <div class="seg">
+      <button class="ghost icon" id="btnUndo" data-ic="undo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" disabled></button>
+      <button class="ghost icon" id="btnRedo" data-ic="redo" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer" disabled></button>
+      <button class="ghost" id="btnHist" data-ic="history" title="Historial de cambios"><span>Historial</span></button>
+    </div>
+    <button id="btnExport" data-ic="download" title="Exportar"><span>Exportar</span></button>
+    <button class="primary" id="btnSave" data-ic="cloud" title="Guardar en la nube"><span>Guardar en la nube</span><em class="badge" id="saveBadge"></em></button>
+    <div class="menu">
+      <button class="ghost icon" id="btnMenu" data-ic="dots" title="Más opciones" aria-label="Más opciones" aria-haspopup="true"></button>
+      <div class="menu-pop" id="menuPop" hidden>
+        <button class="ghost" id="btnVocab" data-ic="book"><span>Vocabulario</span></button>
+        <button class="ghost" id="btnGuide" data-ic="info"><span>Reglas del catálogo</span></button>
+        <button class="ghost" id="btnBackup" data-ic="archive"><span>Respaldo</span></button>
+        <button class="ghost" id="btnConn" data-ic="wifi"><span>Conexión</span></button>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -565,24 +597,187 @@
     try{ localStorage.setItem(KEY,JSON.stringify(payload())); }catch(e){ storageOK=false; }
   }
 
-  var pushTimer=null;
+  /* Guardar = guardar en este navegador. La nube solo se toca con el botón
+     "Guardar en la nube" (o al abrir la app, para traer lo de otros). */
   function save(){
     savedAt=new Date();
     stampChanges();
     persist();
     paintSaved();
     cloudQueue();
-    if(remoteOn()){
-      clearTimeout(pushTimer);
-      pushTimer=setTimeout(remoteSync,1500);
-    }
+    recordHistory();
+    paintCloud();
   }
   function paintSaved(){
     var el=document.getElementById("saved");
     if(!storageOK){ el.innerHTML='<b style="color:var(--req)">Sin guardado automático</b>'; return; }
     if(!savedAt){ el.textContent=""; return; }
     var hh=String(savedAt.getHours()).padStart(2,"0"),mm=String(savedAt.getMinutes()).padStart(2,"0");
-    el.innerHTML='<b>Guardado</b> '+hh+":"+mm;
+    el.innerHTML='<b>Guardado en este equipo</b> '+hh+":"+mm;
+  }
+
+  /* ---------- memoria persistente del navegador (IndexedDB) ----------
+     Aquí viven las fotos (recortada y original) y el historial de cambios.
+     Si el navegador no lo permite, todo sigue funcionando en memoria. */
+  var idb=(function(){
+    var dbp=null;
+    function open(){
+      if(!dbp) dbp=new Promise(function(res,rej){
+        try{
+          var r=indexedDB.open("starmoda",1);
+          r.onupgradeneeded=function(){ var d=r.result; d.createObjectStore("blobs"); d.createObjectStore("kv"); };
+          r.onsuccess=function(){ res(r.result); }; r.onerror=function(){ rej(r.error); };
+        }catch(e){ rej(e); }
+      });
+      return dbp;
+    }
+    function run(store,mode,fn){
+      return open().then(function(d){ return new Promise(function(res,rej){
+        var t=d.transaction(store,mode),q=fn(t.objectStore(store)),out;
+        if(q) q.onsuccess=function(){ out=q.result; };
+        t.oncomplete=function(){ res(out); }; t.onerror=t.onabort=function(){ rej(t.error); };
+      }); });
+    }
+    function safe(p,fallback){ return p.catch(function(){ return fallback; }); }
+    return {
+      get:function(st,k){ return safe(run(st,"readonly",function(s){ return s.get(k); }),undefined); },
+      put:function(st,k,v){ return safe(run(st,"readwrite",function(s){ return s.put(v,k); }),undefined); },
+      del:function(st,k){ return safe(run(st,"readwrite",function(s){ return s.delete(k); }),undefined); },
+      keys:function(st){ return safe(run(st,"readonly",function(s){ return s.getAllKeys(); }),[]); }
+    };
+  })();
+  var blobs={
+    put:function(key,p,o){ return idb.put("blobs",key,{p:p,o:o,t:Date.now()}).then(function(){ availKeys[key]=1; }); },
+    get:function(key){ return idb.get("blobs",key); }
+  };
+  var askedPersist=false;
+  function askPersist(){
+    if(askedPersist) return; askedPersist=true;
+    try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  }
+  /* Vuelve a poner la vista previa de las fotos guardadas en el navegador. */
+  function hydratePhotos(){
+    var keys=[];
+    state.products.forEach(function(p){ (p.photos||[]).forEach(function(f){ if(f.key&&!f.url) keys.push(f); }); });
+    return idb.keys("blobs").then(function(all){
+      (all||[]).forEach(function(k){ availKeys[k]=1; });
+      return Promise.all(keys.map(function(f){
+        if(upFiles[f.key]){ f.url=URL.createObjectURL(upFiles[f.key]); return; }
+        if(!availKeys[f.key]) return;
+        return blobs.get(f.key).then(function(r){ if(r&&r.p){ upFiles[f.key]=r.p; if(r.o) origFiles[f.key]=r.o; f.url=URL.createObjectURL(r.p); } });
+      }));
+    }).then(function(){ if(keys.length){ paintList(); paintForm(); } });
+  }
+  /* Borra del navegador las fotos que ya nadie usa (ni la captura actual ni
+     el historial), para no llenar el disco. */
+  function gcBlobs(){
+    var used={};
+    function mark(list){ (list||[]).forEach(function(p){ (p.photos||[]).forEach(function(f){ if(f.key) used[f.key]=1; }); }); }
+    mark(state.products);
+    hist.entries.forEach(function(e){ try{ mark(JSON.parse(e.snap).products); }catch(x){} });
+    idb.keys("blobs").then(function(all){ (all||[]).forEach(function(k){ if(!used[k]){ idb.del("blobs",k); delete availKeys[k]; } }); });
+  }
+
+  /* ---------- historial de cambios (deshacer / rehacer) ----------
+     Cada pausa al capturar deja una foto del catálogo completo con una
+     descripción. Se puede deshacer, rehacer o volver a cualquier punto. */
+  var HIST_MAX=80;
+  var hist={entries:[],pos:-1}, histTimer=null, histMute=false, histPending=false, histReady=false;
+  var FIELD={title:"nombre",category:"categoría",body:"descripción",price:"precio",compareAt:"precio antes",
+    colors:"colores",sizes:"tallas",variants:"inventario y SKU",tags:"etiquetas",material:"material",fit:"fit",
+    care:"cuidados",modelInfo:"info de la modelo",measurements:"medidas",origin:"origen",photos:"fotos",notes:"notas"};
+  function snapshot(){
+    var ps=clone(state.products); ps.forEach(function(p){ delete p._t; (p.photos||[]).forEach(function(f){ delete f.url; }); });
+    return JSON.stringify({products:ps,vocab:state.vocab,deleted:state.deleted,active:state.active});
+  }
+  function describe(a,b){
+    var A={},B={},out=[];
+    function nm(p){ return p.title||"Prenda sin nombre"; }
+    a.products.forEach(function(p){ A[p.id]=p; }); b.products.forEach(function(p){ B[p.id]=p; });
+    b.products.forEach(function(p){
+      if(!A[p.id]){ out.push("Nueva prenda: "+nm(p)); return; }
+      var ch=Object.keys(FIELD).filter(function(k){ return stable(A[p.id][k])!==stable(p[k]); }).map(function(k){
+        if(k!=="photos") return FIELD[k];
+        var na=(A[p.id].photos||[]).length, nb=(p.photos||[]).length;
+        return nb>na?"agregó "+(nb-na===1?"una foto":(nb-na)+" fotos"):nb<na?"quitó "+(na-nb===1?"una foto":(na-nb)+" fotos"):"ajuste de fotos";
+      });
+      if(ch.length) out.push(nm(p)+" · "+ch.slice(0,3).join(", ")+(ch.length>3?"…":""));
+    });
+    a.products.forEach(function(p){ if(!B[p.id]) out.push("Eliminaste "+nm(p)); });
+    if(stable(a.vocab)!==stable(b.vocab)) out.push("Vocabulario");
+    if(!out.length) return "";
+    return out.length>2?out.slice(0,2).join(" · ")+" y "+(out.length-2)+" más":out.join(" · ");
+  }
+  function commitHistory(label){
+    histTimer=null; histPending=false;
+    var snap=snapshot(), last=hist.entries[hist.pos];
+    if(last&&last.snap===snap) return;
+    var text=label;
+    if(!text&&last){ try{ text=describe(JSON.parse(last.snap),JSON.parse(snap)); }catch(e){} }
+    if(last&&!text) return;
+    hist.entries=hist.entries.slice(0,hist.pos+1);
+    hist.entries.push({t:Date.now(),label:text||"Cambio",snap:snap});
+    if(hist.entries.length>HIST_MAX) hist.entries=hist.entries.slice(-HIST_MAX);
+    hist.pos=hist.entries.length-1;
+    saveHistory(); paintUndo();
+  }
+  function recordHistory(label,now){
+    if(histMute||!histReady) return; /* antes de cargar, el punto inicial ya incluye lo capturado */
+    clearTimeout(histTimer); histPending=true;
+    if(label||now) commitHistory(label); else histTimer=setTimeout(function(){ commitHistory(); },700);
+  }
+  function flushHistory(){ if(histPending){ clearTimeout(histTimer); commitHistory(); } }
+  var histSaveTimer=null;
+  function saveHistory(){
+    clearTimeout(histSaveTimer);
+    histSaveTimer=setTimeout(function(){ idb.put("kv","historial",{entries:hist.entries,pos:hist.pos}); },400);
+  }
+  function restoreSnap(i,why,label){
+    var e=hist.entries[i]; if(!e) return;
+    var d=JSON.parse(e.snap);
+    state.products=d.products||[]; state.vocab=d.vocab||freshVocab(); state.deleted=d.deleted||{};
+    (state.products).forEach(function(p){ (p.photos||[]).forEach(function(f){ f.url=upFiles[f.key]?URL.createObjectURL(upFiles[f.key]):""; if(!f.src&&uploaded[f.key]) f.src=uploaded[f.key]; }); });
+    if(!state.products.some(function(p){ return p.id===state.active; })) state.active=d.active&&state.products.some(function(p){ return p.id===d.active; })?d.active:(state.products[0]&&state.products[0].id)||null;
+    hist.pos=i;
+    histMute=true; save(); histMute=false;
+    saveHistory(); paintUndo(); paintAll(); hydratePhotos();
+    toast(why+": "+(label||e.label));
+  }
+  function undo(){ flushHistory(); if(hist.pos>0) restoreSnap(hist.pos-1,"Deshiciste",hist.entries[hist.pos].label); }
+  function redo(){ flushHistory(); if(hist.pos<hist.entries.length-1) restoreSnap(hist.pos+1,"Rehiciste"); }
+  function paintUndo(){
+    var u=document.getElementById("btnUndo"), r=document.getElementById("btnRedo");
+    if(u) u.disabled=!(hist.pos>0||histPending);
+    if(r) r.disabled=!(hist.pos<hist.entries.length-1);
+  }
+  function loadHistory(){
+    return idb.get("kv","historial").then(function(h){
+      if(h&&Array.isArray(h.entries)){ hist.entries=h.entries; hist.pos=Math.min(h.pos,h.entries.length-1); }
+      var snap=snapshot(), at=hist.entries[hist.pos];
+      if(!at||at.snap!==snap){
+        hist.entries=hist.entries.slice(0,hist.pos+1);
+        hist.entries.push({t:Date.now(),label:hist.entries.length?"Estado al abrir la app":"Inicio",snap:snap});
+        hist.pos=hist.entries.length-1; saveHistory();
+      }
+      histReady=true; paintUndo();
+    },function(){ histReady=true; });
+  }
+  function historyModal(){
+    flushHistory();
+    var list=h("ul",{class:"hist"});
+    var veil;
+    function when(t){ var d=new Date(t), today=new Date(); return (d.toDateString()===today.toDateString()?"Hoy":d.toLocaleDateString("es-MX",{day:"numeric",month:"short"}))+" · "+hhmm(d); }
+    for(var i=hist.entries.length-1;i>=0;i--) (function(i){
+      var e=hist.entries[i], cls=i===hist.pos?"on":i>hist.pos?"future":"";
+      list.appendChild(h("li",{class:cls},[
+        h("div",{},[h("b",{text:e.label}),h("small",{text:when(e.t)+(i===hist.pos?" · Estás aquí":i>hist.pos?" · Deshecho":"")})]),
+        i===hist.pos?h("span",{class:"chip ok",text:"Actual"}):h("button",{text:"Volver aquí",onclick:function(){ veil.remove(); restoreSnap(i,"Volviste al punto"); }})
+      ]));
+    })(i);
+    veil=modal("Historial de cambios",[
+      h("p",{class:"hint",style:"margin:0 0 14px",text:"Cada cambio queda guardado en este navegador. Puedes volver a cualquier punto y luego rehacer si te arrepientes. Para que otros lo vean, toca Guardar en la nube."}),
+      list
+    ],[]);
   }
 
   /* ---------- sincronización opcional ---------- */
@@ -683,36 +878,95 @@
     return stable(c);
   }
 
-  var syncing=false, syncAgain=false, askedCode=false;
-  function remoteSync(){
-    if(!remoteOn()) return;
+  /* ---------- nube: qué falta por subir ----------
+     Se recuerda la firma de lo último que quedó igual en la nube. Lo que
+     difiere son "cambios sin subir"; las fotos sin URL, "fotos por subir". */
+  var SYNCKEY="starmoda-nube";
+  var synced=(function(){ try{ return JSON.parse(localStorage.getItem(SYNCKEY))||null; }catch(e){ return null; } })()||{sigs:{},vocab:"",del:{},at:0};
+  function markSynced(d){
+    synced={sigs:{},vocab:stable((d&&d.vocab)||null),del:clone((d&&d.deleted)||{}),at:Date.now()};
+    ((d&&d.products)||[]).forEach(function(p){ if(p&&p.id&&!p.demo) synced.sigs[p.id]=sig(p); });
+    try{ localStorage.setItem(SYNCKEY,JSON.stringify(synced)); }catch(e){}
+  }
+  function pendingInfo(){
+    var changes=0, photos=0;
+    state.products.forEach(function(p){
+      if(p.demo) return;
+      if(synced.sigs[p.id]!==sig(p)) changes++;
+      (p.photos||[]).forEach(function(f){ if(f.level!=="bad"&&!f.src) photos++; });
+    });
+    Object.keys(state.deleted).forEach(function(id){ if(!synced.del[id]&&synced.sigs[id]) changes++; });
+    if(state.vocab&&stable(state.vocab)!==synced.vocab&&synced.at) changes++;
+    return {changes:changes,photos:photos,total:changes+photos};
+  }
+  function paintCloud(){
+    var btn=document.getElementById("btnSave"), badge=document.getElementById("saveBadge");
+    if(!btn) return;
+    if(!remoteOn()){ btn.style.display="none"; return; }
+    var pi=pendingInfo();
+    badge.textContent=pi.total?String(pi.total):"";
+    btn.classList.toggle("dirty",!!pi.total);
+    btn.title=pi.total?((pi.changes?pi.changes+" cambio(s) sin subir":"")+(pi.changes&&pi.photos?" y ":"")+(pi.photos?pi.photos+" foto(s) por subir":"")):"Todo está en la nube. Toca para traer lo más reciente.";
+    if(syncing) return;
+    if(!getCode()) setSync("down","Falta código — toca aquí");
+    else if(pi.total) setSync("local",pi.total+(pi.total===1?" cambio sin subir":" cambios sin subir"));
+    else if(synced.at) setSync("up","En la nube · "+hhmm(new Date(synced.at)));
+  }
+
+  var syncing=false, askedCode=false;
+  /* Trae lo de la nube y lo junta; con push:true también sube lo de aquí. */
+  function remoteSync(opts){
+    opts=opts||{};
+    if(!remoteOn()) return Promise.resolve(false);
     var code=getCode();
-    if(!code){ setSync("down","Falta código — toca aquí"); if(!askedCode){ askedCode=true; codeModal(); } return; }
-    if(syncing){ syncAgain=true; return; }
+    if(!code){ setSync("down","Falta código — toca aquí"); if(!askedCode){ askedCode=true; codeModal(); } return Promise.resolve(false); }
+    if(syncing) return Promise.resolve(false);
     syncing=true;
-    setSync("local","Sincronizando…");
-    rpc("starmoda_get",{p_code:code,p_doc:REMOTE.docId}).then(function(rows){
+    setSync("local",opts.push?"Guardando en la nube…":"Trayendo cambios…");
+    var hadLocal=pendingInfo().changes>0;
+    return rpc("starmoda_get",{p_code:code,p_doc:REMOTE.docId}).then(function(rows){
       var row=Array.isArray(rows)?rows[0]:rows;
       var remote=(row&&row.payload)||{};
-      mergeIn(remote);
+      if(mergeIn(remote)) recordHistory("Cambios traídos de la nube");
+      if(!opts.push){
+        if(!hadLocal) markSynced(payload()); else markSynced(remote);
+        return null;
+      }
       var mine=payload();
-      if(core(mine)===core(remote)) return null;
-      return rpc("starmoda_save",{p_code:code,p_payload:mine,p_doc:REMOTE.docId});
+      if(core(mine)===core(remote)){ markSynced(mine); return null; }
+      return rpc("starmoda_save",{p_code:code,p_payload:mine,p_doc:REMOTE.docId}).then(function(){ markSynced(mine); });
     }).then(function(){
-      syncing=false;
-      setSync("up","Sincronizado "+hhmm(new Date()));
-      if(syncAgain){ syncAgain=false; remoteSync(); }
+      syncing=false; paintCloud(); paintList(); paintPanel();
+      return true;
     },function(e){
-      syncing=false; syncAgain=false;
+      syncing=false;
       if(e&&e.badCode){
         setCode(""); setSync("down","Código no válido — toca aquí");
         codeModal("Ese código no es válido. Revísalo con Nexium.");
       } else {
-        setSync("down","Sin conexión — guardado aquí");
+        setSync("down","Sin conexión — todo sigue guardado aquí");
       }
+      throw e;
     });
   }
-  function remotePull(){ remoteSync(); }
+  function remotePull(){ return remoteSync().catch(function(){}); }
+
+  /* Botón "Guardar en la nube": primero sube las fotos pendientes (ya con su
+     recorte final), luego junta y sube los datos. */
+  function cloudSave(){
+    if(!remoteOn()||syncing) return;
+    if(!getCode()){ codeModal(); return; }
+    var btn=document.getElementById("btnSave");
+    btn.disabled=true;
+    uploadPending(function(done,total){ setSync("local","Subiendo fotos "+done+"/"+total+"…"); }).then(function(r){
+      return remoteSync({push:true}).then(function(){
+        if(r.failed) toast(r.failed+(r.failed===1?" foto no se pudo subir; se reintenta al volver a guardar":" fotos no se pudieron subir; se reintentan al volver a guardar"),true);
+        else toast(r.done?("Guardado en la nube · "+r.done+(r.done===1?" foto subida":" fotos subidas")):"Guardado en la nube");
+      });
+    }).catch(function(e){
+      if(!(e&&e.badCode)) toast("No se pudo guardar en la nube. Todo sigue guardado aquí.",true);
+    }).then(function(){ btn.disabled=false; paintCloud(); paintAll(); });
+  }
 
   /* ---------- subida de fotos ----------
      /api/starmoda/upload valida el código y regresa una URL firmada; la foto
@@ -720,51 +974,86 @@
      la prenda, así viaja con la sincronización y llega al CSV de Shopify.
      El archivo original solo vive en memoria: si se recarga la página antes
      de subirlo, hay que volver a elegir la foto. */
-  var upFiles={}, upState={}, origFiles={}, busyKeys={};
+  var upFiles={}, upState={}, origFiles={}, busyKeys={}, availKeys={};
+  /* URL ya subida por cada foto: si un "deshacer" le quita la URL, no se
+     vuelve a subir el mismo archivo. */
+  var UPKEY="starmoda-subidas";
+  var uploaded=(function(){ try{ return JSON.parse(localStorage.getItem(UPKEY))||{}; }catch(e){ return {}; } })();
+  function rememberUpload(key,src){ uploaded[key]=src; try{ localStorage.setItem(UPKEY,JSON.stringify(uploaded)); }catch(e){} }
+
   function upInfo(f){
     if(f.level==="bad") return null;
-    if(f.src) return {cls:"ok",text:"Subida a la nube"};
+    if(f.src) return {cls:"ok",text:"En la nube"};
     if(!remoteOn()) return null;
     var s=upState[f.key];
     if(s==="subiendo") return {cls:"",text:"Subiendo…"};
-    var hasFile=!!(f.key&&upFiles[f.key]);
-    if(s&&s!=="subiendo") return {cls:"err",text:s+(hasFile?"":" — vuelve a elegir la foto"),retry:hasFile};
-    return {cls:"err",text:hasFile?"Sin subir":"Sin subir — vuelve a elegir la foto",retry:hasFile};
+    var has=!!(f.key&&(upFiles[f.key]||availKeys[f.key]));
+    if(!has) return {cls:"err",text:"Se perdió el archivo en este navegador: quítala y vuelve a elegirla"};
+    if(s) return {cls:"err",text:s+" — se reintenta al guardar en la nube"};
+    return {cls:"",text:"Por subir · se sube al guardar en la nube"};
   }
-  function uploadPhoto(p,f,repaint){
-    var file=f.key&&upFiles[f.key];
-    if(!remoteOn()||!file||f.level==="bad") return;
-    var code=getCode();
-    if(!code){ upState[f.key]="Falta el código de acceso"; repaint(); codeModal(); return; }
-    upState[f.key]="subiendo"; repaint();
-    var name=(f.target||"foto").replace(/\.[a-z]+$/,"")+"-"+f.key+"."+(f.ext==="webp"||f.ext==="png"?f.ext:"jpg");
-    fetch("/api/starmoda/upload",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({code:code,productId:p.id,fileName:name})
-    }).then(function(r){
-      return r.json().catch(function(){ return {}; }).then(function(t){
-        if(!r.ok){
-          var e=new Error(t.error==="codigo_invalido"?"Código no válido":"No se pudo subir ("+(t.error||r.status)+")");
-          e.badCode=t.error==="codigo_invalido"; throw e;
-        }
-        return t;
+  function photoBlob(key){
+    if(upFiles[key]) return Promise.resolve(upFiles[key]);
+    return blobs.get(key).then(function(r){ if(r&&r.p){ upFiles[key]=r.p; if(r.o) origFiles[key]=r.o; return r.p; } return null; });
+  }
+  function photoOrig(key){
+    if(origFiles[key]) return Promise.resolve(origFiles[key]);
+    return blobs.get(key).then(function(r){ if(r&&r.o){ origFiles[key]=r.o; return r.o; } return null; });
+  }
+  function uploadOne(p,f,code){
+    if(uploaded[f.key]){ f.src=uploaded[f.key]; return Promise.resolve(true); }
+    return photoBlob(f.key).then(function(file){
+      if(!file) throw new Error("Falta el archivo");
+      upState[f.key]="subiendo"; paintPhotosIfOpen(p);
+      var name=(f.target||"foto").replace(/\.[a-z]+$/,"")+"-"+f.key+".jpg";
+      return fetch("/api/starmoda/upload",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({code:code,productId:p.id,fileName:name})
+      }).then(function(r){
+        return r.json().catch(function(){ return {}; }).then(function(t){
+          if(!r.ok){
+            var e=new Error(t.error==="codigo_invalido"?"Código no válido":"No se pudo subir ("+(t.error||r.status)+")");
+            e.badCode=t.error==="codigo_invalido"; throw e;
+          }
+          return t;
+        });
+      }).then(function(t){
+        var fd=new FormData();
+        fd.append("cacheControl","31536000");
+        fd.append("",file,name);
+        return fetch(t.uploadUrl,{method:"PUT",headers:{apikey:REMOTE.key,Authorization:"Bearer "+REMOTE.key,"x-upsert":"true"},body:fd}).then(function(r){
+          if(!r.ok) throw new Error("No se pudo subir ("+r.status+")");
+          return t.publicUrl;
+        });
+      }).then(function(src){
+        delete upState[f.key]; rememberUpload(f.key,src); f.src=src; paintPhotosIfOpen(p);
+        return true;
       });
-    }).then(function(t){
-      var fd=new FormData();
-      fd.append("cacheControl","31536000");
-      fd.append("",file,name);
-      return fetch(t.uploadUrl,{method:"PUT",headers:{apikey:REMOTE.key,Authorization:"Bearer "+REMOTE.key,"x-upsert":"true"},body:fd}).then(function(r){
-        if(!r.ok) throw new Error("No se pudo subir ("+r.status+")");
-        return t.publicUrl;
-      });
-    }).then(function(src){
-      delete upState[f.key];
-      f.src=src; save(); repaint(); paintPanel(); paintList();
-    },function(e){
-      upState[f.key]=(e&&e.message)||"No se pudo subir";
-      if(e&&e.badCode){ setCode(""); codeModal("Ese código no es válido. Revísalo con Nexium."); }
-      repaint();
     });
   }
+  /* Sube todas las fotos pendientes, de una en una. */
+  function uploadPending(progress){
+    var code=getCode(), jobs=[];
+    state.products.forEach(function(p){
+      if(p.demo) return;
+      (p.photos||[]).forEach(function(f){ if(f.level!=="bad"&&!f.src&&f.key) jobs.push([p,f]); });
+    });
+    var done=0, failed=0, i=0;
+    if(!jobs.length) return Promise.resolve({done:0,failed:0});
+    function next(){
+      if(i>=jobs.length) return Promise.resolve();
+      var j=jobs[i++]; progress&&progress(done+failed+1,jobs.length);
+      return uploadOne(j[0],j[1],code).then(function(){ done++; },function(e){
+        failed++; upState[j[1].key]=(e&&e.message)||"No se pudo subir";
+        if(e&&e.badCode){ i=jobs.length; throw e; }
+      }).then(next);
+    }
+    return next().then(function(){
+      if(done){ persist(); recordHistory("Fotos subidas a la nube",true); }
+      return {done:done,failed:failed};
+    });
+  }
+  var photoRepaint=null;
+  function paintPhotosIfOpen(p){ if(photoRepaint&&cur()===p) photoRepaint(); }
 
   /* ---------- fotos: recorte y compresión en el navegador ---------- */
   function loadImage(file){
@@ -898,7 +1187,7 @@
         if(db&&db.s!=="ok"){ err.textContent="No se pudo comprobar el código: revisa la base de datos arriba."; return; }
         setCode(c); err.textContent=""; toast("Código válido: sincronizando");
         btn.textContent="Guardar y probar";
-        setSync("local","Sincronizando…"); remoteSync(); paintForm();
+        remoteSync().catch(function(){}); paintForm();
         if(opts.ask) veil.remove();
       });
     }
@@ -1137,7 +1426,7 @@
     if(dup.length) req.push("SKU repetido: "+dup[0]);
     if(vl.length&&skus.length<vl.length) req.push("Hay variantes sin SKU");
     var okp=p.photos.filter(function(f){ return f.level!=="bad"; });
-    if(remoteOn()&&okp.some(function(f){ return !f.src; })) req.push("Hay fotos sin subir a la nube");
+    var porSubir=okp.filter(function(f){ return !f.src; }).length;
     if(!okp.length) req.push("Foto principal");
     else if(okp.length<2) rec.push("Foto secundaria (se ve al pasar el mouse)");
     if(p.photos.some(function(f){ return f.level==="bad"; })) req.push("Hay fotos que no sirven: quítalas y vuelve a subirlas");
@@ -1160,6 +1449,7 @@
     var nc=p.colors.filter(isNewColor);
     if(nc.length) pend.push("Color sin programar en el tema: "+nc.join(", "));
     if(p.category&&isNewCat(p.category)) pend.push("Categoría nueva: "+p.category);
+    if(remoteOn()&&porSubir) pend.push(porSubir+(porSubir===1?" foto por subir":" fotos por subir")+": se suben al guardar en la nube");
     var nt=p.tags.filter(isNewTag);
     if(nt.length) pend.push("Etiqueta nueva: "+nt.join(", "));
     return {req:req,rec:rec,opt:opt,pend:pend};
@@ -1208,6 +1498,11 @@
     check:'<path d="M20 6L9 17l-5-5"/>',
     alert:'<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
     image:'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>',
+    undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+    redo:'<path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>',
+    history:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',
+    cloud:'<path d="M17.5 19H7a5 5 0 1 1 1.1-9.9A6 6 0 0 1 19.6 11 4 4 0 0 1 17.5 19z"/><path d="M12 12v6"/><path d="M9.5 14.5L12 12l2.5 2.5"/>',
+    dots:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
     shirt:'<path d="M20.4 3.5L16 2a4 4 0 0 1-8 0L3.6 3.5a2 2 0 0 0-1.3 2.2l.6 3.5a1 1 0 0 0 1 .8H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.1a1 1 0 0 0 1-.8l.6-3.5a2 2 0 0 0-1.3-2.2z"/>'
   };
   function icon(name){
@@ -1500,14 +1795,9 @@
           p.colors.forEach(function(c){ sel.appendChild(h("option",{value:c,text:c,selected:f.color===c?"selected":null})); });
           sel.addEventListener("change",function(){ f.color=sel.value; renameAll(); save(); paintShots(); paintPanel(); });
         }
-        var st=upInfo(f), up=null;
-        if(st) up=h("div",{class:"up "+st.cls},[
-          document.createTextNode(st.text),
-          st.retry?h("button",{class:"ghost",style:"margin-top:6px;font-size:11px;padding:4px 8px;width:100%",text:"Reintentar",
-            onclick:function(){ uploadPhoto(p,f,paintShots); }}):null
-        ]);
+        var st=upInfo(f), up=st?h("div",{class:"up "+st.cls,text:st.text}):null;
         var crop=null;
-        if(f.crop&&origFiles[f.key]){
+        if(f.crop&&(origFiles[f.key]||availKeys[f.key])){
           var labels=f.crop.axis==="x"?["◀","Centro","▶"]:["▲","Centro","▼"];
           var tips=f.crop.axis==="x"?["Mostrar más la izquierda","Centrar","Mostrar más la derecha"]:["Mostrar más arriba","Centrar","Mostrar más abajo"];
           crop=h("div",{},[h("div",{class:"crop-l",text:"Encuadre"}),h("div",{class:"crop"},["start","center","end"].map(function(ps,j){
@@ -1537,9 +1827,11 @@
         ]));
       });
     }
-    function inspect(file,pos){
+    /* keepKey: al mover el encuadre de una foto que aún no se sube, se
+       reemplaza en su lugar; nunca se sube nada desde aquí. */
+    function inspect(file,pos,keepKey){
       var ext=(file.name.split(".").pop()||"").toLowerCase();
-      var key=Math.random().toString(36).slice(2,8);
+      var key=keepKey||Math.random().toString(36).slice(2,8);
       origFiles[key]=file;
       return loadImage(file).then(function(img){
         if(!img) return {name:file.name,ext:ext,w:0,h:0,bytes:file.size,url:"",level:"bad",notes:[],crop:null,
@@ -1555,7 +1847,7 @@
           if(!keep&&ext!=="jpg"&&ext!=="jpeg") notes.push("Convertida a JPG.");
           if(o.w<PHOTO.minW||o.h<PHOTO.minH){ issues.push("Queda de "+o.w+"×"+o.h+" px; lo ideal es 1200×1600 o más, puede verse borrosa"); level="warn"; }
           if(!o.blob||o.blob.size>PHOTO.maxBytes){ issues.push("No se pudo dejar en menos de 2 MB"); level="bad"; }
-          if(o.blob) upFiles[key]=o.blob;
+          if(o.blob){ upFiles[key]=o.blob; blobs.put(key,o.blob,file); askPersist(); }
           return {name:file.name,ext:"jpg",w:o.w,h:o.h,bytes:o.blob?o.blob.size:file.size,
             url:o.blob?URL.createObjectURL(o.blob):"",level:level,issues:issues,notes:notes,
             crop:o.axis?{axis:o.axis,pos:pos||"center"}:null,color:"",target:"",key:key,src:""};
@@ -1570,28 +1862,31 @@
         drop.classList.remove("busy"); dropMsg.textContent=dropText;
         res.forEach(function(r){ p.photos.push(r); });
         p.demo=false; renameAll(); save(); paintShots(); paintPanel(); paintList();
-        res.forEach(function(r){ if(r.level!=="bad") uploadPhoto(p,r,paintShots); });
       });
     }
-    /* Mover el encuadre vuelve a recortar desde la foto original (sigue en
-       memoria mientras no se recargue la página) y la sube otra vez. */
+    /* Mover el encuadre recorta otra vez desde la original guardada en el
+       navegador. Solo cambia la vista previa: la foto se sube una sola vez,
+       con el encuadre final, al tocar "Guardar en la nube". */
     function recrop(f,pos){
-      var file=origFiles[f.key]; if(!file) return;
-      busyKeys[f.key]=1; paintShots();
       var oldKey=f.key, oldUrl=f.url;
-      inspect(file,pos).then(function(r){
-        delete busyKeys[oldKey];
-        if(oldUrl) URL.revokeObjectURL(oldUrl);
-        ["ext","w","h","bytes","url","level","issues","notes","crop","key"].forEach(function(k){ f[k]=r[k]; });
-        f.src=""; renameAll(); save(); paintShots(); paintPanel(); paintList();
-        if(f.level!=="bad") uploadPhoto(p,f,paintShots);
-        if(oldKey!==f.key){ delete upFiles[oldKey]; delete origFiles[oldKey]; }
+      busyKeys[oldKey]=1; paintShots();
+      photoOrig(oldKey).then(function(file){
+        if(!file){ delete busyKeys[oldKey]; paintShots(); toast("No se encontró la foto original: vuelve a elegirla",true); return; }
+        /* Copia nueva en el navegador (para que "deshacer" recupere el
+           encuadre anterior); a la nube solo llega la última, al guardar. */
+        return inspect(file,pos).then(function(r){
+          delete busyKeys[oldKey];
+          if(oldUrl) URL.revokeObjectURL(oldUrl);
+          ["ext","w","h","bytes","url","level","issues","notes","crop","key"].forEach(function(k){ f[k]=r[k]; });
+          f.src=""; renameAll(); save(); paintShots(); paintPanel(); paintList();
+        });
       });
     }
+    photoRepaint=paintShots;
     var fileIn=h("input",{type:"file",accept:"image/*",multiple:"multiple",style:"display:none"});
     fileIn.addEventListener("change",function(){ addFiles(fileIn.files); fileIn.value=""; });
     var dropText=remoteOn()
-      ?"Arrastra aquí las fotos de esta prenda, o elígelas. Se recortan a 3:4, se comprimen y se suben solas a la nube; van directo al CSV de Shopify."
+      ?"Arrastra aquí las fotos de esta prenda, o elígelas. Se recortan a 3:4 y se comprimen aquí; se suben a la nube (y al CSV de Shopify) cuando tocas Guardar en la nube."
       :"Arrastra aquí las fotos de esta prenda, o elígelas. Se recortan a 3:4 y se comprimen aquí mismo; no se suben a ningún lado.";
     var dropMsg=h("p",{text:dropText});
     var drop=h("div",{class:"drop"},[
@@ -1659,7 +1954,7 @@
     var okp=p.photos.filter(function(f){ return f.level!=="bad"; });
     var faltaQty=vl.some(function(x){ return x.v.qty===""||x.v.qty===null; });
     var faltaSku=vl.some(function(x){ return !x.v.sku.trim(); });
-    var fotosReq=!okp.length||p.photos.some(function(f){ return f.level==="bad"; })||(remoteOn()&&okp.some(function(f){ return !f.src; }));
+    var fotosReq=!okp.length||p.photos.some(function(f){ return f.level==="bad"; });
     return [
       {id:"sec1",t:"Identidad",s:(!p.title.trim()||!(Number(p.price)>0))?"req":(!p.category||!p.body.trim())?"rec":"ok"},
       {id:"sec2",t:"Color y talla",s:(!p.colors.length||!p.sizes.length||faltaQty||faltaSku)?"req":"ok"},
@@ -2102,7 +2397,13 @@
     var real=state.products.filter(function(p){ return !p.demo; });
     var listos=real.filter(function(p){ return grade(p)!=="req"; });
     var pend=pendientes();
+    var pi=pendingInfo();
     var body=[
+      remoteOn()&&pi.photos?h("div",{class:"banner err",style:"margin:0 0 14px"},[
+        h("div",{},[h("b",{text:pi.photos+(pi.photos===1?" foto todavía no está en la nube":" fotos todavía no están en la nube")}),
+          h("span",{text:"El CSV de Shopify solo lleva las fotos subidas. Guarda en la nube antes de exportar."})]),
+        ibtn("primary","cloud","Guardar en la nube",function(){ veilX.remove(); cloudSave(); })
+      ]):null,
       h("p",{class:"hint",style:"margin:0 0 14px",text:real.length+(real.length===1?" prenda capturada, ":" prendas capturadas, ")+listos.length+(listos.length===1?" lista para publicar.":" listas para publicar.")}),
       h("div",{class:"exp"},[
         h("div",{},[h("b",{text:"CSV de importación de Shopify"}),h("span",{text:"Productos, variantes, inventario y ficha técnica. Una fila por variante."})]),
@@ -2125,7 +2426,7 @@
       ]),
       h("div",{class:"warn"},[h("b",{text:"Para Nexium: "}),document.createTextNode("las columnas de metacampos usan el formato de exportación nativo de Shopify. Verifícalas contra una exportación de prueba antes de importar en producción.")])
     ];
-    modal("Exportar",body,[]);
+    var veilX=modal("Exportar",body,[]);
   }
 
   /* Combina un respaldo con lo que ya hay: agrega las prendas nuevas y
@@ -2241,24 +2542,48 @@
   Array.prototype.forEach.call(document.querySelectorAll("button[data-ic]"),function(b){ b.insertBefore(icon(b.getAttribute("data-ic")),b.firstChild); });
   document.getElementById("btnAdd").addEventListener("click",newProduct);
   document.getElementById("pSearch").addEventListener("input",paintList);
-  document.getElementById("btnConn").addEventListener("click",function(){ connModal(); });
   document.getElementById("btnExport").addEventListener("click",exportModal);
-  document.getElementById("btnBackup").addEventListener("click",backupModal);
-  document.getElementById("btnGuide").addEventListener("click",guideModal);
-  document.getElementById("btnVocab").addEventListener("click",function(){ vocabModal(null); });
+  document.getElementById("btnUndo").addEventListener("click",undo);
+  document.getElementById("btnRedo").addEventListener("click",redo);
+  document.getElementById("btnHist").addEventListener("click",historyModal);
+  document.getElementById("btnSave").addEventListener("click",cloudSave);
+  var menuPop=document.getElementById("menuPop");
+  function closeMenu(){ menuPop.hidden=true; }
+  document.getElementById("btnMenu").addEventListener("click",function(e){ e.stopPropagation(); menuPop.hidden=!menuPop.hidden; });
+  document.addEventListener("click",function(e){ if(!menuPop.hidden&&!menuPop.contains(e.target)) closeMenu(); });
+  [["btnConn",function(){ connModal(); }],["btnBackup",backupModal],["btnGuide",guideModal],["btnVocab",function(){ vocabModal(null); }]].forEach(function(x){
+    document.getElementById(x[0]).addEventListener("click",function(){ closeMenu(); x[1](); });
+  });
+  /* Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y: dentro de un campo de texto manda el
+     deshacer del propio campo; fuera, el del catálogo. */
+  document.addEventListener("keydown",function(e){
+    if(!(e.ctrlKey||e.metaKey)) return;
+    var t=e.target, typing=t&&(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)||t.isContentEditable);
+    if(typing) return;
+    var k=(e.key||"").toLowerCase();
+    if(k==="z"&&!e.shiftKey){ e.preventDefault(); undo(); }
+    else if((k==="z"&&e.shiftKey)||k==="y"){ e.preventDefault(); redo(); }
+    else if(k==="s"){ e.preventDefault(); cloudSave(); }
+  });
+  /* Aviso al cerrar con cambios sin subir (lo capturado sigue guardado
+     aquí; el aviso es para que no se olvide subirlo). */
+  window.addEventListener("beforeunload",function(e){
+    flushHistory();
+    if(remoteOn()&&getCode()&&pendingInfo().total){ e.preventDefault(); e.returnValue=""; }
+  });
 
   load(); primeSigs(); paintAll(); paintSaved();
+  loadHistory().then(function(){ hydratePhotos(); gcBlobs(); });
   if(remoteOn()){
-    remoteSync();
+    /* Al abrir solo trae lo que otros guardaron; no sube nada. */
+    remoteSync().catch(function(){}).then(paintCloud);
     refreshPhotoStatus();
-    /* trae lo que capturen otros mientras la app está abierta */
-    setInterval(function(){ if(!document.hidden&&getCode()) remoteSync(); },45000);
-    document.addEventListener("visibilitychange",function(){ if(!document.hidden&&getCode()) remoteSync(); });
     var syncEl=document.getElementById("sync");
     syncEl.style.cursor="pointer";
-    syncEl.title="Sincronizar ahora (Conexión para ver el detalle)";
-    syncEl.addEventListener("click",function(){ if(getCode()) remoteSync(); else codeModal(); });
+    syncEl.title="Ver la conexión";
+    syncEl.addEventListener("click",function(){ if(getCode()) connModal(); else codeModal(); });
   } else cloudInit();
+  paintCloud();
   if(!storageOK) setTimeout(function(){ alert("Este navegador no permite guardar automáticamente. Exporta un respaldo seguido para no perder el trabajo."); },400);
 })();
 
