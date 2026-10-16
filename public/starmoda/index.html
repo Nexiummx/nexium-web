@@ -103,6 +103,36 @@
   .hist li.future{opacity:.6;}
   .hist li button{padding:6px 11px;font-size:12.5px;flex:none;}
 
+  input.bc{font-family:var(--mono);font-size:12.5px;min-width:150px;}
+  input.bc.bad{border-color:var(--req);background:var(--req-soft);}
+  .modal.wide{max-width:780px;}
+  .rstats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+  .rstats div{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;background:var(--surface-2);}
+  .rstats b{display:block;font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.1;}
+  .rstats span{font-size:12px;color:var(--muted);}
+  .rscan{display:flex;gap:8px;flex-wrap:wrap;}
+  .rscan .rinput{flex:1 1 260px;font-size:17px;padding:12px 14px;letter-spacing:.04em;}
+  .rmsg{margin:10px 0 12px;padding:10px 12px;border-radius:10px;background:var(--sunk);font-size:13.5px;font-weight:600;color:var(--ink-2);}
+  .rmsg.ok{background:var(--ok-soft);color:var(--ok);}
+  .rmsg.err{background:var(--req-soft);color:var(--req);}
+  .rcam{position:relative;border-radius:var(--r);overflow:hidden;background:#000;margin-bottom:12px;max-height:300px;}
+  .rcam[hidden]{display:none;}
+  .rvideo{width:100%;max-height:300px;object-fit:cover;display:block;}
+  .raim{position:absolute;left:12%;right:12%;top:42%;height:16%;border:2px solid rgba(255,255,255,.85);border-radius:10px;box-shadow:0 0 0 999px rgba(0,0,0,.25);}
+  .rnew{border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));background:var(--accent-soft);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:12px;}
+  .rnew .row{margin-bottom:10px;}
+  .rnew input,.rnew select{background:var(--surface);}
+  .rnew-h{margin-bottom:10px;}
+  .rnew-h b{display:block;font-size:15px;}
+  .rnew-h span{font-size:12.5px;color:var(--ink-2);}
+  .rinfo{font-size:12.5px;font-weight:600;color:var(--accent);margin:-2px 0 10px;}
+  .rlog-h{margin:6px 0 6px;font-size:13px;}
+  .rlog{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:var(--r);max-height:220px;overflow-y:auto;}
+  .rlog:empty{display:none;}
+  .rlog li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line-soft);}
+  .rlog li:last-child{border-bottom:0;}
+  .rlog b{display:block;font-size:13px;}
+  .rlog small{font-size:12px;color:var(--muted);font-family:var(--mono);}
   /* estructura */
   .shell{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:calc(100vh - 64px);}
   aside{border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;position:sticky;top:64px;height:calc(100vh - 64px);}
@@ -184,7 +214,8 @@
   .bulk input{width:92px;padding:7px 10px;}
   .bulk button{padding:7px 12px;}
   .vtable{border:1px solid var(--line);background:var(--surface);overflow-x:auto;border-radius:0 0 var(--r) var(--r);}
-  table{border-collapse:collapse;width:100%;min-width:560px;font-size:13px;}
+  table{border-collapse:collapse;width:100%;min-width:720px;font-size:13px;}
+  .vtable td input.mono{min-width:170px;}
   th{text-align:left;font-size:11.5px;font-weight:700;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface-2);white-space:nowrap;}
   td{padding:7px 14px;border-bottom:1px solid var(--line-soft);vertical-align:middle;}
   tbody tr:hover td{background:var(--surface-2);}
@@ -360,6 +391,7 @@
       <button class="ghost icon" id="btnRedo" data-ic="redo" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer" disabled></button>
       <button class="ghost" id="btnHist" data-ic="history" title="Historial de cambios"><span>Historial</span></button>
     </div>
+    <button id="btnRecv" data-ic="scan" title="Recibir mercancía con escáner o cámara"><span>Recibir</span></button>
     <button id="btnExport" data-ic="download" title="Exportar"><span>Exportar</span></button>
     <button class="primary" id="btnSave" data-ic="cloud" title="Guardar en la nube"><span>Guardar en la nube</span><em class="badge" id="saveBadge"></em></button>
     <div class="menu">
@@ -513,7 +545,7 @@
     return {id:uid(),title:"",category:"",body:"",price:"",compareAt:"",
       colors:[],sizes:[],variants:{},tags:[],
       material:"",fit:"",care:"",modelInfo:"",measurements:"",origin:"",
-      photos:[],notes:"",demo:false};
+      photos:[],notes:"",demo:false,style:"",vendor:""};
   }
   function seed(){
     var p=blank(); p.demo=true;
@@ -685,7 +717,7 @@
   var hist={entries:[],pos:-1}, histTimer=null, histMute=false, histPending=false, histReady=false;
   var FIELD={title:"nombre",category:"categoría",body:"descripción",price:"precio",compareAt:"precio antes",
     colors:"colores",sizes:"tallas",variants:"inventario y SKU",tags:"etiquetas",material:"material",fit:"fit",
-    care:"cuidados",modelInfo:"info de la modelo",measurements:"medidas",origin:"origen",photos:"fotos",notes:"notas"};
+    care:"cuidados",style:"estilo",vendor:"proveedor",modelInfo:"info de la modelo",measurements:"medidas",origin:"origen",photos:"fotos",notes:"notas"};
   function snapshot(){
     var ps=clone(state.products); ps.forEach(function(p){ delete p._t; (p.photos||[]).forEach(function(f){ delete f.url; }); });
     return JSON.stringify({products:ps,vocab:state.vocab,deleted:state.deleted,active:state.active});
@@ -1093,7 +1125,7 @@
      Revisa cada pieza por separado para decir exactamente qué falla:
      la base (y el SQL), el código, el servidor de fotos en Vercel y el
      bucket de Supabase. */
-  var photoStatus=null; /* null: sin revisar · {ok:true} · {ok:false,msg} */
+  var photoStatus=null, visionOn=false; /* null: sin revisar · {ok:true} · {ok:false,msg} */
   function dbCheck(code){
     if(!remoteOn()) return Promise.resolve({s:"off"});
     return fetch(REMOTE.url.replace(/\/$/,"")+"/rest/v1/rpc/starmoda_get",{
@@ -1132,6 +1164,7 @@
   function refreshPhotoStatus(){
     if(!remoteOn()||!getCode()) return;
     photoCheck(getCode()).then(function(ph){
+      if(ph&&!ph.missing) visionOn=!!ph.vision;
       var v=photoVerdict(ph), changed=!photoStatus||photoStatus.ok!==v.ok;
       photoStatus=v; if(changed) paintForm();
     });
@@ -1172,6 +1205,8 @@
         else rows.push(["wait","Código de acceso","No se pudo revisar hasta que la base responda."]);
         var v=photoVerdict(ph);
         rows.push(v.ok?["ok","Subida de fotos","Servidor y espacio de fotos listos."]:["bad","Subida de fotos",v.msg]);
+        if(ph&&!ph.missing){ visionOn=!!ph.vision;
+          rows.push(ph.vision?["ok","Lectura de etiquetas con IA","Lista: en Recibir mercancía puedes leer la etiqueta con una foto."]:["wait","Lectura de etiquetas con IA (opcional)","Para leer estilo, color y talla con la cámara, agrega ANTHROPIC_API_KEY en Vercel y vuelve a desplegar. El escáner funciona sin esto."]); }
         paint(rows);
         if(code&&db.s==="ok"){ photoStatus=v; }
         return db;
@@ -1425,6 +1460,11 @@
     var dup=skus.filter(function(s,i){ return skus.indexOf(s)!==i; });
     if(dup.length) req.push("SKU repetido: "+dup[0]);
     if(vl.length&&skus.length<vl.length) req.push("Hay variantes sin SKU");
+    var bcs=vl.map(function(x){ return (x.v.barcode||"").trim(); }).filter(Boolean);
+    var badBc=bcs.filter(function(b){ return !barcodeOk(b); });
+    if(badBc.length) req.push("Código de barras con dígito verificador incorrecto: "+badBc[0]);
+    var idx=barcodeIndex(), dupBc=bcs.filter(function(b){ var hit=idx[b]; return hit&&hit.length>1; });
+    if(dupBc.length) req.push("Código de barras repetido: "+dupBc[0]);
     var okp=p.photos.filter(function(f){ return f.level!=="bad"; });
     var porSubir=okp.filter(function(f){ return !f.src; }).length;
     if(!okp.length) req.push("Foto principal");
@@ -1502,6 +1542,8 @@
     redo:'<path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>',
     history:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',
     cloud:'<path d="M17.5 19H7a5 5 0 1 1 1.1-9.9A6 6 0 0 1 19.6 11 4 4 0 0 1 17.5 19z"/><path d="M12 12v6"/><path d="M9.5 14.5L12 12l2.5 2.5"/>',
+    scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8"/><path d="M10 8v8"/><path d="M13 8v8"/><path d="M17 8v8"/>',
+    camera:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
     dots:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
     shirt:'<path d="M20.4 3.5L16 2a4 4 0 0 1-8 0L3.6 3.5a2 2 0 0 0-1.3 2.2l.6 3.5a1 1 0 0 0 1 .8H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.1a1 1 0 0 0 1-.8l.6-3.5a2 2 0 0 0-1.3-2.2z"/>'
   };
@@ -1593,7 +1635,7 @@
     var vl=variantList(p);
     if(!vl.length) return h("div",{class:"drop"},[h("p",{text:"Elige al menos un color y una talla para generar las variantes."})]);
     var body=h("tbody",{});
-    var foot=h("td",{colspan:"4",text:totalPieces(p)+" piezas en total"});
+    var foot=h("td",{colspan:"5",text:totalPieces(p)+" piezas en total"});
     vl.forEach(function(x){
       var cl=color(x.color);
       var skuIn=h("input",{type:"text",class:"mono",value:x.v.sku});
@@ -1605,6 +1647,11 @@
         foot.textContent=totalPieces(p)+" piezas en total";
       });
       if(x.v.qty==="0") qtyIn.classList.add("zero");
+      var bcIn=h("input",{type:"text",class:"mono bc",inputmode:"numeric",value:x.v.barcode||"",placeholder:"escanea aquí",autocomplete:"off"});
+      function bcMark(){ var b=bcIn.value.trim(); bcIn.classList.toggle("bad",!!b&&!barcodeOk(b)); bcIn.title=b&&!barcodeOk(b)?"El dígito verificador no cuadra: revisa el código":""; }
+      bcIn.addEventListener("input",function(){ x.v.barcode=bcIn.value.replace(/\s+/g,""); p.demo=false; bcMark(); save(); paintPanel(); paintList(); });
+      bcIn.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); var n=bcIn.closest("tr").nextElementSibling; var nx=n&&n.querySelector("input.bc"); if(nx) nx.focus(); } });
+      bcMark();
       var swatch=h("span",{class:"sw",style:"background:"+(cl?cl.hex:"#ccc")});
       var nameSpan=h("span",{text:x.color});
       var cell=h("div",{class:"vcolor"},[swatch,nameSpan]);
@@ -1613,6 +1660,7 @@
         h("td",{},[cell]),
         h("td",{class:"vsize",text:x.size}),
         h("td",{},[skuIn]),
+        h("td",{},[bcIn]),
         h("td",{class:"num"},[qtyIn])
       ]));
     });
@@ -1631,7 +1679,7 @@
       h("button",{class:"ghost",text:"Solo a las vacías",onclick:function(){ fill(true); }})
     ]);
     return h("div",{},[bar,h("div",{class:"vtable"},[h("table",{},[
-      h("thead",{},[h("tr",{},[h("th",{text:"Color"}),h("th",{text:"Talla"}),h("th",{text:"SKU"}),h("th",{text:"Piezas"})])]),
+      h("thead",{},[h("tr",{},[h("th",{text:"Color"}),h("th",{text:"Talla"}),h("th",{text:"SKU"}),h("th",{text:"Código de barras"}),h("th",{text:"Piezas"})])]),
       body,
       h("tfoot",{},[h("tr",{},[foot])])
     ])])]);
@@ -1697,6 +1745,10 @@
       h("div",{class:"row two"},[
         field("Nombre de la prenda","req",input(p,"title",{placeholder:"Blusa Marfil",maxlength:"60"}),"Sin talla ni color. Máximo 60 caracteres."),
         field("Categoría","rec",catSel,"Define qué tallas aplican y en qué colección entra.")
+      ]),
+      h("div",{class:"row two"},[
+        field("Estilo del proveedor","opt",input(p,"style",{placeholder:"BL7571",class:"mono"}),"El que viene en la etiqueta. Con él, el escáner encuentra la prenda."),
+        field("Proveedor / marca","opt",input(p,"vendor",{placeholder:"Balam Denim"}),"Sale como marca en Shopify. Vacío = Star Moda.")
       ]),
       h("div",{class:"row"},[field("Descripción","rec",area(p,"body",{placeholder:"Cómo se ve, cómo cae, con qué combina."}),"El material y los cuidados NO van aquí — tienen su propio campo.")]),
       h("div",{class:"row two"},[
@@ -1927,7 +1979,7 @@
     form.appendChild(h("div",{class:"actions"},[
       ibtn("","copy","Duplicar prenda",function(){
         var copy=clone(p); copy.id=uid(); copy.title=p.title+" (copia)"; copy.photos=[]; copy.demo=false;
-        Object.keys(copy.variants).forEach(function(k){ copy.variants[k].skuTouched=false; });
+        Object.keys(copy.variants).forEach(function(k){ copy.variants[k].skuTouched=false; copy.variants[k].barcode=""; });
         syncVariants(copy); state.products.push(copy); state.active=copy.id; save(); paintAll();
         window.scrollTo(0,0); toast("Prenda duplicada: ajusta colores y fotos");
       }),
@@ -2275,7 +2327,7 @@
 
   var SHOPIFY_COLS=["Handle","Title","Body (HTML)","Vendor","Type","Tags","Published",
     "Option1 Name","Option1 Value","Option2 Name","Option2 Value",
-    "Variant SKU","Variant Inventory Tracker","Variant Inventory Qty","Variant Inventory Policy",
+    "Variant SKU","Variant Barcode","Variant Inventory Tracker","Variant Inventory Qty","Variant Inventory Policy",
     "Variant Fulfillment Service","Variant Price","Variant Compare At Price",
     "Variant Requires Shipping","Variant Taxable","Image Src","Image Position","Image Alt Text","Variant Image","Status",
     "Material (product.metafields.custom.material)",
@@ -2301,13 +2353,14 @@
         r.push(handle);
         r.push(f?p.title:"");
         r.push(f?(p.body?"<p>"+p.body.replace(/\n+/g,"</p><p>")+"</p>":""):"");
-        r.push(f?"Star Moda":"");
+        r.push(f?((p.vendor||"").trim()||"Star Moda"):"");
         r.push(f?p.category:"");
         r.push(f?p.tags.join(", "):"");
         r.push(f?"TRUE":"");
         r.push(f?"Color":""); r.push(x.color);
         r.push(f?"Talla":"");  r.push(x.size);
         r.push(x.v.sku);
+        r.push((x.v.barcode||"").trim());
         r.push("shopify");
         r.push(x.v.qty===""?"0":x.v.qty);
         r.push("deny"); r.push("manual");
@@ -2536,6 +2589,330 @@
     ],[]);
   }
 
+  /* ---------- códigos de barras ----------
+     EAN-13 / EAN-8 / UPC-A / GTIN-14 traen un dígito de control al final:
+     se verifica con pesos 3 y 1 desde la derecha, así un código mal leído
+     nunca se liga a una prenda. Códigos con letras (Code 128) pasan tal cual. */
+  function barcodeOk(code){
+    code=String(code||"").trim();
+    if(/^[0-9]+$/.test(code)){
+      if(!/^(\d{8}|\d{12,14})$/.test(code)) return false;
+      var d=code.split("").map(Number), chk=d.pop(), sum=0;
+      d.reverse().forEach(function(n,i){ sum+=n*(i%2===0?3:1); });
+      return (10-sum%10)%10===chk;
+    }
+    return /^[A-Za-z0-9.\-]{4,30}$/.test(code);
+  }
+  function barcodeIndex(){
+    var idx={};
+    state.products.forEach(function(p){
+      if(p.demo) return;
+      variantList(p).forEach(function(x){ var b=(x.v.barcode||"").trim(); if(b) (idx[b]=idx[b]||[]).push({p:p,x:x}); });
+    });
+    return idx;
+  }
+
+  /* ---------- reconocer estilo, color y talla de la etiqueta ----------
+     Lo que la app ya conoce se toma solo; lo nuevo se pregunta una vez y se
+     aprende ("MEDIUM MEDIO" = Azul medio, "7 (28)" = 28) para la próxima. */
+  function norm(t){ return slug(t).replace(/-/g," ").trim().toUpperCase(); }
+  function findStyle(style){
+    var n=norm(style); if(!n) return null;
+    return state.products.filter(function(p){ return !p.demo&&(norm(p.style)===n||norm(p.title)===n); })[0]||null;
+  }
+  function matchColor(raw){
+    var n=norm(raw); if(!n) return "";
+    var al=(V().alias&&V().alias.color)||{};
+    if(al[n]&&color(al[n])) return al[n];
+    var hit=V().colors.filter(function(c){ return norm(c.n)===n; })[0];
+    if(hit) return hit.n;
+    var toks=n.split(" ");
+    hit=V().colors.filter(function(c){ return toks.indexOf(norm(c.n))>=0; })[0];
+    return hit?hit.n:"";
+  }
+  function suggestColorName(raw){
+    var t=String(raw||"").trim().split(/[\s\/]+/).filter(Boolean);
+    var w=t.length>1?t[t.length-1]:(t[0]||"");
+    return w?w.charAt(0).toUpperCase()+w.slice(1).toLowerCase():"";
+  }
+  function allSizes(){
+    var out=[];
+    Object.keys(V().systems).forEach(function(k){ V().systems[k].forEach(function(z){ if(out.indexOf(z)<0) out.push(z); }); });
+    return out;
+  }
+  function sizeCandidates(raw){
+    raw=String(raw||"").trim();
+    var c=[raw], m=/^(.*?)\s*\((.*?)\)\s*$/.exec(raw);
+    if(m) c.push(m[2].trim(),m[1].trim());
+    return c.filter(Boolean);
+  }
+  function matchSize(raw,catName){
+    var n=norm(raw); if(!n) return "";
+    var al=(V().alias&&V().alias.size)||{};
+    var pool=catName?sizesFor(catName):allSizes();
+    if(al[n]&&pool.indexOf(al[n])>=0) return al[n];
+    var c=sizeCandidates(raw);
+    for(var i=0;i<c.length;i++) for(var j=0;j<pool.length;j++) if(norm(pool[j])===norm(c[i])) return pool[j];
+    return "";
+  }
+  function suggestSize(raw){ var c=sizeCandidates(raw); return c[1]||c[0]||""; }
+
+  /* Bip de confirmación / error (y vibración en celular). */
+  var actx=null;
+  function beep(ok){
+    try{
+      actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      var t=actx.currentTime;
+      (ok?[[1046,0,.09]]:[[240,0,.13],[190,.17,.16]]).forEach(function(b){
+        var o=actx.createOscillator(),g=actx.createGain();
+        o.type=ok?"sine":"square"; o.frequency.value=b[0];
+        g.gain.setValueAtTime(.14,t+b[1]); g.gain.exponentialRampToValueAtTime(.001,t+b[1]+b[2]);
+        o.connect(g); g.connect(actx.destination); o.start(t+b[1]); o.stop(t+b[1]+b[2]+.02);
+      });
+    }catch(e){}
+    if(!ok&&navigator.vibrate){ try{ navigator.vibrate(140); }catch(e){} }
+  }
+
+  /* Foto de la etiqueta → IA → {barcode, style, color, size, brand}. */
+  function readTagAI(file){
+    return loadImage(file).then(function(img){
+      if(!img) throw new Error("No se pudo abrir la foto (si es HEIC, usa la cámara en modo compatible).");
+      var sc=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight));
+      var c=document.createElement("canvas"); c.width=Math.round(img.naturalWidth*sc); c.height=Math.round(img.naturalHeight*sc);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      return fetch("/api/starmoda/etiqueta",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({code:getCode(),image:c.toDataURL("image/jpeg",.85)})});
+    }).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(t){
+        if(r.ok) return t;
+        var m={lectura_no_configurada:"La lectura con IA no está activada: falta ANTHROPIC_API_KEY en Vercel. Mientras, escanea el código o escribe los datos.",
+          codigo_invalido:"Código de acceso no válido.",ia_ocupada:"La IA está ocupada; intenta en unos segundos.",
+          imagen_muy_grande:"La foto es muy grande.",lectura_ilegible:"No se pudo leer la etiqueta; toma la foto más de cerca."};
+        throw new Error(m[t.error]||("No se pudo leer la etiqueta ("+(t.error||r.status)+")."));
+      });
+    });
+  }
+
+  /* ---------- Recibir mercancía ----------
+     Cada lectura (escáner, cámara o foto de etiqueta) suma una pieza a su
+     variante. Un código nuevo se liga una sola vez a estilo + color + talla. */
+  var lastRecv={style:"",color:"",size:""}, recvOpen=false;
+  function receiveModal(firstCode){
+    if(recvOpen) return;
+    recvOpen=true; flushHistory();
+    var session={pieces:0,news:0,styles:{},log:[]};
+    var stats=h("div",{class:"rstats"});
+    var input=h("input",{type:"text",class:"mono rinput",placeholder:"Escanea o escribe el código de barras y Enter",autocomplete:"off",inputmode:"numeric"});
+    var msg=h("div",{class:"rmsg",text:"Listo para escanear. Cada lectura suma una pieza."});
+    var formHost=h("div",{});
+    var logEl=h("ul",{class:"rlog"});
+    var video=h("video",{playsinline:"playsinline",muted:"muted",autoplay:"autoplay",class:"rvideo"});
+    var camWrap=h("div",{class:"rcam",hidden:"hidden"},[video,h("div",{class:"raim"})]);
+    var stream=null, det=null, pauseCam=false, lastCam={code:"",t:0};
+
+    function paintStats(){
+      stats.innerHTML="";
+      [["Piezas",session.pieces],["Estilos",Object.keys(session.styles).length],["Códigos nuevos",session.news]].forEach(function(x){
+        stats.appendChild(h("div",{},[h("b",{text:String(x[1])}),h("span",{text:x[0]})]));
+      });
+    }
+    function say(text,cls){ msg.className="rmsg "+(cls||""); msg.textContent=text; }
+    function addPiece(p,x,isNew){
+      var n=parseInt(x.v.qty,10); x.v.qty=String((isNaN(n)?0:n)+1); p.demo=false;
+      save(); paintList();
+      session.pieces++; session.styles[p.style||p.title]=1; if(isNew) session.news++;
+      var li=h("li",{},[
+        h("div",{},[h("b",{text:(p.style?p.style+" · ":"")+(p.title&&p.title!==p.style?p.title:"")}),
+          h("small",{text:x.color+" · Talla "+x.size+" · "+(x.v.barcode||"")+(isNew?" · nuevo":"")})]),
+        h("span",{class:"chip ok",text:x.v.qty+" pz"})
+      ]);
+      logEl.insertBefore(li,logEl.firstChild);
+      session.log.push({p:p,key:x.key,li:li,isNew:isNew});
+      paintStats(); beep(true);
+      say("+1  "+(p.style||p.title)+" · "+x.color+" · "+x.size+"  →  "+x.v.qty+(x.v.qty==="1"?" pieza":" piezas"),"ok");
+    }
+    function undoLast(){
+      var e=session.log.pop(); if(!e){ say("No hay lecturas que quitar.",""); return; }
+      var v=e.p.variants[e.key];
+      if(v){ v.qty=String(Math.max(0,(parseInt(v.qty,10)||0)-1)); save(); paintList(); }
+      e.li.remove(); session.pieces=Math.max(0,session.pieces-1); if(e.isNew) session.news=Math.max(0,session.news-1);
+      paintStats(); say("Se quitó la última pieza.",""); input.focus();
+    }
+    function handle(code,reading){
+      code=String(code||"").replace(/\s+/g,"");
+      if(!code){ if(reading) newForm("",reading); return; }
+      if(!barcodeOk(code)){ beep(false); say("El código "+code+" no es válido: su dígito verificador no cuadra. Vuelve a escanearlo.","err"); return; }
+      var hit=barcodeIndex()[code];
+      if(hit&&hit.length){ formHost.innerHTML=""; pauseCam=false; addPiece(hit[0].p,hit[0].x,false); return; }
+      newForm(code,reading);
+    }
+
+    function newForm(code,reading){
+      pauseCam=true;
+      var r=reading||{}, fromTag=!!reading, colorRaw=r.color||"", sizeRaw=r.size||"";
+      formHost.innerHTML="";
+      var codeIn=h("input",{type:"text",class:"mono",value:code,placeholder:"Código de barras",inputmode:"numeric"});
+      var styleIn=h("input",{type:"text",class:"mono",value:r.style||lastRecv.style,placeholder:"BL7571",list:"rstyles",autocomplete:"off"});
+      var dl=h("datalist",{id:"rstyles"});
+      state.products.forEach(function(p){ if(!p.demo&&p.style) dl.appendChild(h("option",{value:p.style,label:p.title})); });
+      var nameIn=h("input",{type:"text",placeholder:"Ej. Jeans Mom Fit Medio"});
+      var catSel=h("select",{}); catSel.appendChild(h("option",{value:"",text:"Elegir…"}));
+      V().cats.forEach(function(c){ catSel.appendChild(h("option",{value:c.n,text:c.n,selected:c.n==="Jeans"?"selected":null})); });
+      var colorSel=h("select",{}), sizeSel=h("select",{});
+      var newColorIn=h("input",{type:"text",value:suggestColorName(colorRaw),placeholder:"Nombre del color"});
+      var newColorHex=h("input",{type:"color",value:"#5b6f95"});
+      var newSizeIn=h("input",{type:"text",class:"mono",value:suggestSize(sizeRaw),placeholder:"Talla"});
+      var info=h("div",{class:"rinfo"});
+      var newProdRow=h("div",{class:"row two"},[field("Nombre de la prenda","",nameIn),field("Categoría","",catSel)]);
+      var newColorRow=h("div",{class:"row two"},[field("Color nuevo","",newColorIn),field("Tono","",newColorHex)]);
+      var newSizeRow=h("div",{class:"row"},[field("Talla nueva","",newSizeIn)]);
+      function refresh(){
+        var p=findStyle(styleIn.value);
+        newProdRow.style.display=p||!styleIn.value.trim()?"none":"";
+        info.textContent=p?("Prenda encontrada: "+(p.title||p.style)+". Se agrega a sus variantes."):(styleIn.value.trim()?"Estilo nuevo: se crea la prenda.":"Escribe el estilo de la etiqueta.");
+        var catName=p?p.category:catSel.value;
+        var cv=colorSel.value&&colorSel.value!=="__new"?colorSel.value:(matchColor(colorRaw)||(fromTag?"":lastRecv.color));
+        colorSel.innerHTML="";
+        V().colors.forEach(function(c){ colorSel.appendChild(h("option",{value:c.n,text:c.n,selected:c.n===cv?"selected":null})); });
+        colorSel.appendChild(h("option",{value:"__new",text:"+ Color nuevo…",selected:cv?null:"selected"}));
+        newColorRow.style.display=colorSel.value==="__new"?"":"none";
+        var pool=catName?sizesFor(catName):allSizes();
+        var sv=sizeSel.value&&sizeSel.value!=="__new"&&pool.indexOf(sizeSel.value)>=0?sizeSel.value:(matchSize(sizeRaw,catName)||(!fromTag&&pool.indexOf(lastRecv.size)>=0?lastRecv.size:""));
+        sizeSel.innerHTML="";
+        pool.forEach(function(z){ sizeSel.appendChild(h("option",{value:z,text:z,selected:z===sv?"selected":null})); });
+        sizeSel.appendChild(h("option",{value:"__new",text:"+ Talla nueva…",selected:sv?null:"selected"}));
+        newSizeRow.style.display=sizeSel.value==="__new"?"":"none";
+      }
+      styleIn.addEventListener("input",refresh); catSel.addEventListener("change",refresh);
+      colorSel.addEventListener("change",refresh); sizeSel.addEventListener("change",refresh);
+      function submit(){
+        var bc=codeIn.value.replace(/\s+/g,"");
+        if(!bc){ say("Falta el código de barras.","err"); codeIn.focus(); return; }
+        if(!barcodeOk(bc)){ beep(false); say("Ese código no es válido: su dígito verificador no cuadra.","err"); codeIn.focus(); return; }
+        var ex=barcodeIndex()[bc];
+        if(ex&&ex.length){ formHost.innerHTML=""; pauseCam=false; addPiece(ex[0].p,ex[0].x,false); input.focus(); return; }
+        var st=styleIn.value.trim().toUpperCase();
+        if(!st){ say("Escribe el estilo de la etiqueta.","err"); styleIn.focus(); return; }
+        var cName=colorSel.value==="__new"?newColorIn.value.trim():colorSel.value;
+        var sName=sizeSel.value==="__new"?newSizeIn.value.trim():sizeSel.value;
+        if(!cName){ say("Elige o escribe el color.","err"); return; }
+        if(!sName){ say("Elige o escribe la talla.","err"); return; }
+        var p=findStyle(st), created=false, v=V();
+        if(!p){
+          state.products=state.products.filter(function(x){ return !x.demo; });
+          p=blank(); p.style=st; p.title=nameIn.value.trim()||st; p.category=catSel.value;
+          if(r.brand) p.vendor=r.brand;
+          state.products.push(p); created=true;
+        }
+        if(created||!state.products.some(function(x){ return x.id===state.active; })) state.active=p.id;
+        if(!color(cName)) v.colors.push({n:cName,hex:newColorHex.value,ab:(abbr(cName)||"COL").slice(0,4),tema:false,nuevo:true});
+        var order=sizesFor(p.category);
+        if(order.indexOf(sName)<0){
+          var sys=(cat(p.category)&&cat(p.category).sys)||"Letras";
+          if(!v.systems[sys]) v.systems[sys]=[];
+          v.systems[sys].push(sName); order=sizesFor(p.category);
+        }
+        if(colorRaw||sizeRaw){
+          if(!v.alias||typeof v.alias!=="object") v.alias={};
+          v.alias.color=v.alias.color||{}; v.alias.size=v.alias.size||{};
+          if(colorRaw&&norm(colorRaw)!==norm(cName)) v.alias.color[norm(colorRaw)]=cName;
+          if(sizeRaw&&norm(sizeRaw)!==norm(sName)) v.alias.size[norm(sizeRaw)]=sName;
+        }
+        if(p.colors.indexOf(cName)<0) p.colors.push(cName);
+        if(p.sizes.indexOf(sName)<0){ p.sizes.push(sName); p.sizes.sort(function(a,z){ return order.indexOf(a)-order.indexOf(z); }); }
+        syncVariants(p);
+        var x=variantList(p).filter(function(y){ return y.color===cName&&y.size===sName; })[0];
+        if(x.v.barcode&&x.v.barcode!==bc&&!confirm("Esa variante ya tiene el código "+x.v.barcode+". ¿Reemplazarlo por "+bc+"?")) return;
+        x.v.barcode=bc;
+        lastRecv={style:p.style||st,color:cName,size:sName};
+        formHost.innerHTML=""; pauseCam=false;
+        addPiece(p,x,true);
+        if(created) toast("Prenda nueva: "+p.title);
+        input.focus();
+      }
+      [codeIn,styleIn,nameIn,newColorIn,newSizeIn].forEach(function(el){ el.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); submit(); } }); });
+      formHost.appendChild(h("div",{class:"rnew"},[
+        h("div",{class:"rnew-h"},[h("b",{text:fromTag?"Etiqueta leída":"Código nuevo"}),
+          h("span",{text:fromTag?("Leído: "+[r.style,r.color,r.size].filter(Boolean).join(" · ")):"Dime a qué prenda, color y talla pertenece. Solo se pregunta una vez."})]),
+        h("div",{class:"row two"},[field("Código de barras","",codeIn),field("Estilo (de la etiqueta)","",styleIn)]),
+        dl, info, newProdRow,
+        h("div",{class:"row two"},[field("Color"+(colorRaw?" · etiqueta: "+colorRaw:""),"",colorSel),field("Talla"+(sizeRaw?" · etiqueta: "+sizeRaw:""),"",sizeSel)]),
+        newColorRow, newSizeRow,
+        h("div",{class:"actions"},[
+          ibtn("primary","check","Ligar y sumar 1 pieza",submit),
+          h("button",{class:"ghost",text:"Cancelar",onclick:function(){ formHost.innerHTML=""; pauseCam=false; say("Cancelado.",""); input.focus(); }})
+        ])
+      ]));
+      refresh();
+      setTimeout(function(){ (code?(styleIn.value?colorSel:styleIn):codeIn).focus(); },30);
+    }
+
+    /* cámara: lector de código en vivo (Chrome / Android) */
+    var hasDet=typeof window.BarcodeDetector==="function";
+    var camBtn=ibtn("","camera","Escanear con cámara",function(){ if(stream) stopCam(); else startCam(); });
+    if(!hasDet){ camBtn.disabled=true; camBtn.title="Este navegador no lee códigos en vivo. Usa el escáner o la foto de la etiqueta."; }
+    function startCam(){
+      var want=["ean_13","ean_8","upc_a","upc_e","code_128"];
+      window.BarcodeDetector.getSupportedFormats().then(function(fs){
+        det=new window.BarcodeDetector({formats:want.filter(function(f){ return fs.indexOf(f)>=0; })});
+        return navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
+      }).then(function(s){
+        stream=s; video.srcObject=s; camWrap.hidden=false; video.play().catch(function(){});
+        camBtn.querySelector("span").textContent="Apagar cámara"; loop();
+      }).catch(function(){ say("No se pudo abrir la cámara. Revisa el permiso del navegador.","err"); });
+    }
+    function loop(){
+      if(!stream) return;
+      if(pauseCam||video.readyState<2){ setTimeout(loop,300); return; }
+      det.detect(video).then(function(codes){
+        if(codes&&codes.length){
+          var c=codes[0].rawValue, now=Date.now();
+          if(c!==lastCam.code||now-lastCam.t>2500){ lastCam={code:c,t:now}; handle(c); }
+        }
+      }).catch(function(){}).then(function(){ setTimeout(loop,250); });
+    }
+    function stopCam(){
+      if(stream) stream.getTracks().forEach(function(t){ t.stop(); });
+      stream=null; camWrap.hidden=true; camBtn.querySelector("span").textContent="Escanear con cámara";
+    }
+
+    /* foto de la etiqueta → IA */
+    var photoIn=h("input",{type:"file",accept:"image/*",capture:"environment",style:"display:none"});
+    var tagBtn=ibtn("","image","Leer etiqueta con foto",function(){ photoIn.click(); });
+    if(!visionOn) tagBtn.title="Requiere ANTHROPIC_API_KEY en Vercel";
+    photoIn.addEventListener("change",function(){
+      var file=photoIn.files[0]; photoIn.value=""; if(!file) return;
+      tagBtn.disabled=true; say("Leyendo la etiqueta…","");
+      readTagAI(file).then(function(t){
+        var bc=(t.barcode||"").replace(/\D/g,"");
+        if(bc&&!barcodeOk(bc)){ beep(false); say("La IA leyó el código "+bc+" pero no pasa el dígito verificador: corrígelo abajo.","err"); newForm(bc,t); return; }
+        if(bc&&barcodeIndex()[bc]){ handle(bc,t); return; }
+        say("Etiqueta leída. Confirma los datos.",""); newForm(bc,t);
+      }).catch(function(e){ beep(false); say(e.message,"err"); }).then(function(){ tagBtn.disabled=false; });
+    });
+
+    input.addEventListener("keydown",function(e){
+      if(e.key!=="Enter") return;
+      e.preventDefault(); var c=input.value; input.value=""; handle(c);
+    });
+    paintStats();
+    var veil=modal("Recibir mercancía",[
+      stats,
+      h("div",{class:"rscan"},[input,camBtn,tagBtn,photoIn]),
+      msg, camWrap, formHost,
+      h("div",{class:"rlog-h"},[h("b",{text:"Lecturas de esta sesión"})]),
+      logEl
+    ],[h("button",{class:"ghost",text:"Deshacer última",onclick:undoLast})]);
+    veil.querySelector(".modal").classList.add("wide");
+    var obs=new MutationObserver(function(){
+      if(veil.isConnected) return;
+      obs.disconnect(); stopCam(); recvOpen=false; paintAll();
+      if(session.pieces) toast(session.pieces+(session.pieces===1?" pieza recibida":" piezas recibidas")+". Recuerda guardar en la nube.");
+    });
+    obs.observe(document.body,{childList:true});
+    setTimeout(function(){ input.focus(); if(firstCode) handle(firstCode); },60);
+  }
+
   /* ---------- arranque ---------- */
   function paintAll(){ paintList(); paintForm(); }
 
@@ -2547,6 +2924,21 @@
   document.getElementById("btnRedo").addEventListener("click",redo);
   document.getElementById("btnHist").addEventListener("click",historyModal);
   document.getElementById("btnSave").addEventListener("click",cloudSave);
+  document.getElementById("btnRecv").addEventListener("click",function(){ receiveModal(); });
+  /* Escáner USB/Bluetooth: "teclea" muy rápido y da Enter. Si llega una
+     ráfaga así fuera de un campo de texto, se abre Recibir con ese código. */
+  var kb={buf:"",t:0};
+  document.addEventListener("keydown",function(e){
+    if(recvOpen||e.ctrlKey||e.metaKey||e.altKey) return;
+    var t=e.target;
+    if(t&&(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)||t.isContentEditable)) return;
+    var now=Date.now();
+    if(e.key==="Enter"){
+      if(kb.buf.length>=6&&now-kb.t<120){ e.preventDefault(); var c=kb.buf; kb.buf=""; receiveModal(c); }
+      kb.buf=""; return;
+    }
+    if(e.key&&e.key.length===1){ if(now-kb.t>80) kb.buf=""; kb.buf+=e.key; kb.t=now; }
+  });
   var menuPop=document.getElementById("menuPop");
   function closeMenu(){ menuPop.hidden=true; }
   document.getElementById("btnMenu").addEventListener("click",function(e){ e.stopPropagation(); menuPop.hidden=!menuPop.hidden; });

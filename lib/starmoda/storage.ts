@@ -117,6 +117,11 @@ async function checkCode(cfg: Config, code: unknown): Promise<void> {
   throw e;
 }
 
+/** Valida un código de acceso con la base (lanza codigo_invalido si no sirve). */
+export async function validateAccessCode(code: unknown, cfg: Config = getConfig()): Promise<void> {
+  await checkCode(cfg, code);
+}
+
 export interface SetupStatus {
   /** El servidor tiene SUPABASE_URL y la llave secreta */
   config: boolean;
@@ -131,6 +136,8 @@ export interface SetupStatus {
   keyKind?: KeyKind;
   /** Proyecto al que apunta Vercel (p. ej. wxcmlfxcaunvtcegyupc) */
   project?: string;
+  /** Hay llave de IA para leer etiquetas con la cámara */
+  vision?: boolean;
 }
 
 /** Diagnóstico para la pantalla de conexión de la app: nunca lanza. */
@@ -145,6 +152,7 @@ export async function checkSetup(
     return { config: false, code: null, bucket: null, error: "storage_no_configurado" };
   }
   const out: SetupStatus = {
+    vision: !!(env.ANTHROPIC_API_KEY || "").trim(),
     config: true,
     code: null,
     bucket: null,

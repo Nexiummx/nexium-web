@@ -97,7 +97,7 @@ describe("checkSetup", () => {
 
   it("todo bien", async () => {
     fetchMock.mockResolvedValueOnce(res(200, '"Nexium"')).mockResolvedValueOnce(res(200, { id: "starmoda-fotos", public: true }));
-    expect(await checkSetup("sm-1", env)).toEqual({ config: true, code: true, bucket: true, keyKind: "secret", project: "abc" });
+    expect(await checkSetup("sm-1", env)).toEqual({ vision: false, config: true, code: true, bucket: true, keyKind: "secret", project: "abc" });
     expect(fetchMock.mock.calls[1][0]).toBe("https://abc.supabase.co/storage/v1/bucket/starmoda-fotos");
   });
 
