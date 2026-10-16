@@ -20,6 +20,27 @@ export interface TagReading {
   size: string;
   /** Marca o proveedor si aparece, p. ej. "Balam Denim" */
   brand: string;
+  /** Modelo que hizo la lectura (Haiku primero; Opus solo si hizo falta) */
+  model?: string;
+}
+
+/** Modelos: el rápido y barato primero; el más capaz solo si la lectura del
+ *  primero no pasa la validación (código con dígito incorrecto, sin estilo). */
+export const PRIMARY_MODEL = "claude-haiku-5-5";
+export const FALLBACK_MODEL = "claude-opus-5-5";
+
+/** Dígito verificador de EAN-8 / UPC-A / EAN-13 / GTIN-14 (pesos 3 y 1). */
+export function gtinOk(code: string): boolean {
+  if (!/^(\d{8}|\d{12,14})$/.test(code)) return false;
+  const d = code.split("").map(Number);
+  const check = d.pop() as number;
+  const sum = d.reverse().reduce((acc, n, i) => acc + n * (i % 2 === 0 ? 3 : 1), 0);
+  return (10 - (sum % 10)) % 10 === check;
+}
+
+/** ¿La lectura sirve tal cual? Si no, vale la pena el modelo más capaz. */
+export function readingLooksGood(r: TagReading): boolean {
+  return !!r.style && (!r.barcode || gtinOk(r.barcode));
 }
 
 const MEDIA_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
@@ -63,27 +84,56 @@ function clean(v: unknown, max = 60): string {
   return typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, max) : "";
 }
 
-export async function readTag(
-  image: { mediaType: MediaType; data: string },
-  client: Anthropic = new Anthropic()
-): Promise<TagReading> {
+type Image = { mediaType: MediaType; data: string };
+
+function content(image: Image): Anthropic.Beta.BetaContentBlockParam[] {
+  return [
+    { type: "image", source: { type: "base64", media_type: image.mediaType, data: image.data } },
+    { type: "text", text: PROMPT },
+  ];
+}
+
+async function readWithHaiku(image: Image, client: Anthropic): Promise<TagReading> {
   const response = await client.beta.messages.create({
-    model: "claude-opus-5-5",
+    model: PRIMARY_MODEL,
+    max_tokens: 16000,
+    output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
+    messages: [{ role: "user", content: content(image) }],
+  });
+  return parseReading(response, PRIMARY_MODEL);
+}
+
+async function readWithOpus(image: Image, client: Anthropic): Promise<TagReading> {
+  const response = await client.beta.messages.create({
+    model: FALLBACK_MODEL,
     max_tokens: 16000,
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
     output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
-    messages: [
-      {
-        role: "user",
-        content: [
-          { type: "image", source: { type: "base64", media_type: image.mediaType, data: image.data } },
-          { type: "text", text: PROMPT },
-        ],
-      },
-    ],
+    messages: [{ role: "user", content: content(image) }],
   });
+  return parseReading(response, FALLBACK_MODEL);
+}
 
+/** Haiku primero (centavos de centavo); si falla o su lectura no pasa la
+ *  validación, se reintenta una sola vez con Opus. */
+export async function readTag(image: Image, client: Anthropic = new Anthropic()): Promise<TagReading> {
+  let first: TagReading | null = null;
+  try {
+    first = await readWithHaiku(image, client);
+    if (readingLooksGood(first)) return first;
+  } catch (e) {
+    if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.RateLimitError) throw e;
+  }
+  try {
+    return await readWithOpus(image, client);
+  } catch (e) {
+    if (first) return first;
+    throw e;
+  }
+}
+
+function parseReading(response: Anthropic.Beta.BetaMessage, model: string): TagReading {
   if (response.stop_reason === "refusal") throw new StarmodaError("lectura_rechazada", 422);
   const text = response.content
     .map((b) => (b.type === "text" ? b.text : ""))
@@ -101,5 +151,6 @@ export async function readTag(
     color: clean(raw.color),
     size: clean(raw.size, 30),
     brand: clean(raw.brand),
+    model,
   };
 }
