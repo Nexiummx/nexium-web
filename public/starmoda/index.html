@@ -3256,6 +3256,7 @@
     var shotIn=mkInput(true), galIn=mkInput(false);
     function setChip(it,cls,txt){ it.chip.className="chip "+cls; it.chip.textContent=txt; }
     function addPhotos(list){
+      errEl.hidden=true;
       Array.prototype.slice.call(list||[]).forEach(function(file){
         if(!file.size) return;
         var chip=h("span",{class:"chip rec",text:"preparando"});
@@ -3276,14 +3277,40 @@
         if(!it.img.src) it.img.src=URL.createObjectURL(o.blob);
         setChip(it,"rec","subiendo");
         return fetch("/api/starmoda/upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:token,fileName:name})})
-          .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(t){ if(!r.ok){ var e=new Error(t.error||("HTTP "+r.status)); throw e; } return t; }); })
+          .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(t){
+            if(!r.ok){ var e=new Error(t.error||("HTTP "+r.status)); e.step="firma"; e.http=r.status; e.detail=t.detail||""; throw e; }
+            return t;
+          }); })
           .then(function(t){
             var fd=new FormData(); fd.append("cacheControl","31536000"); fd.append("",o.blob,name);
             return fetch(t.uploadUrl,{method:"PUT",headers:{apikey:REMOTE.key,Authorization:"Bearer "+REMOTE.key,"x-upsert":"true"},body:fd})
-              .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return send("foto",t.path); });
+              .then(function(r){
+                if(r.ok) return;
+                return r.text().then(function(x){ var e=new Error("HTTP "+r.status); e.step="subida"; e.http=r.status; e.detail=x.slice(0,200); throw e; });
+              })
+              .then(function(){ return send("foto",t.path).catch(function(e){ e.step="aviso"; throw e; }); });
           });
       });
     }
+    /* Qué decirle a la persona según dónde falló; retry solo si fue la red. */
+    function photoErr(e){
+      var m=(e&&e.message)||"", d=(e&&e.detail)||"", all=m+" "+d;
+      if(/sesion_vencida/.test(m)) return {fatal:"vencido"};
+      if(m==="ilegible") return {msg:"No se pudo leer la foto (si es HEIC, cambia la cámara a «Más compatible»)."};
+      if(m==="grande") return {msg:"La foto quedó de más de 2 MB."};
+      if(/storage_no_configurado/.test(m)) return {msg:"Falta configurar en Vercel SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY (y volver a desplegar).",stop:true};
+      if(/starmoda_scan_valida|PGRST202|Could not find the function/i.test(all)||/tipo_invalido|foto_invalida/.test(m))
+        return {msg:"Falta correr en Supabase el SQL nuevo del celular (solo-celular.sql, con lo de fotos).",stop:true};
+      if(/permission denied/i.test(all)) return {msg:"Falta un permiso en Supabase: vuelve a correr solo-celular.sql completo.",stop:true};
+      if(/supabase_401|supabase_403|Invalid API key|JWS|signature/i.test(all)&&e.step==="firma") return {msg:"La llave secreta de Vercel (SUPABASE_SERVICE_ROLE_KEY) no es válida; debe ser la sb_secret_….",stop:true};
+      if(e.step==="firma"&&/storage_4\d\d/.test(m)) return {msg:"Supabase no dejó preparar la subida: "+(d||m)+". Revisa que exista el espacio starmoda-fotos (corre el SQL completo).",stop:true};
+      if(e.step==="subida"&&e.http&&e.http<500) return {msg:"Supabase rechazó la foto ("+e.http+(d?": "+d:"")+").",stop:true};
+      if(e.step==="aviso"&&!/fetch|network|load failed/i.test(m)) return {msg:"La foto se subió pero no se pudo avisar a la computadora: "+m,stop:true};
+      if(e.http===404&&e.step==="firma") return {msg:"No se encontró el servidor de fotos. Abre el enlace desde nexiummx.com.",stop:true};
+      return {retry:true,msg:"Sin conexión ("+(m||"error")+(d?": "+d:"")+")."};
+    }
+    var errEl=h("div",{class:"plast err",hidden:"hidden"});
+    function showErr(msg){ errEl.hidden=false; errEl.textContent=msg; }
     function pumpPhotos(){
       if(photoBusy||!photoQ.length||gone) return;
       photoBusy=true;
@@ -3294,14 +3321,12 @@
         setPill("up","Conectado"); pumpPhotos();
       },function(e){
         photoBusy=false;
-        var m=(e&&e.message)||"";
-        if(/sesion_vencida/.test(m)){ gone=true; setPill("down","Enlace vencido"); lastEl.textContent="Este enlace venció. En la computadora toca Celular › Nuevo enlace y vuelve a escanear el QR."; lastEl.className="plast err"; setChip(it,"req","no se envió"); return; }
-        if(m==="ilegible"||m==="grande"){ photoQ.shift(); setChip(it,"req",m==="ilegible"?"no se pudo leer":"muy pesada"); pumpPhotos(); return; }
-        if(/storage_no_configurado/.test(m)){ photoQ.length=0; setChip(it,"req","falta configurar"); lastEl.textContent="La subida de fotos no está configurada en Vercel (SUPABASE_SERVICE_ROLE_KEY)."; lastEl.className="plast err"; return; }
-        it.tries++;
-        if(it.tries>=4){ photoQ.shift(); setChip(it,"req","no se envió"); pumpPhotos(); return; }
-        setChip(it,"rec","reintentando"); setPill("down","Sin conexión, reintentando…");
-        setTimeout(pumpPhotos,2500*it.tries);
+        var r=photoErr(e);
+        if(r.fatal){ gone=true; setPill("down","Enlace vencido"); lastEl.textContent="Este enlace venció. En la computadora toca Celular › Nuevo enlace y vuelve a escanear el QR."; lastEl.className="plast err"; setChip(it,"req","no se envió"); return; }
+        if(r.retry&&++it.tries<4){ setChip(it,"rec","reintentando"); setPill("down","Sin conexión, reintentando…"); setTimeout(pumpPhotos,2500*it.tries); return; }
+        showErr(r.msg);
+        if(r.stop){ photoQ.forEach(function(x){ setChip(x,"req","no se envió"); }); photoQ.length=0; return; }
+        photoQ.shift(); setChip(it,"req","no se envió"); pumpPhotos();
       });
     }
     var photoSec=h("section",{class:"psec"},[
@@ -3312,6 +3337,7 @@
       ]),
       shotIn, galIn,
       h("p",{class:"hint",style:"margin:0",text:"Llegan a la prenda que tengas abierta en la computadora. Ahí eliges el encuadre 3:4 si hace falta."}),
+      errEl,
       grid
     ]);
     document.body.appendChild(h("div",{class:"phone"},[

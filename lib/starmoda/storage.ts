@@ -231,7 +231,11 @@ export async function createUploadTicket(
     method: "POST",
     headers: headers(cfg.key, { "x-upsert": "true" }),
   });
-  if (!r.ok) throw new StarmodaError(`storage_${r.status}`, 502);
+  if (!r.ok) {
+    const e = new StarmodaError(`storage_${r.status}`, 502);
+    e.detail = await detailOf(r);
+    throw e;
+  }
   const data = (await r.json()) as { url?: string };
   if (!data.url) throw new StarmodaError("storage_sin_url", 502);
 

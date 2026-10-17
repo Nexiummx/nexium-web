@@ -17,8 +17,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(ticket);
   } catch (error) {
     if (error instanceof StarmodaError) {
-      if (error.status >= 500) console.error("[starmoda-upload]", error.message);
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      if (error.status >= 500) console.error("[starmoda-upload]", error.message, error.detail || "");
+      return NextResponse.json({ error: error.message, detail: error.detail }, { status: error.status });
     }
     console.error("[starmoda-upload] Error:", error);
     return NextResponse.json({ error: "error_interno" }, { status: 500 });
