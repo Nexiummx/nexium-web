@@ -118,6 +118,15 @@
   .pcam{max-height:none;}
   .pcam .rvideo{max-height:46vh;}
   .pmain > button{padding:14px;font-size:15px;}
+  .psec{margin-top:8px;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px;}
+  .psec h2{margin:0;font-size:15px;font-weight:700;}
+  .pbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .pbtns button{padding:14px;font-size:15px;justify-content:center;}
+  .pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+  .pgrid:empty{display:none;}
+  .pgrid figure{margin:0;position:relative;aspect-ratio:3/4;border-radius:var(--r);overflow:hidden;background:var(--sunk);}
+  .pgrid img{width:100%;height:100%;object-fit:cover;display:block;}
+  .pgrid .chip{position:absolute;left:6px;bottom:6px;}
   .sizetools{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;align-items:end;margin-bottom:14px;}
   .sizeadd{display:flex;gap:8px;}
   .sizeadd input{flex:1;}
@@ -508,6 +517,7 @@
     fits:["Ajustado","Regular","Holgado","Oversize"]
   };
 
+  var PHOTO_BUCKET="starmoda-fotos";
   var PHOTO={ratio:3/4,tol:0.035,minW:1200,minH:1600,maxH:2400,maxBytes:2*1024*1024,warnBytes:600*1024};
   var KEY="starmoda-captura-v2", OLDKEY="starmoda-captura-v1";
   var state={products:[],active:null,vocab:null,vocabT:0,deleted:{}};
@@ -1113,6 +1123,43 @@
     });
   }
   var photoRepaint=null;
+  function renamePhotos(p){
+    var base=slug(p.title)||"prenda",n={};
+    p.photos.forEach(function(f){
+      var k=f.color?slug(f.color):"_";
+      n[k]=(n[k]||0)+1;
+      f.target=base+(f.color?"-"+slug(f.color):"")+"-"+n[k]+"."+(f.ext||"jpg");
+    });
+  }
+  /* keepKey: al mover el encuadre de una foto que aún no se sube, se
+     reemplaza en su lugar; nunca se sube nada desde aquí. */
+  function inspect(file,pos,keepKey,trusted){
+    var ext=(file.name.split(".").pop()||"").toLowerCase();
+    var key=keepKey||Math.random().toString(36).slice(2,8);
+    origFiles[key]=file;
+    return loadImage(file).then(function(img){
+      if(!img) return {name:file.name,ext:ext,w:0,h:0,bytes:file.size,url:"",level:"bad",notes:[],crop:null,
+        issues:["No se pudo leer la imagen"+(ext==="heic"||ext==="heif"?" — HEIC no sirve, cambia la cámara a 'Más compatible' o mándala por WhatsApp":"")],
+        color:"",target:"",key:key,src:""};
+      var W=img.naturalWidth,H=img.naturalHeight;
+      /* trusted: ya viene comprimida (del celular); se queda tal cual si
+         ya es 3:4, para no volver a comprimirla ni subirla dos veces. */
+      var keep=(ext==="jpg"||ext==="jpeg")&&Math.abs(W/H-PHOTO.ratio)<=0.005&&H<=PHOTO.maxH&&file.size<=(trusted?PHOTO.maxBytes:PHOTO.warnBytes);
+      var job=keep?Promise.resolve({blob:file,w:W,h:H,axis:"",scaled:false}):processImage(img,pos||"center");
+      return job.then(function(o){
+        var notes=[],issues=[],level="ok";
+        if(o.axis) notes.push("Recortada a 3:4 (llegó en "+W+"×"+H+"). Revisa el encuadre.");
+        else if(o.scaled) notes.push("Reducida de "+W+"×"+H+".");
+        if(!keep&&ext!=="jpg"&&ext!=="jpeg") notes.push("Convertida a JPG.");
+        if(o.w<PHOTO.minW||o.h<PHOTO.minH){ issues.push("Queda de "+o.w+"×"+o.h+" px; lo ideal es 1200×1600 o más, puede verse borrosa"); level="warn"; }
+        if(!o.blob||o.blob.size>PHOTO.maxBytes){ issues.push("No se pudo dejar en menos de 2 MB"); level="bad"; }
+        if(o.blob){ upFiles[key]=o.blob; blobs.put(key,o.blob,file); askPersist(); }
+        return {name:file.name,ext:"jpg",w:o.w,h:o.h,bytes:o.blob?o.blob.size:file.size,
+          url:o.blob?URL.createObjectURL(o.blob):"",level:level,issues:issues,notes:notes,
+          crop:o.axis?{axis:o.axis,pos:pos||"center"}:null,color:"",target:"",key:key,src:""};
+      });
+    });
+  }
   function paintPhotosIfOpen(p){ if(photoRepaint&&cur()===p) photoRepaint(); }
 
   /* ---------- fotos: recorte y compresión en el navegador ---------- */
@@ -1124,13 +1171,14 @@
       img.src=url;
     });
   }
-  /* Recorta a 3:4 (pos: start/center/end sobre el eje que sobra), reduce a
+  /* Recorta a 3:4 (pos: start/center/end sobre el eje que sobra; "none" no
+     recorta, lo usa el celular para que el encuadre se elija después), reduce a
      2400 px de alto como máximo y guarda en JPG bajando la calidad hasta
      quedar en menos de 2 MB. El fondo blanco cubre la transparencia de PNG. */
   function processImage(img,pos){
     var W=img.naturalWidth,H=img.naturalHeight,t=PHOTO.ratio;
     var x=0,y=0,cw=W,ch=H,axis="";
-    if(Math.abs(W/H-t)>0.005){
+    if(pos!=="none"&&Math.abs(W/H-t)>0.005){
       if(W/H>t){ cw=Math.round(H*t); axis="x"; x=pos==="start"?0:pos==="end"?W-cw:Math.round((W-cw)/2); }
       else { ch=Math.round(W/t); axis="y"; y=pos==="start"?0:pos==="end"?H-ch:Math.round((H-ch)/2); }
     }
@@ -1892,14 +1940,7 @@
 
     /* 4 fotos */
     var shots=h("div",{class:"shots"});
-    function renameAll(){
-      var base=slug(p.title)||"prenda",n={};
-      p.photos.forEach(function(f){
-        var k=f.color?slug(f.color):"_";
-        n[k]=(n[k]||0)+1;
-        f.target=base+(f.color?"-"+slug(f.color):"")+"-"+n[k]+"."+(f.ext||"jpg");
-      });
-    }
+    function renameAll(){ renamePhotos(p); }
     function paintShots(){
       shots.innerHTML="";
       p.photos.forEach(function(f,i){
@@ -1942,33 +1983,6 @@
             }})
           ])
         ]));
-      });
-    }
-    /* keepKey: al mover el encuadre de una foto que aún no se sube, se
-       reemplaza en su lugar; nunca se sube nada desde aquí. */
-    function inspect(file,pos,keepKey){
-      var ext=(file.name.split(".").pop()||"").toLowerCase();
-      var key=keepKey||Math.random().toString(36).slice(2,8);
-      origFiles[key]=file;
-      return loadImage(file).then(function(img){
-        if(!img) return {name:file.name,ext:ext,w:0,h:0,bytes:file.size,url:"",level:"bad",notes:[],crop:null,
-          issues:["No se pudo leer la imagen"+(ext==="heic"||ext==="heif"?" — HEIC no sirve, cambia la cámara a 'Más compatible' o mándala por WhatsApp":"")],
-          color:"",target:"",key:key,src:""};
-        var W=img.naturalWidth,H=img.naturalHeight;
-        var keep=(ext==="jpg"||ext==="jpeg")&&Math.abs(W/H-PHOTO.ratio)<=0.005&&H<=PHOTO.maxH&&file.size<=PHOTO.warnBytes;
-        var job=keep?Promise.resolve({blob:file,w:W,h:H,axis:"",scaled:false}):processImage(img,pos||"center");
-        return job.then(function(o){
-          var notes=[],issues=[],level="ok";
-          if(o.axis) notes.push("Recortada a 3:4 (llegó en "+W+"×"+H+"). Revisa el encuadre.");
-          else if(o.scaled) notes.push("Reducida de "+W+"×"+H+".");
-          if(!keep&&ext!=="jpg"&&ext!=="jpeg") notes.push("Convertida a JPG.");
-          if(o.w<PHOTO.minW||o.h<PHOTO.minH){ issues.push("Queda de "+o.w+"×"+o.h+" px; lo ideal es 1200×1600 o más, puede verse borrosa"); level="warn"; }
-          if(!o.blob||o.blob.size>PHOTO.maxBytes){ issues.push("No se pudo dejar en menos de 2 MB"); level="bad"; }
-          if(o.blob){ upFiles[key]=o.blob; blobs.put(key,o.blob,file); askPersist(); }
-          return {name:file.name,ext:"jpg",w:o.w,h:o.h,bytes:o.blob?o.blob.size:file.size,
-            url:o.blob?URL.createObjectURL(o.blob):"",level:level,issues:issues,notes:notes,
-            crop:o.axis?{axis:o.axis,pos:pos||"center"}:null,color:"",target:"",key:key,src:""};
-        });
       });
     }
     function addFiles(list){
@@ -3071,6 +3085,31 @@
     }
     receiveModal(code);
   }
+  /* Foto del celular: ya está en el bucket (cel<token>/…). Se baja y entra a
+     la prenda abierta como si se hubiera elegido aquí; si ya viene en 3:4 se
+     queda con esa misma dirección y no se vuelve a subir. Una a la vez, en
+     el orden en que se tomaron. */
+  var photoChain=Promise.resolve();
+  function remotePhoto(path){
+    var src=REMOTE.url.replace(/\/$/,"")+"/storage/v1/object/public/"+PHOTO_BUCKET+"/"+path;
+    photoChain=photoChain.then(function(){
+      var p=cur();
+      if(!p){ toast("Llegó una foto del celular, pero no hay ninguna prenda abierta",true); return; }
+      return fetch(src).then(function(r){
+        if(!r.ok) throw new Error("HTTP "+r.status);
+        return r.blob();
+      }).then(function(b){
+        var file=new File([b],"celular.jpg",{type:"image/jpeg"});
+        return inspect(file,"center",null,true).then(function(f){
+          if(upFiles[f.key]===file){ f.src=src; rememberUpload(f.key,src); }
+          f.name="Celular";
+          p.photos.push(f); p.demo=false; renamePhotos(p);
+          save(); paintPhotosIfOpen(p); paintPanel(); paintList();
+          toast("Foto del celular agregada a «"+(p.title||"Prenda sin nombre")+"»");
+        });
+      }).catch(function(){ toast("No se pudo traer una foto del celular",true); });
+    });
+  }
   function pollOnce(){
     if(!pairValid()||!getCode()||polling) return Promise.resolve();
     polling=true;
@@ -3080,6 +3119,7 @@
         pair.last=Math.max(pair.last||0,+r.id);
         var was=Date.now()-phoneSeen<120000; phoneSeen=Date.now();
         if(r.tipo==="hola"){ if(!was) toast("Celular conectado: ya puedes escanear"); }
+        else if(r.tipo==="foto") remotePhoto(r.codigo);
         else if(r.codigo) remoteCode(r.codigo);
       });
       if(rows&&rows.length) savePair();
@@ -3125,7 +3165,8 @@
       h("ol",{class:"steps-ol"},[
         h("li",{text:"Abre la cámara del celular y apunta a este QR (o abre el enlace)."}),
         h("li",{text:"Toca Iniciar cámara y apunta a los códigos de barras."}),
-        h("li",{text:"Cada código llega aquí: a Recibir, o al campo de código de la variante donde estés parado."})
+        h("li",{text:"Cada código llega aquí: a Recibir, o al campo de código de la variante donde estés parado."}),
+        h("li",{text:"Las fotos que tomes con el celular llegan a la prenda que tengas abierta aquí."})
       ]),
       box, status,
       h("div",{class:"rscan"},[linkEl,ibtn("","copy","Copiar enlace",function(){ try{ navigator.clipboard.writeText(linkEl.value); toast("Enlace copiado"); }catch(e){ linkEl.select(); } })])
@@ -3200,6 +3241,79 @@
       }).catch(function(){}).then(function(){ setTimeout(loop,250); });
     }
     manual.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); got(manual.value); manual.value=""; } });
+
+    /* Fotos: se reducen aquí (sin recortar: el encuadre se elige en la
+       computadora), se suben al bucket con una URL firmada que pide el
+       enlace del QR, y se avisa a la computadora con su ruta. */
+    var photoQ=[], photoBusy=false, photoN=0;
+    var grid=h("div",{class:"pgrid"});
+    var photoCount=h("span",{class:"muted",text:""});
+    function mkInput(capture){
+      var el=h("input",{type:"file",accept:"image/*",multiple:capture?null:"multiple",capture:capture?"environment":null,style:"display:none"});
+      el.addEventListener("change",function(){ addPhotos(el.files); el.value=""; });
+      return el;
+    }
+    var shotIn=mkInput(true), galIn=mkInput(false);
+    function setChip(it,cls,txt){ it.chip.className="chip "+cls; it.chip.textContent=txt; }
+    function addPhotos(list){
+      Array.prototype.slice.call(list||[]).forEach(function(file){
+        if(!file.size) return;
+        var chip=h("span",{class:"chip rec",text:"preparando"});
+        var img=h("img",{alt:""});
+        var it={file:file,chip:chip,img:img,tries:0};
+        grid.insertBefore(h("figure",{},[img,chip]),grid.firstChild);
+        photoQ.push(it);
+      });
+      pumpPhotos();
+    }
+    function uploadPhoto(it){
+      var name="foto-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,6)+".jpg";
+      return loadImage(it.file).then(function(img){
+        if(!img) throw new Error("ilegible");
+        return processImage(img,"none");
+      }).then(function(o){
+        if(!o.blob||o.blob.size>PHOTO.maxBytes) throw new Error("grande");
+        if(!it.img.src) it.img.src=URL.createObjectURL(o.blob);
+        setChip(it,"rec","subiendo");
+        return fetch("/api/starmoda/upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:token,fileName:name})})
+          .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(t){ if(!r.ok){ var e=new Error(t.error||("HTTP "+r.status)); throw e; } return t; }); })
+          .then(function(t){
+            var fd=new FormData(); fd.append("cacheControl","31536000"); fd.append("",o.blob,name);
+            return fetch(t.uploadUrl,{method:"PUT",headers:{apikey:REMOTE.key,Authorization:"Bearer "+REMOTE.key,"x-upsert":"true"},body:fd})
+              .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return send("foto",t.path); });
+          });
+      });
+    }
+    function pumpPhotos(){
+      if(photoBusy||!photoQ.length||gone) return;
+      photoBusy=true;
+      var it=photoQ[0];
+      uploadPhoto(it).then(function(){
+        photoQ.shift(); photoBusy=false; photoN++;
+        setChip(it,"ok","enviada"); photoCount.textContent=photoN+" enviada"+(photoN>1?"s":"");
+        setPill("up","Conectado"); pumpPhotos();
+      },function(e){
+        photoBusy=false;
+        var m=(e&&e.message)||"";
+        if(/sesion_vencida/.test(m)){ gone=true; setPill("down","Enlace vencido"); lastEl.textContent="Este enlace venció. En la computadora toca Celular › Nuevo enlace y vuelve a escanear el QR."; lastEl.className="plast err"; setChip(it,"req","no se envió"); return; }
+        if(m==="ilegible"||m==="grande"){ photoQ.shift(); setChip(it,"req",m==="ilegible"?"no se pudo leer":"muy pesada"); pumpPhotos(); return; }
+        if(/storage_no_configurado/.test(m)){ photoQ.length=0; setChip(it,"req","falta configurar"); lastEl.textContent="La subida de fotos no está configurada en Vercel (SUPABASE_SERVICE_ROLE_KEY)."; lastEl.className="plast err"; return; }
+        it.tries++;
+        if(it.tries>=4){ photoQ.shift(); setChip(it,"req","no se envió"); pumpPhotos(); return; }
+        setChip(it,"rec","reintentando"); setPill("down","Sin conexión, reintentando…");
+        setTimeout(pumpPhotos,2500*it.tries);
+      });
+    }
+    var photoSec=h("section",{class:"psec"},[
+      h("div",{style:"display:flex;justify-content:space-between;align-items:baseline;gap:8px"},[h("h2",{text:"Fotos de la prenda"}),photoCount]),
+      h("div",{class:"pbtns"},[
+        ibtn("primary","camera","Tomar foto",function(){ shotIn.click(); }),
+        ibtn("","image","Galería",function(){ galIn.click(); })
+      ]),
+      shotIn, galIn,
+      h("p",{class:"hint",style:"margin:0",text:"Llegan a la prenda que tengas abierta en la computadora. Ahí eliges el encuadre 3:4 si hace falta."}),
+      grid
+    ]);
     document.body.appendChild(h("div",{class:"phone"},[
       h("header",{class:"top"},[
         h("div",{class:"brand"},[h("div",{class:"logo",html:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3l-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/></svg>'}),
@@ -3211,11 +3325,12 @@
         lastEl, cam, camBtn,
         h("div",{class:"rscan"},[manual,h("button",{text:"Enviar",onclick:function(){ got(manual.value); manual.value=""; }})]),
         h("p",{class:"hint",style:"margin:6px 0 10px",text:"Lo que escanees aparece en la computadora: en Recibir mercancía o en el campo de código de la variante donde estés parado."}),
-        list
+        list,
+        photoSec
       ])
     ]));
     send("hola","").then(function(){ setPill("up","Conectado"); },function(e){
-      if(/sesion_vencida/.test(e.message)){ gone=true; setPill("down","Enlace vencido"); lastEl.textContent="Este enlace venció o no existe. En la computadora toca Celular › Nuevo enlace."; lastEl.className="plast err"; camBtn.disabled=true; }
+      if(/sesion_vencida/.test(e.message)){ gone=true; setPill("down","Enlace vencido"); lastEl.textContent="Este enlace venció o no existe. En la computadora toca Celular › Nuevo enlace."; lastEl.className="plast err"; camBtn.disabled=true; photoSec.hidden=true; }
       else setPill("down","Sin conexión");
     });
   }

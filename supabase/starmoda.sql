@@ -164,7 +164,8 @@ begin
   return json_build_object('token', v_token, 'expira', v_expira);
 end $$;
 
--- Celular: manda un código (o un "hola" al abrir el enlace).
+-- Celular: manda un código, una foto ya subida al bucket (su ruta
+-- cel<token>/…jpg) o un "hola" al abrir el enlace.
 create or replace function public.starmoda_scan_enviar(p_token text, p_codigo text, p_tipo text default 'codigo')
 returns bigint
 language plpgsql
@@ -177,18 +178,32 @@ begin
     perform pg_sleep(0.3);
     raise exception 'sesion_vencida' using errcode = '28000';
   end if;
-  if p_tipo not in ('codigo', 'hola') then raise exception 'tipo_invalido'; end if;
+  if p_tipo not in ('codigo', 'foto', 'hola') then raise exception 'tipo_invalido'; end if;
   if p_tipo = 'codigo' and coalesce(p_codigo, '') !~ '^[A-Za-z0-9.\-]{4,30}$' then
     raise exception 'codigo_invalido_formato';
+  end if;
+  if p_tipo = 'foto' and coalesce(p_codigo, '') !~ ('^cel' || p_token || '/[a-z0-9-]{1,120}\.jpg$') then
+    raise exception 'foto_invalida';
   end if;
   if (select count(*) from starmoda_scan where token = p_token and creado > now() - interval '10 seconds') > 60 then
     raise exception 'demasiados_codigos';
   end if;
   insert into starmoda_scan (token, tipo, codigo)
-       values (p_token, p_tipo, case when p_tipo = 'codigo' then p_codigo else '' end)
+       values (p_token, p_tipo, case when p_tipo = 'hola' then '' else p_codigo end)
     returning id into v_id;
   return v_id;
 end $$;
+
+-- Servidor (Vercel, con la llave secreta): ¿el enlace del celular sigue
+-- vigente? Así firma la subida de una foto sin pedir el código de acceso.
+create or replace function public.starmoda_scan_valida(p_token text)
+returns boolean
+language sql
+security definer
+set search_path = public, extensions
+as $$
+  select exists (select 1 from starmoda_scan_sesion where token = p_token and expira > now());
+$$;
 
 -- Computadora: lee lo que mandó el celular desde el último id visto.
 create or replace function public.starmoda_scan_leer(p_code text, p_token text, p_desde bigint default 0)
@@ -213,6 +228,8 @@ revoke all on function public.starmoda_scan_leer(text, text, bigint) from public
 grant execute on function public.starmoda_scan_abrir(text) to anon, authenticated;
 grant execute on function public.starmoda_scan_enviar(text, text, text) to anon, authenticated;
 grant execute on function public.starmoda_scan_leer(text, text, bigint) to anon, authenticated;
+revoke all on function public.starmoda_scan_valida(text) from public, anon, authenticated;
+grant execute on function public.starmoda_scan_valida(text) to service_role;
 
 -- ============================================================
 -- CÓDIGOS: cambia los textos entre comillas por códigos largos y

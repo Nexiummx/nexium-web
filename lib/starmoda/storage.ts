@@ -26,6 +26,8 @@ export class StarmodaError extends Error {
 
 export interface UploadRequest {
   code?: unknown;
+  /** Token del celular ligado por QR (en lugar del código de acceso) */
+  token?: unknown;
   productId?: unknown;
   fileName?: unknown;
 }
@@ -189,12 +191,41 @@ export async function checkSetup(
   return out;
 }
 
+/** Carpeta de las fotos que manda un celular: cel<token>. */
+export function phoneFolder(token: unknown): string {
+  if (typeof token !== "string" || !/^[a-f0-9]{24}$/.test(token)) {
+    throw new StarmodaError("sesion_vencida", 403);
+  }
+  return `cel${token}`;
+}
+
+/** El celular no conoce el código de acceso: se valida su enlace del QR. */
+async function checkPhoneToken(cfg: Config, token: string): Promise<void> {
+  const r = await fetch(`${cfg.url}/rest/v1/rpc/starmoda_scan_valida`, {
+    method: "POST",
+    headers: headers(cfg.key, { "Content-Type": "application/json" }),
+    body: JSON.stringify({ p_token: token }),
+  });
+  if (!r.ok) {
+    const e = new StarmodaError(`supabase_${r.status}`, 502);
+    e.detail = await detailOf(r);
+    throw e;
+  }
+  if ((await r.json()) !== true) throw new StarmodaError("sesion_vencida", 403);
+}
+
 export async function createUploadTicket(
   body: UploadRequest,
   cfg: Config = getConfig()
 ): Promise<UploadTicket> {
-  const path = buildPath(body.productId, body.fileName);
-  await checkCode(cfg, body.code);
+  let path: string;
+  if (body.token !== undefined) {
+    path = buildPath(phoneFolder(body.token), body.fileName);
+    await checkPhoneToken(cfg, body.token as string);
+  } else {
+    path = buildPath(body.productId, body.fileName);
+    await checkCode(cfg, body.code);
+  }
 
   const r = await fetch(`${cfg.url}/storage/v1/object/upload/sign/${BUCKET}/${path}`, {
     method: "POST",

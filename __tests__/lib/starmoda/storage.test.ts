@@ -72,6 +72,28 @@ describe("createUploadTicket", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it("celular: valida el enlace del QR y sube a cel<token>/", async () => {
+    const token = "a".repeat(24);
+    fetchMock
+      .mockResolvedValueOnce(res(200, true))
+      .mockResolvedValueOnce(res(200, { url: `/object/upload/sign/starmoda-fotos/cel${token}/foto-1.jpg?token=T` }));
+
+    const t = await createUploadTicket({ token, fileName: "foto-1.jpg" }, cfg);
+
+    expect(fetchMock.mock.calls[0][0]).toBe("https://abc.supabase.co/rest/v1/rpc/starmoda_scan_valida");
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ p_token: token });
+    expect(t.path).toBe(`cel${token}/foto-1.jpg`);
+  });
+
+  it("celular: enlace vencido o con formato raro", async () => {
+    fetchMock.mockResolvedValueOnce(res(200, false));
+    await expect(createUploadTicket({ token: "b".repeat(24), fileName: "foto-1.jpg" }, cfg)).rejects.toMatchObject({
+      message: "sesion_vencida", status: 403,
+    });
+    await expect(createUploadTicket({ token: "../x", fileName: "foto-1.jpg" }, cfg)).rejects.toMatchObject({ status: 403 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it("rechaza un código vacío sin llamar a Supabase", async () => {
     await expect(
       createUploadTicket({ code: "", productId: "p1234", fileName: "a.jpg" }, cfg)
