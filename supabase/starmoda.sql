@@ -124,6 +124,97 @@ on conflict (id) do update
       allowed_mime_types = excluded.allowed_mime_types;
 
 -- ============================================================
+-- Star Moda · Celular como escáner (enlace por QR)
+-- La computadora abre una sesión con su código de acceso y muestra un QR
+-- con un token aleatorio. El celular solo conoce ese token: con él puede
+-- MANDAR códigos de barras, pero no leer el catálogo. La computadora lee
+-- la cola con su código de acceso. La sesión vence en 12 horas.
+-- ============================================================
+create table if not exists public.starmoda_scan_sesion (
+  token       text primary key,
+  creado      timestamptz not null default now(),
+  expira      timestamptz not null,
+  creado_por  text
+);
+create table if not exists public.starmoda_scan (
+  id      bigint generated always as identity primary key,
+  token   text not null references public.starmoda_scan_sesion(token) on delete cascade,
+  tipo    text not null default 'codigo',
+  codigo  text not null default '',
+  creado  timestamptz not null default now()
+);
+create index if not exists starmoda_scan_token_idx on public.starmoda_scan (token, id);
+alter table public.starmoda_scan_sesion enable row level security;
+alter table public.starmoda_scan        enable row level security;
+revoke all on public.starmoda_scan_sesion, public.starmoda_scan from anon, authenticated;
+
+-- Computadora: abre una sesión nueva (y borra las vencidas).
+create or replace function public.starmoda_scan_abrir(p_code text)
+returns json
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare v_quien text; v_token text; v_expira timestamptz := now() + interval '12 hours';
+begin
+  v_quien := starmoda_quien(p_code);
+  delete from starmoda_scan_sesion where expira < now() - interval '1 day';
+  v_token := encode(extensions.gen_random_bytes(12), 'hex');
+  insert into starmoda_scan_sesion (token, expira, creado_por) values (v_token, v_expira, v_quien);
+  return json_build_object('token', v_token, 'expira', v_expira);
+end $$;
+
+-- Celular: manda un código (o un "hola" al abrir el enlace).
+create or replace function public.starmoda_scan_enviar(p_token text, p_codigo text, p_tipo text default 'codigo')
+returns bigint
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare v_id bigint;
+begin
+  if not exists (select 1 from starmoda_scan_sesion where token = p_token and expira > now()) then
+    perform pg_sleep(0.3);
+    raise exception 'sesion_vencida' using errcode = '28000';
+  end if;
+  if p_tipo not in ('codigo', 'hola') then raise exception 'tipo_invalido'; end if;
+  if p_tipo = 'codigo' and coalesce(p_codigo, '') !~ '^[A-Za-z0-9.\-]{4,30}$' then
+    raise exception 'codigo_invalido_formato';
+  end if;
+  if (select count(*) from starmoda_scan where token = p_token and creado > now() - interval '10 seconds') > 60 then
+    raise exception 'demasiados_codigos';
+  end if;
+  insert into starmoda_scan (token, tipo, codigo)
+       values (p_token, p_tipo, case when p_tipo = 'codigo' then p_codigo else '' end)
+    returning id into v_id;
+  return v_id;
+end $$;
+
+-- Computadora: lee lo que mandó el celular desde el último id visto.
+create or replace function public.starmoda_scan_leer(p_code text, p_token text, p_desde bigint default 0)
+returns table (id bigint, tipo text, codigo text, creado timestamptz)
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+begin
+  perform starmoda_quien(p_code);
+  return query
+    select s.id, s.tipo, s.codigo, s.creado
+      from starmoda_scan s
+     where s.token = p_token and s.id > coalesce(p_desde, 0)
+     order by s.id
+     limit 200;
+end $$;
+
+revoke all on function public.starmoda_scan_abrir(text) from public;
+revoke all on function public.starmoda_scan_enviar(text, text, text) from public;
+revoke all on function public.starmoda_scan_leer(text, text, bigint) from public;
+grant execute on function public.starmoda_scan_abrir(text) to anon, authenticated;
+grant execute on function public.starmoda_scan_enviar(text, text, text) to anon, authenticated;
+grant execute on function public.starmoda_scan_leer(text, text, bigint) to anon, authenticated;
+
+-- ============================================================
 -- CÓDIGOS: cambia los textos entre comillas por códigos largos y
 -- difíciles de adivinar (ej. "sm-7Kq2-vX9p-Lm4t"). Uno por persona,
 -- así el historial dice quién guardó.

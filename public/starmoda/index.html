@@ -103,6 +103,25 @@
   .hist li.future{opacity:.6;}
   .hist li button{padding:6px 11px;font-size:12.5px;flex:none;}
 
+  #btnPhone.live{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,var(--line));background:var(--ok-soft);}
+  .qrbox{width:240px;height:240px;margin:6px auto 12px;background:#fff;border-radius:var(--r);padding:8px;display:grid;place-items:center;color:#000;font-size:12px;}
+  .qrbox svg{width:100%;height:100%;}
+  .steps-ol{margin:0 0 6px;padding-left:20px;font-size:13.5px;color:var(--ink-2);line-height:1.6;}
+  .phone .top{position:sticky;}
+  .pmain{padding:16px 14px 40px;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:12px;}
+  .pstat{display:flex;align-items:baseline;gap:10px;}
+  .pcount{font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1;}
+  .pstat span{color:var(--muted);font-size:13px;}
+  .plast{padding:14px;border-radius:var(--r);background:var(--sunk);font-family:var(--mono);font-size:18px;font-weight:600;text-align:center;word-break:break-all;}
+  .plast.ok{background:var(--ok-soft);color:var(--ok);}
+  .plast.err{background:var(--req-soft);color:var(--req);font-family:var(--body);font-size:14px;}
+  .pcam{max-height:none;}
+  .pcam .rvideo{max-height:46vh;}
+  .pmain > button{padding:14px;font-size:15px;}
+  .sizetools{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;align-items:end;margin-bottom:14px;}
+  .sizeadd{display:flex;gap:8px;}
+  .sizeadd input{flex:1;}
+  @media (max-width:860px){.sizetools{grid-template-columns:1fr;}}
   input.bc{font-family:var(--mono);font-size:12.5px;min-width:150px;}
   input.bc.bad{border-color:var(--req);background:var(--req-soft);}
   .modal.wide{max-width:780px;}
@@ -118,7 +137,7 @@
   .rcam{position:relative;border-radius:var(--r);overflow:hidden;background:#000;margin-bottom:12px;max-height:300px;}
   .rcam[hidden]{display:none;}
   .rvideo{width:100%;max-height:300px;object-fit:cover;display:block;}
-  .raim{position:absolute;left:12%;right:12%;top:42%;height:16%;border:2px solid rgba(255,255,255,.85);border-radius:10px;box-shadow:0 0 0 999px rgba(0,0,0,.25);}
+  .raim{position:absolute;left:10%;right:10%;top:28%;height:44%;background:transparent;border:2px solid rgba(255,255,255,.9);border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.28);pointer-events:none;}
   .rnew{border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));background:var(--accent-soft);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:12px;}
   .rnew .row{margin-bottom:10px;}
   .rnew input,.rnew select{background:var(--surface);}
@@ -391,6 +410,7 @@
       <button class="ghost icon" id="btnRedo" data-ic="redo" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer" disabled></button>
       <button class="ghost" id="btnHist" data-ic="history" title="Historial de cambios"><span>Historial</span></button>
     </div>
+    <button class="ghost" id="btnPhone" data-ic="phone" title="Ligar un celular como escáner"><span>Celular</span></button>
     <button id="btnRecv" data-ic="scan" title="Recibir mercancía con escáner o cámara"><span>Recibir</span></button>
     <button id="btnExport" data-ic="download" title="Exportar"><span>Exportar</span></button>
     <button class="primary" id="btnSave" data-ic="cloud" title="Guardar en la nube"><span>Guardar en la nube</span><em class="badge" id="saveBadge"></em></button>
@@ -524,6 +544,14 @@
     if(c && V().systems[c.sys]) return V().systems[c.sys];
     return V().systems["Letras"]||[];
   }
+  /* Sistema de tallas de una prenda: el que se eligió para ella, o el de su
+     categoría, o Letras. */
+  function sizeSysOf(p){
+    if(p&&p.sizeSys&&V().systems[p.sizeSys]) return p.sizeSys;
+    var c=p&&cat(p.category);
+    return c&&V().systems[c.sys]?c.sys:"Letras";
+  }
+  function sizesOf(p){ return V().systems[sizeSysOf(p)]||[]; }
   function isNewColor(n){ var c=color(n); return !!(c && !c.tema); }
   function isNewCat(n){ var c=cat(n); return !!(c && c.nuevo); }
   function isNewTag(t){ var d=tagDef(t); return !!(d && d.nuevo); }
@@ -545,7 +573,7 @@
     return {id:uid(),title:"",category:"",body:"",price:"",compareAt:"",
       colors:[],sizes:[],variants:{},tags:[],
       material:"",fit:"",care:"",modelInfo:"",measurements:"",origin:"",
-      photos:[],notes:"",demo:false,style:"",vendor:""};
+      photos:[],notes:"",demo:false,style:"",vendor:"",sizeSys:""};
   }
   function seed(){
     var p=blank(); p.demo=true;
@@ -717,7 +745,7 @@
   var hist={entries:[],pos:-1}, histTimer=null, histMute=false, histPending=false, histReady=false;
   var FIELD={title:"nombre",category:"categoría",body:"descripción",price:"precio",compareAt:"precio antes",
     colors:"colores",sizes:"tallas",variants:"inventario y SKU",tags:"etiquetas",material:"material",fit:"fit",
-    care:"cuidados",style:"estilo",vendor:"proveedor",modelInfo:"info de la modelo",measurements:"medidas",origin:"origen",photos:"fotos",notes:"notas"};
+    care:"cuidados",sizeSys:"sistema de tallas",style:"estilo",vendor:"proveedor",modelInfo:"info de la modelo",measurements:"medidas",origin:"origen",photos:"fotos",notes:"notas"};
   function snapshot(){
     var ps=clone(state.products); ps.forEach(function(p){ delete p._t; (p.photos||[]).forEach(function(f){ delete f.url; }); });
     return JSON.stringify({products:ps,vocab:state.vocab,deleted:state.deleted,active:state.active});
@@ -1544,6 +1572,7 @@
     cloud:'<path d="M17.5 19H7a5 5 0 1 1 1.1-9.9A6 6 0 0 1 19.6 11 4 4 0 0 1 17.5 19z"/><path d="M12 12v6"/><path d="M9.5 14.5L12 12l2.5 2.5"/>',
     scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8"/><path d="M10 8v8"/><path d="M13 8v8"/><path d="M17 8v8"/>',
     camera:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+    phone:'<rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/>',
     dots:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
     shirt:'<path d="M20.4 3.5L16 2a4 4 0 0 1-8 0L3.6 3.5a2 2 0 0 0-1.3 2.2l.6 3.5a1 1 0 0 0 1 .8H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.1a1 1 0 0 0 1-.8l.6-3.5a2 2 0 0 0-1.3-2.2z"/>'
   };
@@ -1647,7 +1676,7 @@
         foot.textContent=totalPieces(p)+" piezas en total";
       });
       if(x.v.qty==="0") qtyIn.classList.add("zero");
-      var bcIn=h("input",{type:"text",class:"mono bc",inputmode:"numeric",value:x.v.barcode||"",placeholder:"escanea aquí",autocomplete:"off"});
+      var bcIn=h("input",{type:"text",class:"mono bc",inputmode:"numeric",value:x.v.barcode||"",placeholder:"escanea aquí o con el celular",autocomplete:"off"});
       function bcMark(){ var b=bcIn.value.trim(); bcIn.classList.toggle("bad",!!b&&!barcodeOk(b)); bcIn.title=b&&!barcodeOk(b)?"El dígito verificador no cuadra: revisa el código":""; }
       bcIn.addEventListener("input",function(){ x.v.barcode=bcIn.value.replace(/\s+/g,""); p.demo=false; bcMark(); save(); paintPanel(); paintList(); });
       bcIn.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); var n=bcIn.closest("tr").nextElementSibling; var nx=n&&n.querySelector("input.bc"); if(nx) nx.focus(); } });
@@ -1735,7 +1764,7 @@
     catSel.addEventListener("change",function(){
       if(catSel.value==="__add"){ catSel.value=p.category||""; vocabModal("cats"); return; }
       p.category=catSel.value; p.demo=false;
-      var allowed=sizesFor(p.category);
+      var allowed=sizesOf(p);
       p.sizes=p.sizes.filter(function(z){ return allowed.indexOf(z)>=0; });
       syncVariants(p); save(); paintForm();
     });
@@ -1775,7 +1804,42 @@
         p.demo=false; syncVariants(p); save(); paintForm();
       },{focus:"colors"});
 
-    var sizeSet=sizesFor(p.category);
+    var sizeSet=sizesOf(p), curSys=sizeSysOf(p);
+    /* Elegir el sistema de tallas de esta prenda, sin depender de la categoría. */
+    var sysSel=h("select",{class:"syssel"});
+    Object.keys(V().systems).forEach(function(k){ sysSel.appendChild(h("option",{value:k,text:k+" ("+V().systems[k].slice(0,4).join(", ")+(V().systems[k].length>4?"…":"")+")",selected:k===curSys?"selected":null})); });
+    sysSel.appendChild(h("option",{value:"__new",text:"+ Nuevo sistema de tallas…"}));
+    sysSel.addEventListener("change",function(){
+      var k=sysSel.value;
+      if(k==="__new"){
+        var name=(prompt("Nombre del nuevo sistema de tallas (ej. Dama numérico, Niña, Plus):")||"").trim();
+        if(!name){ sysSel.value=curSys; return; }
+        if(!V().systems[name]) V().systems[name]=[];
+        k=name;
+      }
+      var pool=V().systems[k]||[];
+      var lost=p.sizes.filter(function(z){ return pool.indexOf(z)<0; });
+      var withData=variantList(p).filter(function(x){ return lost.indexOf(x.size)>=0&&((x.v.qty&&x.v.qty!=="0")||x.v.barcode); });
+      if(withData.length&&!confirm("Las tallas "+lost.join(", ")+" no están en "+k+" y tienen piezas o códigos capturados. ¿Cambiar de todos modos? Esas variantes se quitarán.")){ sysSel.value=curSys; return; }
+      p.sizeSys=k; p.sizes=p.sizes.filter(function(z){ return pool.indexOf(z)>=0; });
+      p.demo=false; syncVariants(p); save(); paintForm();
+    });
+    var newSizeIn=h("input",{type:"text",class:"mono",placeholder:"Nueva talla (ej. 28, 7 (28), 3X)",autocomplete:"off"});
+    function addSize(){
+      var z=newSizeIn.value.trim(); if(!z){ newSizeIn.focus(); return; }
+      var sys=sizeSysOf(p), pool=V().systems[sys];
+      if(pool.indexOf(z)<0) pool.push(z);
+      if(p.sizes.indexOf(z)<0) p.sizes.push(z);
+      p.sizes.sort(function(a,b){ return pool.indexOf(a)-pool.indexOf(b); });
+      p.demo=false; syncVariants(p); save(); paintForm();
+      toast("Talla "+z+" agregada a "+sys);
+      var again=document.querySelector("#sec2 .sizeadd input"); if(again) again.focus();
+    }
+    newSizeIn.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); addSize(); } });
+    var sizeTools=h("div",{class:"sizetools"},[
+      h("label",{class:"f"},[h("span",{text:"Sistema de tallas"}),sysSel]),
+      h("div",{class:"sizeadd"},[newSizeIn,ibtn("","plus","Agregar talla",addSize)])
+    ]);
     var sizePicks=pickRow(
       sizeSet.map(function(s){ return {label:s}; }),
       function(it){ return p.sizes.indexOf(it.label)>=0; },
@@ -1793,7 +1857,8 @@
       h("p",{class:"hint",text:"Los colores con borde punteado todavía no existen en el diseño de la tienda: se verán beige hasta que Nexium los programe."}),
       field("Colores","req",colorPicks),
       h("div",{style:"height:16px"}),
-      field("Tallas","req",sizePicks,p.category?("Sistema: "+(cat(p.category)?cat(p.category).sys:"Letras")):"Elige la categoría para ajustar el sistema de tallas."),
+      sizeTools,
+      field("Tallas","req",sizePicks,"Toca las tallas que llegaron. Si falta una, escríbela arriba y Agregar talla."),
       h("div",{style:"height:18px"}),
       h("span",{class:"kicker",text:"Variantes generadas"}),
       h("div",{style:"height:8px"}),
@@ -2646,10 +2711,10 @@
     if(m) c.push(m[2].trim(),m[1].trim());
     return c.filter(Boolean);
   }
-  function matchSize(raw,catName){
+  function matchSize(raw,catName,poolIn){
     var n=norm(raw); if(!n) return "";
     var al=(V().alias&&V().alias.size)||{};
-    var pool=catName?sizesFor(catName):allSizes();
+    var pool=poolIn||(catName?sizesFor(catName):allSizes());
     if(al[n]&&pool.indexOf(al[n])>=0) return al[n];
     var c=sizeCandidates(raw);
     for(var i=0;i<c.length;i++) for(var j=0;j<pool.length;j++) if(norm(pool[j])===norm(c[i])) return pool[j];
@@ -2815,8 +2880,8 @@
         V().colors.forEach(function(c){ colorSel.appendChild(h("option",{value:c.n,text:c.n,selected:c.n===cv?"selected":null})); });
         colorSel.appendChild(h("option",{value:"__new",text:"+ Color nuevo…",selected:cv?null:"selected"}));
         newColorRow.style.display=colorSel.value==="__new"?"":"none";
-        var pool=catName?sizesFor(catName):allSizes();
-        var sv=sizeSel.value&&sizeSel.value!=="__new"&&pool.indexOf(sizeSel.value)>=0?sizeSel.value:(matchSize(sizeRaw,catName)||(!fromTag&&pool.indexOf(lastRecv.size)>=0?lastRecv.size:""));
+        var pool=p?sizesOf(p):(catName?sizesFor(catName):allSizes());
+        var sv=sizeSel.value&&sizeSel.value!=="__new"&&pool.indexOf(sizeSel.value)>=0?sizeSel.value:(matchSize(sizeRaw,catName,pool)||(!fromTag&&pool.indexOf(lastRecv.size)>=0?lastRecv.size:""));
         sizeSel.innerHTML="";
         pool.forEach(function(z){ sizeSel.appendChild(h("option",{value:z,text:z,selected:z===sv?"selected":null})); });
         sizeSel.appendChild(h("option",{value:"__new",text:"+ Talla nueva…",selected:sv?null:"selected"}));
@@ -2845,11 +2910,11 @@
         }
         if(created||!state.products.some(function(x){ return x.id===state.active; })) state.active=p.id;
         if(!color(cName)) v.colors.push({n:cName,hex:newColorHex.value,ab:(abbr(cName)||"COL").slice(0,4),tema:false,nuevo:true});
-        var order=sizesFor(p.category);
+        var order=sizesOf(p);
         if(order.indexOf(sName)<0){
-          var sys=(cat(p.category)&&cat(p.category).sys)||"Letras";
+          var sys=sizeSysOf(p);
           if(!v.systems[sys]) v.systems[sys]=[];
-          v.systems[sys].push(sName); order=sizesFor(p.category);
+          v.systems[sys].push(sName); order=sizesOf(p);
         }
         if(colorRaw||sizeRaw){
           if(!v.alias||typeof v.alias!=="object") v.alias={};
@@ -2957,13 +3022,202 @@
       logEl
     ],[h("button",{class:"ghost",text:"Deshacer última",onclick:undoLast})]);
     veil.querySelector(".modal").classList.add("wide");
+    recvApi={handle:function(c){ input.focus(); handle(c); }};
     var obs=new MutationObserver(function(){
       if(veil.isConnected) return;
-      obs.disconnect(); stopCam(); recvOpen=false; paintAll();
+      obs.disconnect(); stopCam(); recvOpen=false; recvApi=null; paintAll();
       if(session.pieces) toast(session.pieces+(session.pieces===1?" pieza recibida":" piezas recibidas")+". Recuerda guardar en la nube.");
     });
     obs.observe(document.body,{childList:true});
     setTimeout(function(){ input.focus(); if(firstCode) handle(firstCode); },60);
+  }
+
+  /* ---------- celular como escáner (enlace por QR) ----------
+     La computadora abre una sesión de 12 h y muestra un QR con un token. El
+     celular abre /starmoda#scan=<token>: es solo un escáner, puede mandar
+     códigos pero no ve el catálogo. La computadora revisa la cola cada 1.5 s
+     y cada código va a donde estés: Recibir, el campo de código de una
+     variante, o abre Recibir. */
+  var PAIRKEY="starmoda-celular";
+  var pair=(function(){ try{ return JSON.parse(localStorage.getItem(PAIRKEY))||null; }catch(e){ return null; } })();
+  var phoneSeen=0, pollTimer=null, polling=false, recvApi=null, phoneUi=null;
+  function pairValid(){ return !!(pair&&pair.token&&new Date(pair.expira).getTime()>Date.now()); }
+  function savePair(){ try{ if(pair) localStorage.setItem(PAIRKEY,JSON.stringify(pair)); else localStorage.removeItem(PAIRKEY); }catch(e){} }
+  function phoneUrl(){ return location.origin+"/starmoda#scan="+pair.token; }
+  function loadQR(){
+    if(window.qrcode) return Promise.resolve(window.qrcode);
+    return new Promise(function(res,rej){
+      var sc=document.createElement("script"); sc.src="/starmoda/vendor/qrcode-generator-2.0.4.js";
+      sc.onload=function(){ res(window.qrcode); }; sc.onerror=function(){ rej(new Error("No se pudo cargar el generador de QR.")); };
+      document.head.appendChild(sc);
+    });
+  }
+  function paintPhoneBtn(){
+    var b=document.getElementById("btnPhone"); if(!b) return;
+    var live=pairValid()&&Date.now()-phoneSeen<120000;
+    b.classList.toggle("live",live);
+    b.title=live?"Celular conectado":pairValid()?"Celular ligado (esperando lecturas)":"Ligar un celular como escáner";
+  }
+  function remoteCode(code){
+    if(recvOpen&&recvApi){ recvApi.handle(code); return; }
+    var a=document.activeElement;
+    if(a&&a.classList&&a.classList.contains("bc")){
+      a.value=code; a.dispatchEvent(new Event("input",{bubbles:true}));
+      beep(barcodeOk(code));
+      var tr=a.closest("tr"), n=tr&&tr.nextElementSibling, nx=n&&n.querySelector("input.bc");
+      if(nx) nx.focus();
+      toast("Código "+code+" capturado desde el celular",!barcodeOk(code));
+      return;
+    }
+    receiveModal(code);
+  }
+  function pollOnce(){
+    if(!pairValid()||!getCode()||polling) return Promise.resolve();
+    polling=true;
+    return rpc("starmoda_scan_leer",{p_code:getCode(),p_token:pair.token,p_desde:pair.last||0}).then(function(rows){
+      polling=false;
+      (rows||[]).forEach(function(r){
+        pair.last=Math.max(pair.last||0,+r.id);
+        var was=Date.now()-phoneSeen<120000; phoneSeen=Date.now();
+        if(r.tipo==="hola"){ if(!was) toast("Celular conectado: ya puedes escanear"); }
+        else if(r.codigo) remoteCode(r.codigo);
+      });
+      if(rows&&rows.length) savePair();
+      paintPhoneBtn(); if(phoneUi) phoneUi();
+    },function(){ polling=false; });
+  }
+  function startPolling(){
+    clearTimeout(pollTimer);
+    if(!pairValid()) { paintPhoneBtn(); return; }
+    (function tick(){
+      pollOnce().then(function(){ pollTimer=setTimeout(tick,document.hidden?4000:1500); });
+    })();
+  }
+  function phoneModal(){
+    var box=h("div",{class:"qrbox"}), status=h("div",{class:"rmsg"}), linkEl=h("input",{type:"text",readonly:"readonly",class:"mono"});
+    var veil;
+    function paint(){
+      if(!pairValid()){ status.className="rmsg"; status.textContent="Creando el enlace…"; return; }
+      var live=Date.now()-phoneSeen<120000;
+      status.className="rmsg "+(live?"ok":"");
+      status.textContent=live?("Celular conectado · lo que escanees llega aquí. Vence "+hhmm(new Date(pair.expira))+"."):"Esperando que el celular abra el enlace…";
+    }
+    function show(){
+      linkEl.value=phoneUrl();
+      loadQR().then(function(qrcode){
+        var q=qrcode(0,"M"); q.addData(phoneUrl()); q.make();
+        box.innerHTML=q.createSvgTag({cellSize:6,margin:2,scalable:true});
+      }).catch(function(e){ box.textContent=e.message; });
+      paint(); startPolling();
+    }
+    function open(){
+      if(!getCode()){ veil&&veil.remove(); codeModal(); return; }
+      status.textContent="Creando el enlace…";
+      rpc("starmoda_scan_abrir",{p_code:getCode()}).then(function(r){
+        pair={token:r.token,expira:r.expira,last:0}; phoneSeen=0; savePair(); show();
+      },function(e){
+        status.className="rmsg err";
+        status.textContent=/function|PGRST202|does not exist/i.test(e.message)?"Falta correr el SQL del celular en Supabase (starmoda_scan_abrir).":(e.badCode?"Código de acceso no válido.":"No se pudo crear el enlace: "+e.message);
+      });
+    }
+    phoneUi=paint;
+    veil=modal("Escanear con el celular",[
+      h("ol",{class:"steps-ol"},[
+        h("li",{text:"Abre la cámara del celular y apunta a este QR (o abre el enlace)."}),
+        h("li",{text:"Toca Iniciar cámara y apunta a los códigos de barras."}),
+        h("li",{text:"Cada código llega aquí: a Recibir, o al campo de código de la variante donde estés parado."})
+      ]),
+      box, status,
+      h("div",{class:"rscan"},[linkEl,ibtn("","copy","Copiar enlace",function(){ try{ navigator.clipboard.writeText(linkEl.value); toast("Enlace copiado"); }catch(e){ linkEl.select(); } })])
+    ],[
+      h("button",{class:"ghost",text:"Nuevo enlace",onclick:function(){ open(); }}),
+      h("button",{class:"ghost danger",text:"Desligar celular",onclick:function(){ pair=null; savePair(); clearTimeout(pollTimer); phoneSeen=0; paintPhoneBtn(); veil.remove(); toast("Celular desligado"); }})
+    ]);
+    var obs=new MutationObserver(function(){ if(!veil.isConnected){ obs.disconnect(); phoneUi=null; } });
+    obs.observe(document.body,{childList:true});
+    if(pairValid()) show(); else open();
+  }
+
+  /* Pantalla del celular: solo escáner. */
+  function phoneMode(token){
+    document.title="Escáner · Star Moda";
+    /* Quita la app de captura pero conserva estilos y scripts (viven en el body). */
+    Array.prototype.slice.call(document.body.children).forEach(function(el){ if(!/^(STYLE|LINK|SCRIPT|TITLE)$/.test(el.tagName)) el.remove(); });
+    var sent=0, queue=[], sending=false, lastCam={code:"",seen:0}, stream=null, det=null, gone=false;
+    var pill=h("span",{class:"sync local"},[h("b",{text:"•"}),document.createTextNode(" Conectando…")]);
+    var countEl=h("b",{class:"pcount",text:"0"});
+    var lastEl=h("div",{class:"plast",text:"Toca Iniciar cámara y apunta al código de barras."});
+    var video=h("video",{playsinline:"playsinline",muted:"muted",autoplay:"autoplay",class:"rvideo"});
+    var cam=h("div",{class:"rcam pcam",hidden:"hidden"},[video,h("div",{class:"raim"})]);
+    var list=h("ul",{class:"rlog"});
+    var manual=h("input",{type:"text",class:"mono rinput",inputmode:"numeric",placeholder:"…o escribe el código"});
+    var camBtn=ibtn("primary","camera","Iniciar cámara",function(){ stream?stopCam():startCam(); });
+    function setPill(cls,txt){ pill.className="sync "+cls; pill.innerHTML="<b>•</b> "+txt; }
+    function send(tipo,codigo){
+      return rpc("starmoda_scan_enviar",{p_token:token,p_codigo:codigo||"",p_tipo:tipo});
+    }
+    function flush(){
+      if(sending||!queue.length||gone) return;
+      sending=true;
+      var it=queue[0];
+      send("codigo",it.code).then(function(){
+        queue.shift(); sending=false; it.li.querySelector(".chip").className="chip ok"; it.li.querySelector(".chip").textContent="enviado";
+        setPill("up","Conectado"); flush();
+      },function(e){
+        sending=false;
+        if(/sesion_vencida/.test(e.message)){ gone=true; setPill("down","Enlace vencido"); lastEl.textContent="Este enlace venció. En la computadora toca Celular › Nuevo enlace y vuelve a escanear el QR."; stopCam(); return; }
+        setPill("down","Sin conexión, reintentando…"); setTimeout(flush,2500);
+      });
+    }
+    function got(code){
+      code=String(code||"").replace(/\s+/g,"");
+      if(!code) return;
+      if(!barcodeOk(code)){ beep(false); lastEl.textContent="Código "+code+" no válido (dígito verificador). Vuelve a escanear."; lastEl.className="plast err"; return; }
+      beep(true); if(navigator.vibrate){ try{ navigator.vibrate(40); }catch(e){} }
+      sent++; countEl.textContent=String(sent);
+      lastEl.textContent=code; lastEl.className="plast ok";
+      var li=h("li",{},[h("div",{},[h("b",{class:"mono",text:code}),h("small",{text:hhmm(new Date())})]),h("span",{class:"chip rec",text:"enviando"})]);
+      list.insertBefore(li,list.firstChild);
+      queue.push({code:code,li:li}); flush();
+    }
+    function startCam(){
+      try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); actx.resume(); }catch(e){}  /* iOS: el audio se habilita con el toque */
+      lastEl.textContent="Abriendo la cámara…"; lastEl.className="plast";
+      getDetector().then(function(d){ det=d; return navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},audio:false}); })
+      .then(function(s){ stream=s; video.srcObject=s; cam.hidden=false; video.play().catch(function(){}); camBtn.querySelector("span").textContent="Detener cámara"; lastEl.textContent="Apunta al código dentro del recuadro."; loop(); })
+      .catch(function(){ lastEl.textContent="No se pudo abrir la cámara. Revisa el permiso del navegador."; lastEl.className="plast err"; });
+    }
+    function stopCam(){ if(stream) stream.getTracks().forEach(function(t){ t.stop(); }); stream=null; cam.hidden=true; camBtn.querySelector("span").textContent="Iniciar cámara"; }
+    function loop(){
+      if(!stream) return;
+      if(video.readyState<2){ setTimeout(loop,250); return; }
+      det.detect(video).then(function(codes){
+        var c=codes&&codes.length?codes[0].rawValue:"", now=Date.now();
+        if(!c) return;
+        var repeat=c===lastCam.code&&now-lastCam.seen<1500;
+        lastCam.seen=now; if(repeat) return;
+        lastCam.code=c; got(c);
+      }).catch(function(){}).then(function(){ setTimeout(loop,250); });
+    }
+    manual.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); got(manual.value); manual.value=""; } });
+    document.body.appendChild(h("div",{class:"phone"},[
+      h("header",{class:"top"},[
+        h("div",{class:"brand"},[h("div",{class:"logo",html:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3l-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/></svg>'}),
+          h("div",{class:"mark",html:"Star <em>Moda</em><small>Escáner del celular</small>"})]),
+        h("div",{class:"sep"}), pill
+      ]),
+      h("main",{class:"pmain"},[
+        h("div",{class:"pstat"},[countEl,h("span",{text:"códigos enviados a la computadora"})]),
+        lastEl, cam, camBtn,
+        h("div",{class:"rscan"},[manual,h("button",{text:"Enviar",onclick:function(){ got(manual.value); manual.value=""; }})]),
+        h("p",{class:"hint",style:"margin:6px 0 10px",text:"Lo que escanees aparece en la computadora: en Recibir mercancía o en el campo de código de la variante donde estés parado."}),
+        list
+      ])
+    ]));
+    send("hola","").then(function(){ setPill("up","Conectado"); },function(e){
+      if(/sesion_vencida/.test(e.message)){ gone=true; setPill("down","Enlace vencido"); lastEl.textContent="Este enlace venció o no existe. En la computadora toca Celular › Nuevo enlace."; lastEl.className="plast err"; camBtn.disabled=true; }
+      else setPill("down","Sin conexión");
+    });
   }
 
   /* ---------- arranque ---------- */
@@ -2982,7 +3236,7 @@
      ráfaga así fuera de un campo de texto, se abre Recibir con ese código. */
   var kb={buf:"",t:0};
   document.addEventListener("keydown",function(e){
-    if(recvOpen||e.ctrlKey||e.metaKey||e.altKey) return;
+    if(recvOpen||scanTok||e.ctrlKey||e.metaKey||e.altKey) return;
     var t=e.target;
     if(t&&(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)||t.isContentEditable)) return;
     var now=Date.now();
@@ -3017,7 +3271,11 @@
     if(remoteOn()&&getCode()&&pendingInfo().total){ e.preventDefault(); e.returnValue=""; }
   });
 
+  var scanTok=(location.hash.match(/scan=([a-f0-9]{24})/)||[])[1];
+  if(scanTok){ phoneMode(scanTok); return; }
+  document.getElementById("btnPhone").addEventListener("click",phoneModal);
   load(); primeSigs(); paintAll(); paintSaved();
+  if(pairValid()) startPolling(); else paintPhoneBtn();
   loadHistory().then(function(){ hydratePhotos(); gcBlobs(); });
   if(remoteOn()){
     /* Al abrir solo trae lo que otros guardaron; no sube nada. */
