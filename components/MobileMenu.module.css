@@ -1,25 +1,41 @@
-.draw {
-  display: none;
+.sheet {
   position: fixed;
-  inset: 0;
+  inset: var(--nav) 0 0;
   z-index: 199;
-  background: #0d0d0d;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 44px;
-}
-.draw.open {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 28px var(--gut);
+  background: rgba(5, 7, 13, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s var(--ease), visibility 0s 0.3s;
 }
-.draw a {
+.open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s var(--ease);
+}
+.sheet a:not(:global(.btn-p)) {
   font-family: var(--font-barlow-condensed), sans-serif;
   font-weight: 700;
-  font-size: 40px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.8);
-  transition: color 0.2s;
+  font-size: 40px;
+  line-height: 1.2;
 }
-.draw a:hover {
-  color: #fff;
+.sheet a {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
+}
+.open a {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(var(--i, 0) * 40ms + 60ms);
+}
+.sheet :global(.btn-p) {
+  margin-top: 24px;
 }

@@ -10,7 +10,7 @@ import "./globals.css";
 
 const barlow = Barlow({
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "600"],
   variable: "--font-barlow",
   display: "swap",
 });
@@ -100,9 +100,13 @@ export default function RootLayout({
   return (
     <html
       lang="es"
+      suppressHydrationWarning
       className={`${barlow.variable} ${barlowCondensed.variable}`}
     >
       <head>
+        <script
+          dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }}
+        />
         <SiteSchema />
       </head>
       <body>

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useSiteWa } from "@/components/SiteConfigProvider";
+import { NAV } from "./Header";
 import styles from "./MobileMenu.module.css";
 
 interface Props {
@@ -20,29 +21,32 @@ export function MobileMenu({ open, onClose }: Props) {
   return (
     <nav
       id="mob-menu"
-      className={`${styles.draw} ${open ? styles.open : ""}`}
-      role="navigation"
+      className={`${styles.sheet} ${open ? styles.open : ""}`}
       aria-label="Menú móvil"
+      aria-hidden={!open}
     >
-      <a href="#servicios" onClick={onClose}>
-        Servicios
-      </a>
-      <a href="#como-trabajamos" onClick={onClose}>
-        Cómo trabajamos
-      </a>
-      <a href="#faq" onClick={onClose}>
-        FAQ
-      </a>
+      {NAV.map((n, i) => (
+        <a
+          key={n.href}
+          href={n.href}
+          onClick={onClose}
+          tabIndex={open ? 0 : -1}
+          style={{ ["--i" as string]: i }}
+        >
+          {n.label}
+        </a>
+      ))}
       {waLinks && (
         <a
           href={waLinks.hero}
-          className="btn-n"
-          style={{ fontSize: 22, padding: "18px 48px" }}
+          className="btn-p"
           target="_blank"
           rel="noopener noreferrer"
           onClick={onClose}
+          tabIndex={open ? 0 : -1}
+          style={{ ["--i" as string]: NAV.length }}
         >
-          Hablemos →
+          Hablemos por WhatsApp
         </a>
       )}
     </nav>

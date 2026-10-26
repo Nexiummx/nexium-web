@@ -7,14 +7,14 @@ export function useReveal() {
       (entries) => {
         entries.forEach((e) => {
           if (e.isIntersecting) {
-            e.target.classList.add("vis");
+            e.target.classList.add("is-in");
             obs.unobserve(e.target);
           }
         });
       },
-      { threshold: 0.15 }
+      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" }
     );
-    document.querySelectorAll(".rv").forEach((el) => obs.observe(el));
+    document.querySelectorAll("[data-reveal]").forEach((el) => obs.observe(el));
     return () => obs.disconnect();
   }, []);
 }

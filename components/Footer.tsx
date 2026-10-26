@@ -59,7 +59,7 @@ export function Footer() {
       </div>
       <div className={styles.bot}>
         <p>© 2026 Nexium. Todos los derechos reservados.</p>
-        <p style={{ color: "rgba(138,155,176,.3)", fontSize: 13 }}>nexiummx.com</p>
+        <p>nexiummx.com</p>
       </div>
     </footer>
   );

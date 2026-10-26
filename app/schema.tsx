@@ -26,6 +26,9 @@ export function SiteSchema() {
     },
     serviceType: [
       "Desarrollo web",
+      "CMS a la medida",
+      "CRM a la medida",
+      "Paneles administrativos a la medida",
       "Consultoría de digitalización",
       "Integraciones con IA",
     ],

@@ -8,6 +8,9 @@ export type WaLinks = {
   dev: string;
   cons: string;
   saas: string;
+  cms: string;
+  crm: string;
+  admin: string;
   contact: string;
 };
 
@@ -25,6 +28,15 @@ export function buildWaLinks(waNumber: string): WaLinks {
     saas: wa(
       waNumber,
       "Hola Nexium, quiero saber más sobre las integraciones con IA que realizan"
+    ),
+    cms: wa(
+      waNumber,
+      "Hola Nexium, quiero un sitio que pueda administrar yo mismo (CMS a la medida)"
+    ),
+    crm: wa(waNumber, "Hola Nexium, me interesa un CRM a la medida para mi negocio"),
+    admin: wa(
+      waNumber,
+      "Hola Nexium, quiero un panel administrativo para registrar clientes, pedidos o inventario"
     ),
     contact: wa(waNumber, "Hola Nexium, quiero hablar de mi proyecto"),
   };

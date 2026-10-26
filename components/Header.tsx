@@ -1,10 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { LogoHorizontal } from "./icons/LogoHorizontal";
+import { LogoIcon } from "./icons/LogoIcon";
 import { MobileMenu } from "./MobileMenu";
 import { useSiteWa } from "@/components/SiteConfigProvider";
 import styles from "./Header.module.css";
+
+export const NAV = [
+  { href: "#servicios", label: "Servicios" },
+  { href: "#como-trabajamos", label: "Cómo trabajamos" },
+  { href: "#por-que", label: "Por qué Nexium" },
+  { href: "#faq", label: "FAQ" },
+];
 
 export function Header() {
   const { waLinks } = useSiteWa();
@@ -13,6 +19,7 @@ export function Header() {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -21,42 +28,47 @@ export function Header() {
     <>
       <header
         id="hdr"
-        role="banner"
-        className={`${styles.hdr} ${scrolled ? styles.sc : ""}`}
+        className={`${styles.hdr} ${scrolled || menuOpen ? styles.sc : ""}`}
       >
-        <Link href="#hero" className={styles.logoA} aria-label="Nexium inicio">
-          <LogoHorizontal height={34} />
-        </Link>
+        <div className={styles.bar}>
+          <a href="#hero" className={styles.logoA} aria-label="Nexium inicio">
+            <LogoIcon height={30} />
+            <span className={styles.wm}>Nexium</span>
+          </a>
 
-        <nav className={styles.hn} role="navigation" aria-label="Principal">
-          <a href="#servicios">Servicios</a>
-          <a href="#como-trabajamos">Cómo trabajamos</a>
-          <a href="#faq">FAQ</a>
-          {waLinks && (
-            <a
-              href={waLinks.hero}
-              className="btn-n"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Hablemos por WhatsApp"
+          <nav className={styles.hn} aria-label="Principal">
+            {NAV.map((n) => (
+              <a key={n.href} href={n.href}>
+                {n.label}
+              </a>
+            ))}
+          </nav>
+
+          <div className={styles.end}>
+            {waLinks && (
+              <a
+                href={waLinks.hero}
+                className={styles.pill}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Hablemos por WhatsApp"
+              >
+                Hablemos
+              </a>
+            )}
+            <button
+              type="button"
+              className={`${styles.burger} ${menuOpen ? styles.burgerOpen : ""}`}
+              aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-expanded={menuOpen}
+              aria-controls="mob-menu"
+              onClick={() => setMenuOpen((o) => !o)}
             >
-              Hablemos →
-            </a>
-          )}
-        </nav>
-
-        <button
-          type="button"
-          className={styles.hbg}
-          aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
-          aria-expanded={menuOpen}
-          aria-controls="mob-menu"
-          onClick={() => setMenuOpen((o) => !o)}
-        >
-          <span />
-          <span />
-          <span />
-        </button>
+              <span />
+              <span />
+            </button>
+          </div>
+        </div>
       </header>
 
       <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
